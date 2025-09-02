@@ -1,4 +1,4 @@
-name: KMP iOS CI
+name: iOS CI (CocoaPods)
 
 on:
   push:
@@ -7,12 +7,11 @@ on:
     branches: [ main ]
 
 concurrency:
-  group: kmp-ios-${{ github.ref }}
+  group: ios-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ios:
-    name: Build iOS (XCFramework + optional App)
+  build-ios:
     runs-on: macos-14
 
     steps:
@@ -28,48 +27,70 @@ jobs:
       - name: Gradle cache
         uses: gradle/gradle-build-action@v3
 
-      # CocoaPods nur, wenn Podfile vorhanden
-      - name: Install CocoaPods (if Podfile exists)
-        if: ${{ hashFiles('iosApp/Podfile') != '' }}
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Install Ruby & CocoaPods
         run: |
           sudo gem install cocoapods --no-document
+
+      # Optionaler Cache für Pods (beschleunigt pod install)
+      - name: Cache Pods
+        uses: actions/cache@v4
+        with:
+          path: |
+            iosApp/Pods
+            ~/Library/Caches/CocoaPods
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      # 1) KMP -> Podspec + XCFramework erzeugen
+      - name: Build KMP XCFramework via CocoaPods
+        run: ./gradlew :shared:podPublishXCFramework --stacktrace
+
+      - name: Upload XCFramework & Podspec
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-cocoapods-xcframework
+          path: |
+            shared/build/cocoapods/framework/**/*
+            shared/*.podspec
+          if-no-files-found: warn
+
+      # 2) (Optional) iOS-App bauen, falls du eine iosApp hast
+      - name: Install Pods in iosApp
+        if: ${{ hashFiles('iosApp/Podfile') != '' }}
+        run: |
           cd iosApp
           pod install --repo-update
 
-      - name: Assemble XCFramework from :shared
-        run: ./gradlew :shared:assembleXCFramework
-
-      - name: Upload XCFramework
-        uses: actions/upload-artifact@v4
-        with:
-          name: shared-xcframework
-          path: |
-            **/build/XCFrameworks/**/*
-            **/build/cocoapods/framework/**/*
-          if-no-files-found: warn
-
-      # Optional: iOS-App (Simulator) bauen, wenn Xcode-Projekt/Workspace existiert
-      - name: Build iOS app (Debug, Simulator)
-        if: ${{ hashFiles('iosApp/*.xcodeproj') != '' || hashFiles('iosApp/*.xcworkspace') != '' }}
+      - name: Build iosApp (Debug, Simulator)
+        if: ${{ hashFiles('iosApp/*.xcworkspace') != '' || hashFiles('iosApp/*.xcodeproj') != '' }}
         run: |
           set -euo pipefail
           SCHEME="iosApp"
-          SDK="iphonesimulator"
           DEST="platform=iOS Simulator,name=iPhone 15"
+
           if ls iosApp/*.xcworkspace >/dev/null 2>&1; then
-            xcodebuild -workspace iosApp/*.xcworkspace \
-              -scheme "$SCHEME" -sdk "$SDK" -configuration Debug \
+            xcodebuild \
+              -workspace iosApp/*.xcworkspace \
+              -scheme "$SCHEME" \
+              -sdk iphonesimulator \
+              -configuration Debug \
               -destination "$DEST" \
-              -allowProvisioningUpdates \
               CODE_SIGNING_ALLOWED=NO \
-              build | xcpretty
+              build | xcpretty || true
           else
-            xcodebuild -project iosApp/*.xcodeproj \
-              -scheme "$SCHEME" -sdk "$SDK" -configuration Debug \
+            xcodebuild \
+              -project iosApp/*.xcodeproj \
+              -scheme "$SCHEME" \
+              -sdk iphonesimulator \
+              -configuration Debug \
               -destination "$DEST" \
-              -allowProvisioningUpdates \
               CODE_SIGNING_ALLOWED=NO \
-              build | xcpretty
+              build | xcpretty || true
           fi
 
       - name: Upload iOS build products

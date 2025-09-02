@@ -1,4 +1,4 @@
-name: KMP Android CI
+name: Android CI
 
 on:
   push:
@@ -7,12 +7,11 @@ on:
     branches: [ main ]
 
 concurrency:
-  group: kmp-android-${{ github.ref }}
+  group: android-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  android:
-    name: Build Android
+  build-android:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,18 +30,19 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
 
-      - name: Assemble Debug
-        run: ./gradlew :androidApp:assembleDebug
+      # Passe das Modul an, falls dein Android-App-Modul anders heißt
+      - name: Assemble Android Debug
+        run: ./gradlew :composeApp:assembleDebug
 
-      # Optional: AAB (Release)
+      # Optional: Release AAB
       # - name: Bundle Release
-      #   run: ./gradlew :androidApp:bundleRelease
+      #   run: ./gradlew :composeApp:bundleRelease
 
-      - name: Upload Android artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-build
           path: |
-            androidApp/build/outputs/**/*.apk
-            androidApp/build/outputs/**/*.aab
+            composeApp/build/outputs/**/*.apk
+            composeApp/build/outputs/**/*.aab
           if-no-files-found: warn
