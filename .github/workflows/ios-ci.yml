@@ -1,0 +1,83 @@
+name: KMP iOS CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: kmp-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: Build iOS (XCFramework + optional App)
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v3
+
+      # CocoaPods nur, wenn Podfile vorhanden
+      - name: Install CocoaPods (if Podfile exists)
+        if: ${{ hashFiles('iosApp/Podfile') != '' }}
+        run: |
+          sudo gem install cocoapods --no-document
+          cd iosApp
+          pod install --repo-update
+
+      - name: Assemble XCFramework from :shared
+        run: ./gradlew :shared:assembleXCFramework
+
+      - name: Upload XCFramework
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-xcframework
+          path: |
+            **/build/XCFrameworks/**/*
+            **/build/cocoapods/framework/**/*
+          if-no-files-found: warn
+
+      # Optional: iOS-App (Simulator) bauen, wenn Xcode-Projekt/Workspace existiert
+      - name: Build iOS app (Debug, Simulator)
+        if: ${{ hashFiles('iosApp/*.xcodeproj') != '' || hashFiles('iosApp/*.xcworkspace') != '' }}
+        run: |
+          set -euo pipefail
+          SCHEME="iosApp"
+          SDK="iphonesimulator"
+          DEST="platform=iOS Simulator,name=iPhone 15"
+          if ls iosApp/*.xcworkspace >/dev/null 2>&1; then
+            xcodebuild -workspace iosApp/*.xcworkspace \
+              -scheme "$SCHEME" -sdk "$SDK" -configuration Debug \
+              -destination "$DEST" \
+              -allowProvisioningUpdates \
+              CODE_SIGNING_ALLOWED=NO \
+              build | xcpretty
+          else
+            xcodebuild -project iosApp/*.xcodeproj \
+              -scheme "$SCHEME" -sdk "$SDK" -configuration Debug \
+              -destination "$DEST" \
+              -allowProvisioningUpdates \
+              CODE_SIGNING_ALLOWED=NO \
+              build | xcpretty
+          fi
+
+      - name: Upload iOS build products
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: |
+            iosApp/build/**/*
+            ~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug-iphonesimulator/*.app
+          if-no-files-found: warn

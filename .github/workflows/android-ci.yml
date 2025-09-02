@@ -1,0 +1,48 @@
+name: KMP Android CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: kmp-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Build Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v3
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Assemble Debug
+        run: ./gradlew :androidApp:assembleDebug
+
+      # Optional: AAB (Release)
+      # - name: Bundle Release
+      #   run: ./gradlew :androidApp:bundleRelease
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build
+          path: |
+            androidApp/build/outputs/**/*.apk
+            androidApp/build/outputs/**/*.aab
+          if-no-files-found: warn
