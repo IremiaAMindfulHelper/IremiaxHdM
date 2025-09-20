@@ -3,6 +3,7 @@ import Shared
 
 struct ContentView: View {
     @State private var showContent = false
+
     var body: some View {
         VStack {
             Button("Click me!") {
@@ -16,7 +17,9 @@ struct ContentView: View {
                     Image(systemName: "swift")
                         .font(.system(size: 200))
                         .foregroundColor(.accentColor)
-                    Text("SwiftUI: \(Greeting().greet())")
+                    Text(StringsKt.localized(res: SharedRes.strings().welcome_title).localized())
+                    Text(StringsKt.localized(res: SharedRes.strings().sos_button).localized())
+                    Text(StringsKt.localized(res: SharedRes.strings().test_string).localized())
                 }
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
@@ -31,3 +34,4 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
+
