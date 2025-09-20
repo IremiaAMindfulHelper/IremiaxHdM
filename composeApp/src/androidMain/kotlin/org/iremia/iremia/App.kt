@@ -1,7 +1,6 @@
 package org.iremia.iremia
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,17 +12,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import iremia.composeapp.generated.resources.Res
-import iremia.composeapp.generated.resources.compose_multiplatform
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import dev.icerock.moko.resources.desc.Resource
+import dev.icerock.moko.resources.desc.StringDesc
+import org.iremia.library.SharedRes  // <- aus deinem shared-Modul (moko-resources)
 
 @Composable
 @Preview
 fun App() {
+    val context = LocalContext.current
+    var showContent by remember { mutableStateOf(false) }
+
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primaryContainer)
@@ -32,16 +33,17 @@ fun App() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+                // 🔹 Shared-String für den Button
+                Text(StringDesc.Resource(SharedRes.strings.sos_button).toString(context))
             }
+
             AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+                    // 🔹 Shared-String für den Titel
+                    Text(StringDesc.Resource(SharedRes.strings.welcome_title).toString(context))
                 }
             }
         }
