@@ -20,6 +20,7 @@ struct ContentView: View {
                     Text(StringsKt.localized(res: SharedRes.strings().welcome_title).localized())
                     Text(StringsKt.localized(res: SharedRes.strings().sos_button).localized())
                     Text(StringsKt.localized(res: SharedRes.strings().test_string).localized())
+                    Rectangle().fill(Color(SharedColors().secondary()))
                 }
                 .transition(.move(edge: .top).combined(with: .opacity))
             }

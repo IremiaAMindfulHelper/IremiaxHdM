@@ -1,17 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">
-        <light>#2563EB</light>
-        <dark>#3B82F6</dark>
+    <!-- Opaque Farbe (RRGGBB + AA am Ende; AA ist optional) -->
+    <color name="primary">#6750A4FF</color>
+    <color name="secondary">#625B71FF</color>
+    <color name="background">#FFFBFEFF</color>
+    <color name="error">#B3261EFF</color>
+
+    <!-- Referenz auf andere Farbe -->
+    <color name="primaryReference">@color/primary</color>
+
+    <!-- Theme-spezifische Farbe (Light/Dark) -->
+    <color name="brand">
+        <light>#6750A4FF</light>
+        <dark>#D0BCFFFF</dark>
     </color>
 
-    <color name="background">
-        <light>#FFFFFF</light>
-        <dark>#0F172A</dark>
-    </color>
-
-    <color name="text">
-        <light>#1F2937</light>
-        <dark>#F1F5F9</dark>
+    <!-- Themed Referenz -->
+    <color name="brandRef">
+        <light>@color/primary</light>
+        <dark>@color/secondary</dark>
     </color>
 </resources>
