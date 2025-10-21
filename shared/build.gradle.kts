@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
+
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("com.android.library")
@@ -41,8 +42,8 @@ kotlin {
         framework {
             baseName = "Shared"
             isStatic = true
-            export("dev.icerock.moko:resources:0.25.0")
-            export("dev.icerock.moko:graphics:0.10.1")
+            export("dev.icerock.moko:resources:${libs.versions.resources.get()}")
+            export("dev.icerock.moko:graphics:${libs.versions.graphics.get()}")
         }
         // Beispiel für zusätzliche Pods:
         // pod("Reachability", "~> 3.2")
@@ -51,15 +52,15 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api("dev.icerock.moko:resources:0.25.0")
-                api("dev.icerock.moko:graphics:0.10.1")
+                api(libs.resources)
+                api(libs.graphics)
 
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("dev.icerock.moko:resources-test:0.25.0")
+                implementation(libs.resources.test)
 
             }
         }
@@ -79,8 +80,8 @@ kotlin {
 
 android {
     namespace = "org.iremia.iremia.shared"
-    compileSdk = 34
-    defaultConfig { minSdk = 24 }
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
