@@ -20,7 +20,10 @@ struct ContentView: View {
                     Text(StringsKt.localized(res: SharedRes.strings().welcome_title).localized())
                     Text(StringsKt.localized(res: SharedRes.strings().sos_button).localized())
                     Text(StringsKt.localized(res: SharedRes.strings().test_string).localized())
-                    Rectangle().fill(Color(SharedColors().secondary()))
+                    let res = SharedRes.images().onboarding_2
+                    Image(res.assetImageName, bundle: res.bundle)
+                                .resizable()
+                                .scaledToFit()
                 }
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
