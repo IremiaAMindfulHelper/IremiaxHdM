@@ -12,32 +12,82 @@ concurrency:
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup JDK 17
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Gradle cache
-        uses: gradle/gradle-build-action@v3
-
+      # Gradle Wrapper validieren
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
 
-      # Passe das Modul an, falls dein Android-App-Modul anders heißt
-      - name: Assemble Android Debug
-        run: ./gradlew :composeApp:assembleDebug
+      # Integriertes Gradle Caching (ersetzt die alte gradle-build-action@v3)
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      # Optional: Release AAB
-      # - name: Bundle Release
-      #   run: ./gradlew :composeApp:bundleRelease
+      # Netzwerk stabilisieren: IPv4 bevorzugen + Timeouts erhöhen
+      - name: Prepare ~/.gradle/gradle.properties (IPv4 + timeouts)
+        run: |
+          mkdir -p ~/.gradle
+          {
+            echo "org.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true"
+            echo "org.gradle.daemon=false"
+            echo "org.gradle.caching=true"
+            echo "org.gradle.parallel=true"
+            echo "org.gradle.internal.http.socketTimeout=120000"
+            echo "org.gradle.internal.http.connectionTimeout=120000"
+          } >> ~/.gradle/gradle.properties
+          echo "==== ~/.gradle/gradle.properties ===="
+          cat ~/.gradle/gradle.properties
 
+      # Optional: Abhängigkeiten vorab resolven (separater Schritt, damit Fehler früher sichtbar sind)
+      - name: Gradle dependencies (retry x3)
+        run: |
+          set -euo pipefail
+          attempt=0
+          max=3
+          until [ $attempt -ge $max ]
+          do
+            if ./gradlew --no-daemon :composeApp:dependencies :shared:dependencies -s; then
+              exit 0
+            fi
+            attempt=$((attempt+1))
+            echo "Dependency resolve failed (attempt $attempt/$max). Sleeping 15s and retrying..."
+            sleep 15
+          done
+          echo "Dependency resolve failed after $max attempts."
+          exit 1
+
+      # Build mit Retry-Wrapper (gegen flakey Netzwerk/Registry-Probleme)
+      - name: Assemble Android Debug (retry x3)
+        run: |
+          set -euo pipefail
+          attempt=0
+          max=3
+          until [ $attempt -ge $max ]
+          do
+            if ./gradlew --no-daemon clean :composeApp:assembleDebug :shared:build -s; then
+              exit 0
+            fi
+            attempt=$((attempt+1))
+            echo "Gradle build failed (attempt $attempt/$max). Sleeping 15s and retrying..."
+            sleep 15
+          done
+          echo "Gradle build failed after $max attempts."
+          exit 1
+
+      # Optional: Unit Tests
+      - name: Unit Tests (Debug)
+        run: ./gradlew --no-daemon testDebugUnitTest -s
+
+      # Artefakte hochladen
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
