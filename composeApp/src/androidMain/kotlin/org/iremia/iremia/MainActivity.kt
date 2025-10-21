@@ -6,14 +6,20 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import org.iremia.iremia.ui.MainScreen
+import org.iremia.iremia.MainViewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel = MainViewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         setContent {
-            App()
+            MainScreen(viewModel)
         }
     }
 }
@@ -21,5 +27,5 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun AppAndroidPreview() {
-    App()
+    MainScreen(viewModel())
 }

@@ -17,9 +17,8 @@ kotlin {
     // iOS Targets
     iosArm64()
     iosSimulatorArm64()
-    // iosX64() // nur falls Intel-Simulatoren benötigt werden
+    iosX64()
 
-    // <- WICHTIG: cocoapods{} MUSS innerhalb von kotlin{} stehen
     cocoapods {
         version = "0.1.0"
         summary = "Shared Kotlin Multiplatform module"
@@ -31,19 +30,18 @@ kotlin {
             baseName = "Shared"
             isStatic = true
         }
-        // Beispiel für zusätzliche Pods:
-        // pod("Reachability", "~> 3.2")
     }
 
     sourceSets {
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                // provides StateFlow, MutableStateFlow, suspend functions, etc.
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
         val commonTest by getting {
             dependencies { implementation(kotlin("test")) }
         }
-
-        val iosMain by creating { dependsOn(commonMain) }
-        val iosArm64Main by getting { dependsOn(iosMain) }
-        val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
 
         // iOS SQLDelight-Driver bei Bedarf:
         // iosMain.dependencies {
