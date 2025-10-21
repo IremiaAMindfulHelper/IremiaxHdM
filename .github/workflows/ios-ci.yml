@@ -1,4 +1,4 @@
-name: iOS CI (CocoaPods)
+name: iOS CI (XCFramework)
 
 on:
   push:
@@ -12,93 +12,142 @@ concurrency:
 
 jobs:
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-15
+
+    env:
+      PROJECT: iosApp/iosApp.xcodeproj
+      WORKSPACE: ""                  # z.B. iosApp/iosApp.xcworkspace
+      SCHEME: iosApp
+      DERIVED: build/DerivedData
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup JDK 17
+      - name: Select Xcode 17 (preferred)
+        id: xcode_17
+        continue-on-error: true
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '17.*'
+
+      - name: Fallback to Xcode 16
+        if: ${{ steps.xcode_17.outcome == 'failure' }}
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.*'
+
+      - name: Print Xcode version (debug)
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Gradle cache
-        uses: gradle/gradle-build-action@v3
+      - name: Setup Gradle (cache)
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
+        continue-on-error: true
 
-      - name: Install Ruby & CocoaPods
+      # XCFramework an cocoapods/publish-Pfad erzeugen (wie dein Xcode-Projekt es erwartet)
+      - name: Build XCFramework (Debug) at cocoapods/publish path
         run: |
-          sudo gem install cocoapods --no-document
+          set -e
+          ./gradlew :shared:podPublishDebugXCFramework --stacktrace
+          # optional:
+          # ./gradlew :shared:podPublishReleaseXCFramework --stacktrace
 
-      # Optionaler Cache für Pods (beschleunigt pod install)
-      - name: Cache Pods
-        uses: actions/cache@v4
-        with:
-          path: |
-            iosApp/Pods
-            ~/Library/Caches/CocoaPods
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
-
-      # 1) KMP -> Podspec + XCFramework erzeugen
-      - name: Build KMP XCFramework via CocoaPods
-        run: ./gradlew :shared:podPublishXCFramework --stacktrace
-
-      - name: Upload XCFramework & Podspec
-        uses: actions/upload-artifact@v4
-        with:
-          name: shared-cocoapods-xcframework
-          path: |
-            shared/build/cocoapods/framework/**/*
-            shared/*.podspec
-          if-no-files-found: warn
-
-      # 2) (Optional) iOS-App bauen, falls du eine iosApp hast
-      - name: Install Pods in iosApp
-        if: ${{ hashFiles('iosApp/Podfile') != '' }}
+      - name: Zip XCFramework(s)
         run: |
-          cd iosApp
-          pod install --repo-update
-
-      - name: Build iosApp (Debug, Simulator)
-        if: ${{ hashFiles('iosApp/*.xcworkspace') != '' || hashFiles('iosApp/*.xcodeproj') != '' }}
-        run: |
-          set -euo pipefail
-          SCHEME="iosApp"
-          DEST="platform=iOS Simulator,name=iPhone 15"
-
-          if ls iosApp/*.xcworkspace >/dev/null 2>&1; then
-            xcodebuild \
-              -workspace iosApp/*.xcworkspace \
-              -scheme "$SCHEME" \
-              -sdk iphonesimulator \
-              -configuration Debug \
-              -destination "$DEST" \
-              CODE_SIGNING_ALLOWED=NO \
-              build | xcpretty || true
-          else
-            xcodebuild \
-              -project iosApp/*.xcodeproj \
-              -scheme "$SCHEME" \
-              -sdk iphonesimulator \
-              -configuration Debug \
-              -destination "$DEST" \
-              CODE_SIGNING_ALLOWED=NO \
-              build | xcpretty || true
+          set -e
+          DBG_DIR="shared/build/cocoapods/publish/debug/Shared.xcframework"
+          if [ -d "$DBG_DIR" ]; then
+            pushd "$(dirname "$DBG_DIR")"
+            /usr/bin/ditto -c -k --sequesterRsrc --keepParent "Shared.xcframework" "../../Shared-debug.xcframework.zip"
+            popd
+          fi
+          REL_DIR="shared/build/cocoapods/publish/release/Shared.xcframework"
+          if [ -d "$REL_DIR" ]; then
+            pushd "$(dirname "$REL_DIR")"
+            /usr/bin/ditto -c -k --sequesterRsrc --keepParent "Shared.xcframework" "../../Shared-release.xcframework.zip"
+            popd
           fi
 
-      - name: Upload iOS build products
-        if: always()
+      - name: Upload XCFramework (Debug)
+        if: ${{ hashFiles('shared/build/cocoapods/publish/Shared-debug.xcframework.zip') != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build
-          path: |
-            iosApp/build/**/*
-            ~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug-iphonesimulator/*.app
+          name: Shared.xcframework-debug
+          path: shared/build/cocoapods/publish/Shared-debug.xcframework.zip
+          if-no-files-found: warn
+
+      - name: Upload XCFramework (Release)
+        if: ${{ hashFiles('shared/build/cocoapods/publish/Shared-release.xcframework.zip') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shared.xcframework-release
+          path: shared/build/cocoapods/publish/Shared-release.xcframework.zip
+          if-no-files-found: warn
+
+      - name: Install xcpretty
+        run: sudo gem install xcpretty --no-document
+
+      # iOS-App bauen – arm64-Simulator erzwingen
+      - name: Build iosApp (Debug, arm64 Simulator)
+        run: |
+          set -euo pipefail
+          DEST="generic/platform=iOS Simulator"
+
+          if [ -n "${WORKSPACE}" ]; then
+            xcodebuild \
+              -workspace "${WORKSPACE}" \
+              -scheme "${SCHEME}" \
+              -sdk iphonesimulator \
+              -configuration Debug \
+              -destination "${DEST}" \
+              -derivedDataPath "${DERIVED}" \
+              CODE_SIGNING_ALLOWED=NO \
+              ARCHS=arm64 \
+              EXCLUDED_ARCHS="x86_64 i386" \
+              ONLY_ACTIVE_ARCH=YES \
+              build | xcpretty
+          else
+            xcodebuild \
+              -project "${PROJECT}" \
+              -scheme "${SCHEME}" \
+              -sdk iphonesimulator \
+              -configuration Debug \
+              -destination "${DEST}" \
+              -derivedDataPath "${DERIVED}" \
+              CODE_SIGNING_ALLOWED=NO \
+              ARCHS=arm64 \
+              EXCLUDED_ARCHS="x86_64 i386" \
+              ONLY_ACTIVE_ARCH=YES \
+              build | xcpretty
+          fi
+
+      # ⬇️ .app vorher ZIPpen (verhindert Probleme mit ":" im Bundle-Namen)
+      - name: Zip .app (Simulator Debug)
+        run: |
+          set -e
+          APP_DIR="$(/usr/bin/find "${DERIVED}/Build/Products/Debug-iphonesimulator" -maxdepth 1 -type d -name "*.app" | head -n1)"
+          if [ -z "$APP_DIR" ]; then
+            echo "No .app found to zip."
+            exit 0
+          fi
+          echo "Zipping: $APP_DIR"
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "iosApp-Debug.app.zip"
+
+      - name: Upload iOS .app (Simulator Debug, zipped)
+        if: ${{ hashFiles('iosApp-Debug.app.zip') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app-Debug-iphonesimulator
+          path: iosApp-Debug.app.zip
           if-no-files-found: warn

@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
-
+import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
@@ -18,20 +18,18 @@ kotlin {
         compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
     }
 
-    // iOS Targets
     iosArm64()
     iosSimulatorArm64()
-    // iosX64() // nur falls Intel-Simulatoren benötigt werden
     val xcf = XCFramework()
 
     targets.withType(KotlinNativeTarget::class.java).configureEach {
         binaries.framework {
             baseName = "Shared"
             isStatic = true
-            xcf.add(this)   // << wichtig: sonst fehlt assembleSharedDebugXCFramework
+            xcf.add(this)   // wichtig: erzeugt die assemble*XCFramework Tasks auf macOS
         }
     }
-    // <- WICHTIG: cocoapods{} MUSS innerhalb von kotlin{} stehen
+
     cocoapods {
         version = "0.1.0"
         summary = "Shared Kotlin Multiplatform module"
@@ -39,13 +37,15 @@ kotlin {
         authors = "Iremia a Mindful Helper"
         license = "MIT"
         ios.deploymentTarget = "14.0"
+
         framework {
             baseName = "Shared"
             isStatic = true
+            // nutze deine Versionen aus der libs.versions.toml
             export("dev.icerock.moko:resources:${libs.versions.resources.get()}")
             export("dev.icerock.moko:graphics:${libs.versions.graphics.get()}")
         }
-        // Beispiel für zusätzliche Pods:
+        // Beispiel:
         // pod("Reachability", "~> 3.2")
     }
 
@@ -54,14 +54,12 @@ kotlin {
             dependencies {
                 api(libs.resources)
                 api(libs.graphics)
-
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.resources.test)
-
             }
         }
 
@@ -70,11 +68,6 @@ kotlin {
         }
         val iosArm64Main by getting { dependsOn(iosMain) }
         val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
-
-        // iOS SQLDelight-Driver bei Bedarf:
-        // iosMain.dependencies {
-        //     implementation("app.cash.sqldelight:native-driver:2.1.0")
-        // }
     }
 }
 
@@ -97,9 +90,14 @@ sqldelight {
 }
 
 multiplatformResources {
-    resourcesPackage.set("org.iremia.library") // <- dein Package für MR
-    resourcesClassName.set("SharedRes") // optional
-    iosBaseLocalizationRegion.set("en") // deine Base Sprache
+    resourcesPackage.set("org.iremia.library") // Package für MR
+    resourcesClassName.set("SharedRes")        // optional
+    iosBaseLocalizationRegion.set("en")
     iosMinimalDeploymentTarget.set("14.0")
-    configureCopyXCFrameworkResources("Shared")
+}
+
+if (OperatingSystem.current().isMacOsX) {
+    multiplatformResources {
+        configureCopyXCFrameworkResources("Shared")
+    }
 }
