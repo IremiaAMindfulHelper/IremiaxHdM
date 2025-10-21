@@ -1,4 +1,4 @@
-name: iOS CI (CocoaPods)
+name: iOS CI (XCFramework, no CocoaPods)
 
 on:
   push:
@@ -24,81 +24,49 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Gradle cache
-        uses: gradle/gradle-build-action@v3
+      # Gradle Cache + Wrapper-Validation
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
 
-      - name: Install Ruby & CocoaPods
-        run: |
-          sudo gem install cocoapods --no-document
+      # 1) KMP: XCFramework bauen (Debug). Falls du Release willst, unten Alternative aktivieren.
+      - name: Build Shared.xcframework (Debug)
+        run: ./gradlew :shared:podPublishDebugXCFramework --stacktrace
 
-      # Optionaler Cache für Pods (beschleunigt pod install)
-      - name: Cache Pods
-        uses: actions/cache@v4
-        with:
-          path: |
-            iosApp/Pods
-            ~/Library/Caches/CocoaPods
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
+      - name: Build Shared.xcframework (Release)
+        run: ./gradlew :shared:podPublishReleaseXCFramework --stacktrace
 
-      # 1) KMP -> Podspec + XCFramework erzeugen
-      - name: Build KMP XCFramework via CocoaPods
-        run: ./gradlew :shared:podPublishXCFramework --stacktrace
-
-      - name: Upload XCFramework & Podspec
+      # Optional: Artefakt ablegen (nützlich für Debugging / Downloads aus dem CI)
+      - name: Upload XCFramework artifact
         uses: actions/upload-artifact@v4
         with:
-          name: shared-cocoapods-xcframework
-          path: |
-            shared/build/cocoapods/framework/**/*
-            shared/*.podspec
+          name: Shared.xcframework-debug
+          path: shared/build/cocoapods/publish/debug/Shared.xcframework
           if-no-files-found: warn
 
-      # 2) (Optional) iOS-App bauen, falls du eine iosApp hast
-      - name: Install Pods in iosApp
-        if: ${{ hashFiles('iosApp/Podfile') != '' }}
-        run: |
-          cd iosApp
-          pod install --repo-update
-
+      # 2) iOS-App mit Xcode bauen (ohne CocoaPods)
+      #    WICHTIG: Dein Xcode-Projekt muss Shared.xcframework bereits eingebunden haben
+      #    und die Run Script Phase zum Kopieren des moko-resources-Bundles behalten.
       - name: Build iosApp (Debug, Simulator)
-        if: ${{ hashFiles('iosApp/*.xcworkspace') != '' || hashFiles('iosApp/*.xcodeproj') != '' }}
         run: |
           set -euo pipefail
-          SCHEME="iosApp"
-          DEST="platform=iOS Simulator,name=iPhone 15"
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcpretty
 
-          if ls iosApp/*.xcworkspace >/dev/null 2>&1; then
-            xcodebuild \
-              -workspace iosApp/*.xcworkspace \
-              -scheme "$SCHEME" \
-              -sdk iphonesimulator \
-              -configuration Debug \
-              -destination "$DEST" \
-              CODE_SIGNING_ALLOWED=NO \
-              build | xcpretty || true
-          else
-            xcodebuild \
-              -project iosApp/*.xcodeproj \
-              -scheme "$SCHEME" \
-              -sdk iphonesimulator \
-              -configuration Debug \
-              -destination "$DEST" \
-              CODE_SIGNING_ALLOWED=NO \
-              build | xcpretty || true
-          fi
-
+      # Optional: App-Artefakt hochladen (Simulator .app)
       - name: Upload iOS build products
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
           path: |
-            iosApp/build/**/*
             ~/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug-iphonesimulator/*.app
           if-no-files-found: warn
