@@ -15,18 +15,15 @@ jobs:
     runs-on: macos-15
 
     env:
-      # 👉 Falls du eine Workspace nutzt, setze WORKSPACE und lasse PROJECT leer
+      # Falls du eine .xcworkspace nutzt: WORKSPACE setzen und PROJECT leer lassen
       PROJECT: iosApp/iosApp.xcodeproj
-      WORKSPACE: ""                  # z.B.: iosApp/iosApp.xcworkspace
+      WORKSPACE: ""                  # z.B. iosApp/iosApp.xcworkspace
       SCHEME: iosApp
       DERIVED: build/DerivedData
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: List installed Xcodes (debug)
-        run: ls -1 /Applications | grep -i Xcode || true
 
       - name: Select Xcode 17 (preferred)
         id: xcode_17
@@ -59,53 +56,56 @@ jobs:
         uses: gradle/wrapper-validation-action@v2
         continue-on-error: true
 
-      # ⬇️ XCFramework(s) über KMP Tasks bauen (ohne CocoaPods)
-      - name: Build XCFramework(s)
+      # ⬇️ Erzeuge XCFramework an dem Pfad, den Xcode erwartet (cocoapods/publish/debug)
+      - name: Build XCFramework (Debug) at cocoapods/publish path
         run: |
           set -e
-          ./gradlew :shared:assembleSharedDebugXCFramework --stacktrace
-          # Optional:
-          # ./gradlew :shared:assembleSharedReleaseXCFramework --stacktrace
+          ./gradlew :shared:podPublishDebugXCFramework --stacktrace
+          # Optional zusätzlich:
+          # ./gradlew :shared:podPublishReleaseXCFramework --stacktrace
 
       - name: Zip XCFramework(s)
         run: |
           set -e
-          DBG_DIR="shared/build/XCFrameworks/debug/Shared.xcframework"
+          DBG_DIR="shared/build/cocoapods/publish/debug/Shared.xcframework"
           if [ -d "$DBG_DIR" ]; then
-            /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$DBG_DIR" "Shared-debug.xcframework.zip"
+            pushd "$(dirname "$DBG_DIR")"
+            /usr/bin/ditto -c -k --sequesterRsrc --keepParent "Shared.xcframework" "../../Shared-debug.xcframework.zip"
+            popd
           fi
-          REL_DIR="shared/build/XCFrameworks/release/Shared.xcframework"
+          REL_DIR="shared/build/cocoapods/publish/release/Shared.xcframework"
           if [ -d "$REL_DIR" ]; then
-            /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$REL_DIR" "Shared-release.xcframework.zip"
+            pushd "$(dirname "$REL_DIR")"
+            /usr/bin/ditto -c -k --sequesterRsrc --keepParent "Shared.xcframework" "../../Shared-release.xcframework.zip"
+            popd
           fi
 
       - name: Upload XCFramework (Debug)
-        if: ${{ hashFiles('Shared-debug.xcframework.zip') != '' }}
+        if: ${{ hashFiles('shared/build/cocoapods/publish/Shared-debug.xcframework.zip') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: Shared.xcframework-debug
-          path: Shared-debug.xcframework.zip
+          path: shared/build/cocoapods/publish/Shared-debug.xcframework.zip
           if-no-files-found: warn
 
       - name: Upload XCFramework (Release)
-        if: ${{ hashFiles('Shared-release.xcframework.zip') != '' }}
+        if: ${{ hashFiles('shared/build/cocoapods/publish/Shared-release.xcframework.zip') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: Shared.xcframework-release
-          path: Shared-release.xcframework.zip
+          path: shared/build/cocoapods/publish/Shared-release.xcframework.zip
           if-no-files-found: warn
 
-      # ⬇️ Optional: iOS-App bauen – ohne Pods
       - name: Install xcpretty
         run: sudo gem install xcpretty --no-document
 
+      # ⬇️ iOS-App bauen (ohne Pods), das Framework liegt am erwarteten Ort
       - name: Build iosApp (Debug, Simulator)
         run: |
           set -euo pipefail
           DEST="generic/platform=iOS Simulator"
 
           if [ -n "${WORKSPACE}" ]; then
-            # Build über .xcworkspace
             xcodebuild \
               -workspace "${WORKSPACE}" \
               -scheme "${SCHEME}" \
@@ -116,7 +116,6 @@ jobs:
               CODE_SIGNING_ALLOWED=NO \
               build | xcpretty
           else
-            # Build über .xcodeproj
             xcodebuild \
               -project "${PROJECT}" \
               -scheme "${SCHEME}" \
