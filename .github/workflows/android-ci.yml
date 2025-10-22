@@ -24,16 +24,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Gradle Wrapper validieren
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
 
-      # Integriertes Gradle Caching (ersetzt die alte gradle-build-action@v3)
-      - name: Setup Gradle
+      - name: Setup Gradle (cache)
         uses: gradle/actions/setup-gradle@v4
 
-      # Netzwerk stabilisieren: IPv4 bevorzugen + Timeouts erhöhen
-      - name: Prepare ~/.gradle/gradle.properties (IPv4 + timeouts)
+      - name: Prepare ~/.gradle/gradle.properties (IPv4 + timeouts + native-ignore)
         run: |
           mkdir -p ~/.gradle
           {
@@ -43,19 +40,20 @@ jobs:
             echo "org.gradle.parallel=true"
             echo "org.gradle.internal.http.socketTimeout=120000"
             echo "org.gradle.internal.http.connectionTimeout=120000"
+            echo "kotlin.native.ignoreDisabledTargets=true"
+            echo "moko.resources.disableStaticFrameworkWarning=true"
           } >> ~/.gradle/gradle.properties
           echo "==== ~/.gradle/gradle.properties ===="
           cat ~/.gradle/gradle.properties
 
-      # Optional: Abhängigkeiten vorab resolven (separater Schritt, damit Fehler früher sichtbar sind)
       - name: Gradle dependencies (retry x3)
         run: |
-          set -euo pipefail
+          set -euo pipe fail
           attempt=0
           max=3
           until [ $attempt -ge $max ]
           do
-            if ./gradlew --no-daemon :composeApp:dependencies :shared:dependencies -s; then
+            if ./gradlew --no-daemon :composeApp:dependencies :shared:dependencies -s --stacktrace; then
               exit 0
             fi
             attempt=$((attempt+1))
@@ -65,15 +63,14 @@ jobs:
           echo "Dependency resolve failed after $max attempts."
           exit 1
 
-      # Build mit Retry-Wrapper (gegen flakey Netzwerk/Registry-Probleme)
       - name: Assemble Android Debug (retry x3)
         run: |
-          set -euo pipefail
+          set -euo pipe fail
           attempt=0
           max=3
           until [ $attempt -ge $max ]
           do
-            if ./gradlew --no-daemon clean :composeApp:assembleDebug :shared:build -s; then
+            if ./gradlew --no-daemon clean :composeApp:assembleDebug :shared:build -s --stacktrace; then
               exit 0
             fi
             attempt=$((attempt+1))
@@ -83,11 +80,9 @@ jobs:
           echo "Gradle build failed after $max attempts."
           exit 1
 
-      # Optional: Unit Tests
       - name: Unit Tests (Debug)
-        run: ./gradlew --no-daemon testDebugUnitTest -s
+        run: ./gradlew --no-daemon :composeApp:testDebugUnitTest -s --stacktrace
 
-      # Artefakte hochladen
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
