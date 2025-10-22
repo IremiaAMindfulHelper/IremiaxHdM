@@ -15,7 +15,6 @@ jobs:
     runs-on: macos-15
 
     env:
-      # Falls du eine .xcworkspace nutzt: WORKSPACE setzen und PROJECT leer lassen
       PROJECT: iosApp/iosApp.xcodeproj
       WORKSPACE: ""                  # z.B. iosApp/iosApp.xcworkspace
       SCHEME: iosApp
@@ -25,7 +24,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Xcode wählen – erst 17.*, sonst 16.*
       - name: Select Xcode 17 (preferred)
         id: xcode_17
         continue-on-error: true
@@ -57,12 +55,12 @@ jobs:
         uses: gradle/wrapper-validation-action@v2
         continue-on-error: true
 
-      # XCFramework(s) am von deinem Xcode-Projekt erwarteten Pfad erzeugen
+      # XCFramework an cocoapods/publish-Pfad erzeugen (wie dein Xcode-Projekt es erwartet)
       - name: Build XCFramework (Debug) at cocoapods/publish path
         run: |
           set -e
           ./gradlew :shared:podPublishDebugXCFramework --stacktrace
-          # Optional:
+          # optional:
           # ./gradlew :shared:podPublishReleaseXCFramework --stacktrace
 
       - name: Zip XCFramework(s)
@@ -100,7 +98,7 @@ jobs:
       - name: Install xcpretty
         run: sudo gem install xcpretty --no-document
 
-      # iOS-App bauen – arm64-Simulator erzwingen (keine Projektänderung nötig)
+      # iOS-App bauen – arm64-Simulator erzwingen
       - name: Build iosApp (Debug, arm64 Simulator)
         run: |
           set -euo pipefail
@@ -134,9 +132,22 @@ jobs:
               build | xcpretty
           fi
 
-      - name: Upload iOS .app (Simulator Debug)
+      # ⬇️ .app vorher ZIPpen (verhindert Probleme mit ":" im Bundle-Namen)
+      - name: Zip .app (Simulator Debug)
+        run: |
+          set -e
+          APP_DIR="$(/usr/bin/find "${DERIVED}/Build/Products/Debug-iphonesimulator" -maxdepth 1 -type d -name "*.app" | head -n1)"
+          if [ -z "$APP_DIR" ]; then
+            echo "No .app found to zip."
+            exit 0
+          fi
+          echo "Zipping: $APP_DIR"
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "iosApp-Debug.app.zip"
+
+      - name: Upload iOS .app (Simulator Debug, zipped)
+        if: ${{ hashFiles('iosApp-Debug.app.zip') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: ios-app-Debug-iphonesimulator
-          path: ${{ env.DERIVED }}/Build/Products/Debug-iphonesimulator/*.app
+          path: iosApp-Debug.app.zip
           if-no-files-found: warn
