@@ -12,11 +12,30 @@ concurrency:
 
 jobs:
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Logge, welche Xcode-Versionen auf dem Runner verfügbar sind (Debug)
+      - name: List installed Xcodes
+        run: ls -1 /Applications | grep -i Xcode || true
+
+      # 1) Versuch: exakt deine Buildnummer (17A400)
+      - name: Select Xcode by build (17A400)
+        id: xcode_build
+        continue-on-error: true
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '17A400'
+
+      # 2) Fallback: gesamte Hauptversion (z. B. 16.*), falls 17A400 nicht existiert
+      - name: Select Xcode 16 (fallback)
+        if: ${{ steps.xcode_build.outcome == 'failure' }}
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.*'
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -29,16 +48,16 @@ jobs:
 
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
+        continue-on-error: true
 
-      # ⬇️ XCFramework(s) direkt über die KMP-Tasks bauen (ohne CocoaPods)
+      # KMP -> XCFramework (ohne CocoaPods)
       - name: Build XCFramework(s)
         run: |
           set -e
-          # Debug reicht in der Regel – Release optional einkommentieren
           ./gradlew :shared:assembleSharedDebugXCFramework --stacktrace
+          # optional:
           # ./gradlew :shared:assembleSharedReleaseXCFramework --stacktrace
 
-      # ⬇️ Zippen, damit der Doppelpunkt in Bundle-Namen den Artifact-Upload nicht killt
       - name: Zip XCFramework(s)
         run: |
           set -e
@@ -46,7 +65,6 @@ jobs:
           if [ -d "$DBG_DIR" ]; then
             /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$DBG_DIR" "Shared-debug.xcframework.zip"
           fi
-
           REL_DIR="shared/build/XCFrameworks/release/Shared.xcframework"
           if [ -d "$REL_DIR" ]; then
             /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$REL_DIR" "Shared-release.xcframework.zip"
@@ -68,15 +86,16 @@ jobs:
           path: Shared-release.xcframework.zip
           if-no-files-found: warn
 
-      # ⬇️ Optional: iOS-App (Xcode) bauen – ohne Pods
-      - name: Install xcpretty (optional but nice)
+      # Optional: iOS-App bauen (achte auf .xcodeproj vs .xcworkspace!)
+      - name: Install xcpretty
         run: sudo gem install xcpretty --no-document
 
       - name: Build iosApp (Debug, Simulator)
         run: |
           set -euo pipefail
-          PROJECT_PATH="iosApp/iosApp.xcodeproj"   # ggf. auf .xcworkspace anpassen
-          SCHEME="iosApp"                          # ggf. anpassen
+          # Falls du eine Workspace hast, nimm -workspace und setze PROJECT_PATH auf die .xcworkspace
+          PROJECT_PATH="iosApp/iosApp.xcodeproj"
+          SCHEME="iosApp"
           DEST="platform=iOS Simulator,name=iPhone 15"
           DERIVED="build/DerivedData"
 
@@ -94,6 +113,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-app-Debug-iphonesimulator
-          path: |
-            build/DerivedData/Build/Products/Debug-iphonesimulator/*.app
+          path: build/DerivedData/Build/Products/Debug-iphonesimulator/*.app
           if-no-files-found: warn

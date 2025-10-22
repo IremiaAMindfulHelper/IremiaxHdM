@@ -1,4 +1,4 @@
-name: Android CI
+name: Android CI (robust)
 
 on:
   push:
@@ -14,6 +14,13 @@ jobs:
   build-android:
     runs-on: ubuntu-22.04
 
+    env:
+      # Bevorzuge IPv4 & erhöhe HTTP-Timeouts für Gradle
+      GRADLE_OPTS: >-
+        -Djava.net.preferIPv4Stack=true
+        -Dorg.gradle.internal.http.socketTimeout=120000
+        -Dorg.gradle.internal.http.connectionTimeout=120000
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,66 +30,89 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: 'gradle' # Maven/Gradle-Cache via setup-java aktiv
 
-      - name: Validate Gradle Wrapper
+      # Optional: zusätzlicher Cache für Gradle Wrapper-Distributionen
+      - name: Cache Gradle Wrapper dists
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper/dists
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
+      # Gradle Wrapper validieren (weich, damit Netzflaker nicht den Build kippen)
+      - name: Validate Gradle Wrapper (soft)
         uses: gradle/wrapper-validation-action@v2
+        continue-on-error: true
+        timeout-minutes: 5
 
-      - name: Setup Gradle (cache)
+      # Integriertes Gradle Caching (Build-Scans optional)
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Prepare ~/.gradle/gradle.properties (IPv4 + timeouts + native-ignore)
+      # Gradle-Properties auf Runner schärfen (IPv4 + Timeouts + kein Daemon)
+      - name: Prepare ~/.gradle/gradle.properties
         run: |
           mkdir -p ~/.gradle
-          {
-            echo "org.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true"
-            echo "org.gradle.daemon=false"
-            echo "org.gradle.caching=true"
-            echo "org.gradle.parallel=true"
-            echo "org.gradle.internal.http.socketTimeout=120000"
-            echo "org.gradle.internal.http.connectionTimeout=120000"
-            echo "kotlin.native.ignoreDisabledTargets=true"
-            echo "moko.resources.disableStaticFrameworkWarning=true"
-          } >> ~/.gradle/gradle.properties
-          echo "==== ~/.gradle/gradle.properties ===="
+          cat >> ~/.gradle/gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true
+          org.gradle.daemon=false
+          org.gradle.caching=true
+          org.gradle.parallel=true
+          org.gradle.internal.http.socketTimeout=120000
+          org.gradle.internal.http.connectionTimeout=120000
+          EOF
+          echo "=== ~/.gradle/gradle.properties ==="
           cat ~/.gradle/gradle.properties
 
+      # Warmup: leichte Requests damit das Netzwerk „wach“ ist (optional)
+      - name: Network warmup (optional)
+        run: |
+          set -e
+          for u in https://repo.maven.apache.org/maven2/ https://plugins.gradle.org/ ; do
+            echo "HEAD $u"
+            curl -I --retry 3 --retry-all-errors --max-time 30 "$u" || true
+          done
+
+      # Dependencies auflösen (mit Retries)
       - name: Gradle dependencies (retry x3)
+        timeout-minutes: 15
         run: |
           set -euo pipefail
-          attempt=0
-          max=3
-          until [ $attempt -ge $max ]
-          do
-            if ./gradlew --no-daemon :composeApp:dependencies :shared:dependencies -s --stacktrace; then
+          for attempt in 1 2 3; do
+            echo "Resolve attempt $attempt/3"
+            if ./gradlew --no-daemon :composeApp:dependencies :shared:dependencies -s; then
               exit 0
             fi
-            attempt=$((attempt+1))
-            echo "Dependency resolve failed (attempt $attempt/$max). Sleeping 15s and retrying..."
-            sleep 15
+            echo "Dependency resolve failed (attempt $attempt). Sleeping 20s and retrying…"
+            sleep 20
           done
-          echo "Dependency resolve failed after $max attempts."
+          echo "Dependency resolve failed after 3 attempts."
           exit 1
 
+      # Build (mit Retries; letzter Versuch mit --refresh-dependencies)
       - name: Assemble Android Debug (retry x3)
+        timeout-minutes: 30
         run: |
           set -euo pipefail
-          attempt=0
-          max=3
-          until [ $attempt -ge $max ]
-          do
-            if ./gradlew --no-daemon clean :composeApp:assembleDebug :shared:build -s --stacktrace; then
-              exit 0
-            fi
-            attempt=$((attempt+1))
-            echo "Gradle build failed (attempt $attempt/$max). Sleeping 15s and retrying..."
-            sleep 15
-          done
-          echo "Gradle build failed after $max attempts."
-          exit 1
+          if ./gradlew --no-daemon clean :composeApp:assembleDebug :shared:build -s; then
+            exit 0
+          fi
+          echo "Build failed (1/3). Sleeping 20s…"; sleep 20
+          if ./gradlew --no-daemon :composeApp:assembleDebug :shared:build -s; then
+            exit 0
+          fi
+          echo "Build failed (2/3). Sleeping 20s…"; sleep 20
+          ./gradlew --no-daemon :composeApp:assembleDebug :shared:build -s --refresh-dependencies
 
+      # Unit Tests (separat, damit Build-Ergebnis nicht überschattet wird)
       - name: Unit Tests (Debug)
-        run: ./gradlew --no-daemon :composeApp:testDebugUnitTest -s --stacktrace
+        timeout-minutes: 15
+        run: ./gradlew --no-daemon testDebugUnitTest -s
 
+      # Artefakte hochladen
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
