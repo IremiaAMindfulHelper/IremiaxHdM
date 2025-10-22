@@ -48,7 +48,7 @@ jobs:
 
       - name: Gradle dependencies (retry x3)
         run: |
-          set -euo pipe fail
+          set -euo pipefail
           attempt=0
           max=3
           until [ $attempt -ge $max ]
@@ -65,7 +65,7 @@ jobs:
 
       - name: Assemble Android Debug (retry x3)
         run: |
-          set -euo pipe fail
+          set -euo pipefail
           attempt=0
           max=3
           until [ $attempt -ge $max ]
