@@ -75,13 +75,13 @@ jobs:
       - name: Build iosApp (Debug, Simulator)
         run: |
           set -euo pipefail
-          WORKSPACE="iosApp/iosApp.xcworkspace"  # ggf. auf .xcworkspace anpassen
+          PROJECT_PATH="iosApp/iosApp.xcodeproj"   # ggf. auf .xcworkspace anpassen
           SCHEME="iosApp"                          # ggf. anpassen
           DEST="platform=iOS Simulator,name=iPhone 15"
           DERIVED="build/DerivedData"
 
           xcodebuild \
-            -workspace "$WORKSPACE" \
+            -project "$PROJECT_PATH" \
             -scheme "$SCHEME" \
             -sdk iphonesimulator \
             -configuration Debug \
