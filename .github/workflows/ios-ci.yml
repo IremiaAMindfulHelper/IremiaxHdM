@@ -14,28 +14,37 @@ jobs:
   build-ios:
     runs-on: macos-15
 
+    env:
+      # 👉 Falls du eine Workspace nutzt, setze WORKSPACE und lasse PROJECT leer
+      PROJECT: iosApp/iosApp.xcodeproj
+      WORKSPACE: ""                  # z.B.: iosApp/iosApp.xcworkspace
+      SCHEME: iosApp
+      DERIVED: build/DerivedData
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Logge, welche Xcode-Versionen auf dem Runner verfügbar sind (Debug)
-      - name: List installed Xcodes
+      - name: List installed Xcodes (debug)
         run: ls -1 /Applications | grep -i Xcode || true
 
-      # 1) Versuch: exakt deine Buildnummer (17A400)
-      - name: Select Xcode by build (17A400)
-        id: xcode_build
+      - name: Select Xcode 17 (preferred)
+        id: xcode_17
         continue-on-error: true
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '17A400'
+          xcode-version: '17.*'
 
-      # 2) Fallback: gesamte Hauptversion (z. B. 16.*), falls 17A400 nicht existiert
-      - name: Select Xcode 16 (fallback)
-        if: ${{ steps.xcode_build.outcome == 'failure' }}
+      - name: Fallback to Xcode 16
+        if: ${{ steps.xcode_17.outcome == 'failure' }}
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '16.*'
+
+      - name: Print Xcode version (debug)
+        run: |
+          xcodebuild -version
+          xcode-select -p
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -50,12 +59,12 @@ jobs:
         uses: gradle/wrapper-validation-action@v2
         continue-on-error: true
 
-      # KMP -> XCFramework (ohne CocoaPods)
+      # ⬇️ XCFramework(s) über KMP Tasks bauen (ohne CocoaPods)
       - name: Build XCFramework(s)
         run: |
           set -e
           ./gradlew :shared:assembleSharedDebugXCFramework --stacktrace
-          # optional:
+          # Optional:
           # ./gradlew :shared:assembleSharedReleaseXCFramework --stacktrace
 
       - name: Zip XCFramework(s)
@@ -86,32 +95,45 @@ jobs:
           path: Shared-release.xcframework.zip
           if-no-files-found: warn
 
-      # Optional: iOS-App bauen (achte auf .xcodeproj vs .xcworkspace!)
+      # ⬇️ Optional: iOS-App bauen – ohne Pods
       - name: Install xcpretty
         run: sudo gem install xcpretty --no-document
 
       - name: Build iosApp (Debug, Simulator)
         run: |
           set -euo pipefail
-          # Falls du eine Workspace hast, nimm -workspace und setze PROJECT_PATH auf die .xcworkspace
-          PROJECT_PATH="iosApp/iosApp.xcodeproj"
-          SCHEME="iosApp"
-          DEST="platform=iOS Simulator,name=iPhone 15"
-          DERIVED="build/DerivedData"
+          DEST="generic/platform=iOS Simulator"
 
-          xcodebuild \
-            -project "$PROJECT_PATH" \
-            -scheme "$SCHEME" \
-            -sdk iphonesimulator \
-            -configuration Debug \
-            -destination "$DEST" \
-            -derivedDataPath "$DERIVED" \
-            CODE_SIGNING_ALLOWED=NO \
-            build | xcpretty
+          if [ -n "${WORKSPACE}" ]; then
+            # Build über .xcworkspace
+            xcodebuild \
+              -workspace "${WORKSPACE}" \
+              -scheme "${SCHEME}" \
+              -sdk iphonesimulator \
+              -configuration Debug \
+              -destination "${DEST}" \
+              -derivedDataPath "${DERIVED}" \
+              CODE_SIGNING_ALLOWED=NO \
+              build | xcpretty
+          else
+            # Build über .xcodeproj
+            xcodebuild \
+              -project "${PROJECT}" \
+              -scheme "${SCHEME}" \
+              -sdk iphonesimulator \
+              -configuration Debug \
+              -destination "${DEST}" \
+              -derivedDataPath "${DERIVED}" \
+              CODE_SIGNING_ALLOWED=NO \
+              build | xcpretty
+          fi
 
       - name: Upload iOS .app (Simulator Debug)
         uses: actions/upload-artifact@v4
         with:
           name: ios-app-Debug-iphonesimulator
-          path: build/DerivedData/Build/Products/Debug-iphonesimulator/*.app
+          path: |
+            ${{
+              env.DERIVED
+            }}/Build/Products/Debug-iphonesimulator/*.app
           if-no-files-found: warn
