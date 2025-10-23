@@ -20,33 +20,53 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import org.iremia.iremia.shared.R
 
+/**
+ * Root Composable of the Android app.
+ *
+ * This function defines the main visual structure for the Android build of Iremia.
+ * It demonstrates the integration of shared resources (colors, strings, images) generated via moko-resources.
+ *
+ * @preview Displays a preview in Android Studio.
+ *
+ * @details
+ * - The background color and text values come from the shared `SharedRes` resource module.
+ * - The `AnimatedVisibility` composable is used to toggle visibility smoothly when the user presses the button.
+ * - The UI serves as an example of how to access shared multiplatform assets on Android.
+ *
+ * @see SharedRes for the shared color and string resources
+ */
 @Composable
 @Preview
 fun App() {
     val context = LocalContext.current
+
+    // Local state to toggle visibility of content
     var showContent by remember { mutableStateOf(false) }
 
     MaterialTheme {
         Column(
             modifier = Modifier
+                // NOTE: Use shared color from moko-resources for consistent theming
                 .background(Color(SharedRes.colors.secondary.getColor(context)))
                 .safeContentPadding()
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Button(onClick = { showContent = !showContent }) {
-                // 🔹 Shared-String für den Button
+                // NOTE: Text comes from shared string resource, enabling localization
                 Text(localized(SharedRes.strings.sos_button).toString(context))
-
             }
 
+            // AnimatedVisibility smoothly fades the content in and out
             AnimatedVisibility(showContent) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // 🔹 Shared-String für den Titel
+                    // Shared string resource (title text)
                     Text(localized(SharedRes.strings.welcome_title).toString(context))
+
+                    // Shared image (example from resources)
                     Image(
                         painter = painterResource(id = R.drawable.onboarding_2),
                         contentDescription = null

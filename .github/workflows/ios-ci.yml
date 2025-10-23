@@ -1,3 +1,17 @@
+# /**
+#  * iOS CI Pipeline (XCFramework & App Build)
+#  *
+#  * This workflow builds the shared KMP XCFramework and compiles the iOS app
+#  * on a macOS runner. It ensures compatibility with Xcode 17 (fallback 16)
+#  * and uploads zipped build artifacts for simulator testing.
+#  *
+#  * Key goals:
+#  * - Provide stable CI builds for iOS using the shared Kotlin codebase.
+#  * - Automatically retry and fallback between Xcode versions.
+#  * - Build both the Shared.xcframework and the iOS app (Debug).
+#  * - Avoid upload errors caused by “:” characters in .app bundles.
+#  */
+
 name: iOS CI (XCFramework)
 
 on:
@@ -15,15 +29,17 @@ jobs:
     runs-on: macos-15
 
     env:
-      PROJECT: iosApp/iosApp.xcodeproj
-      WORKSPACE: ""                  # z.B. iosApp/iosApp.xcworkspace
-      SCHEME: iosApp
-      DERIVED: build/DerivedData
+      PROJECT: iosApp/iosApp.xcodeproj     # Xcode project file
+      WORKSPACE: ""                        # if you use a .xcworkspace instead, set path here
+      SCHEME: iosApp                       # build scheme
+      DERIVED: build/DerivedData           # derived data output folder
 
     steps:
+      # Checkout repository code
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Select Xcode version 17.* (preferred)
       - name: Select Xcode 17 (preferred)
         id: xcode_17
         continue-on-error: true
@@ -31,38 +47,44 @@ jobs:
         with:
           xcode-version: '17.*'
 
+      # Fallback if Xcode 17 not available (use 16.*)
       - name: Fallback to Xcode 16
         if: ${{ steps.xcode_17.outcome == 'failure' }}
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '16.*'
 
+      # Log active Xcode setup for debugging
       - name: Print Xcode version (debug)
         run: |
           xcodebuild -version
           xcode-select -p
 
+      # Install Java 17 for Gradle/Kotlin builds
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
+      # Cache Gradle build data
       - name: Setup Gradle (cache)
         uses: gradle/actions/setup-gradle@v4
 
+      # Validate Gradle wrapper (soft fail to avoid network issues)
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
         continue-on-error: true
 
-      # XCFramework an cocoapods/publish-Pfad erzeugen (wie dein Xcode-Projekt es erwartet)
+      # NOTE: Builds the XCFramework at the same path Xcode expects (cocoapods/publish)
       - name: Build XCFramework (Debug) at cocoapods/publish path
         run: |
           set -e
           ./gradlew :shared:podPublishDebugXCFramework --stacktrace
-          # optional:
+          # Optional: uncomment for release version
           # ./gradlew :shared:podPublishReleaseXCFramework --stacktrace
 
+      # Compress XCFrameworks to avoid issues with “:” in filenames
       - name: Zip XCFramework(s)
         run: |
           set -e
@@ -79,6 +101,7 @@ jobs:
             popd
           fi
 
+      # Upload generated artifacts (XCFrameworks)
       - name: Upload XCFramework (Debug)
         if: ${{ hashFiles('shared/build/cocoapods/publish/Shared-debug.xcframework.zip') != '' }}
         uses: actions/upload-artifact@v4
@@ -95,15 +118,17 @@ jobs:
           path: shared/build/cocoapods/publish/Shared-release.xcframework.zip
           if-no-files-found: warn
 
+      # Install xcpretty for readable xcodebuild logs
       - name: Install xcpretty
         run: sudo gem install xcpretty --no-document
 
-      # iOS-App bauen – arm64-Simulator erzwingen
+      # Build the iOS app for arm64 simulator
       - name: Build iosApp (Debug, arm64 Simulator)
         run: |
           set -euo pipefail
           DEST="generic/platform=iOS Simulator"
 
+          # Build using either workspace or project depending on configuration
           if [ -n "${WORKSPACE}" ]; then
             xcodebuild \
               -workspace "${WORKSPACE}" \
@@ -132,7 +157,7 @@ jobs:
               build | xcpretty
           fi
 
-      # ⬇️ .app vorher ZIPpen (verhindert Probleme mit ":" im Bundle-Namen)
+      # NOTE: Zipping the .app bundle avoids artifact upload errors due to ":" in paths
       - name: Zip .app (Simulator Debug)
         run: |
           set -e
@@ -144,6 +169,7 @@ jobs:
           echo "Zipping: $APP_DIR"
           /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "iosApp-Debug.app.zip"
 
+      # Upload zipped iOS app (ready for simulator)
       - name: Upload iOS .app (Simulator Debug, zipped)
         if: ${{ hashFiles('iosApp-Debug.app.zip') != '' }}
         uses: actions/upload-artifact@v4
