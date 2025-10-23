@@ -1,7 +1,6 @@
 package org.iremia.iremia
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,35 +12,65 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import org.iremia.library.SharedRes
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import org.iremia.iremia.shared.R
 
-import iremia.composeapp.generated.resources.Res
-import iremia.composeapp.generated.resources.compose_multiplatform
-
+/**
+ * Root Composable of the Android app.
+ *
+ * This function defines the main visual structure for the Android build of Iremia.
+ * It demonstrates the integration of shared resources (colors, strings, images) generated via moko-resources.
+ *
+ * @preview Displays a preview in Android Studio.
+ *
+ * @details
+ * - The background color and text values come from the shared `SharedRes` resource module.
+ * - The `AnimatedVisibility` composable is used to toggle visibility smoothly when the user presses the button.
+ * - The UI serves as an example of how to access shared multiplatform assets on Android.
+ *
+ * @see SharedRes for the shared color and string resources
+ */
 @Composable
 @Preview
 fun App() {
+    val context = LocalContext.current
+
+    // Local state to toggle visibility of content
+    var showContent by remember { mutableStateOf(false) }
+
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                // NOTE: Use shared color from moko-resources for consistent theming
+                .background(Color(SharedRes.colors.secondary.getColor(context)))
                 .safeContentPadding()
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+                // NOTE: Text comes from shared string resource, enabling localization
+                Text(localized(SharedRes.strings.sos_button).toString(context))
             }
+
+            // AnimatedVisibility smoothly fades the content in and out
             AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+                    // Shared string resource (title text)
+                    Text(localized(SharedRes.strings.welcome_title).toString(context))
+
+                    // Shared image (example from resources)
+                    Image(
+                        painter = painterResource(id = R.drawable.onboarding_2),
+                        contentDescription = null
+                    )
                 }
             }
         }
