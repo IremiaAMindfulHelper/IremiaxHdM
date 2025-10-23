@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Opaque Farbe (RRGGBB + AA am Ende; AA ist optional) -->
+    <!-- Opaque color (RRGGBB + AA at the end; AA is optional) -->
     <color name="primary">#6750A4FF</color>
     <color name="secondary">#625B71FF</color>
     <color name="background">#FFFBFEFF</color>
     <color name="error">#B3261EFF</color>
 
-    <!-- Referenz auf andere Farbe -->
+    <!-- Reference to another color -->
     <color name="primaryReference">@color/primary</color>
 
-    <!-- Theme-spezifische Farbe (Light/Dark) -->
+    <!-- Theme-specific color (Light/Dark) -->
     <color name="brand">
         <light>#6750A4FF</light>
         <dark>#D0BCFFFF</dark>
     </color>
 
-    <!-- Themed Referenz -->
+    <!-- Theme-related reference -->
     <color name="brandRef">
         <light>@color/primary</light>
         <dark>@color/secondary</dark>
