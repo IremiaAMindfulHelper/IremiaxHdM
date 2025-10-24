@@ -1,0 +1,6 @@
+platform :ios, '14.0'
+use_frameworks!
+
+target 'iosApp' do   # <- Name deines App-Targets in Xcode (meist "iosApp" oder "Iremia")
+  pod 'Shared', :path => '../shared'
+end

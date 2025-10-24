@@ -1,31 +1,66 @@
 import SwiftUI
 import Shared
 
+/// Root view of the iOS app.
+///
+/// This view demonstrates how to use shared Kotlin Multiplatform resources
+/// (`SharedRes`) from SwiftUI. It mirrors the behavior of the Android `App()`
+/// composable by toggling visibility of localized text and shared images.
+///
+/// - Features:
+///   - Integration of shared strings and images generated via moko-resources.
+///   - Example of localized text retrieval through `StringsKt.localized`.
+///   - Animated show/hide transition using SwiftUI’s `withAnimation`.
+///
+/// - Design:
+///   The structure uses a vertical stack with a toggle button and conditional
+///   sub-content that animates from the top edge.
+///
+/// - Note: This file serves as an example for future feature screens
+///   (SOS-plan, Skills, Reflections) and how shared logic is accessed on iOS.
 struct ContentView: View {
+    /// Tracks whether the secondary content (image + texts) is visible.
     @State private var showContent = false
+
     var body: some View {
         VStack {
+            // NOTE: Toggle visibility with animation to demonstrate reactive UI updates.
             Button("Click me!") {
                 withAnimation {
-                    showContent = !showContent
+                    showContent.toggle()
                 }
             }
 
+            // Conditionally show localized shared resources.
             if showContent {
                 VStack(spacing: 16) {
+                    // SwiftUI system icon (for demo purposes)
                     Image(systemName: "swift")
                         .font(.system(size: 200))
                         .foregroundColor(.accentColor)
-                    Text("SwiftUI: \(Greeting().greet())")
+
+                    // NOTE: Text values pulled from shared string resources (moko-resources)
+                    Text(StringsKt.localized(res: SharedRes.strings().welcome_title).localized())
+                    Text(StringsKt.localized(res: SharedRes.strings().sos_button).localized())
+                    Text(StringsKt.localized(res: SharedRes.strings().test_string).localized())
+
+                    // Shared image example (onboarding illustration)
+                    let res = SharedRes.images().onboarding_2
+                    Image(res.assetImageName, bundle: res.bundle)
+                        .resizable()
+                        .scaledToFit()
                 }
+                    // Smooth slide-and-fade transition when content toggles
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+            // Stretch to fill safe area and align at top
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding()
     }
 }
 
+/// Xcode canvas preview.
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
