@@ -6,7 +6,6 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Handshake
-import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Home
 
 import androidx.compose.material3.Icon
@@ -64,8 +63,7 @@ fun MainScreen(viewModel: MainViewModel) {
                             NavigationTarget.SOS -> Icons.Filled.Handshake
                             NavigationTarget.Contacts -> Icons.Filled.Group
                             NavigationTarget.Profile -> Icons.Filled.AccountCircle
-                            else -> Icons.AutoMirrored.Filled.Help
-                        }
+                            }
                             Icon(icon, contentDescription = null)
                                },
                         label = { Text(localized(target.route).toString(context)) },
