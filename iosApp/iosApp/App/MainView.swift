@@ -19,30 +19,30 @@ struct MainView: View {
             })
         ) {
             HomeView()
-                .tabItem { Label("Home", systemImage: "house") }
+                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().home).localized(), systemImage: "house") }
                 .tag(NavigationTarget.Home().route)
 
             ReflectionView()
-                .tabItem { Label("Reflection", systemImage: "book") }
+                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().reflection).localized(), systemImage: "book") }
                 .tag(NavigationTarget.Reflection().route)
 
             SosView()
-                .tabItem { Label("SOS", systemImage: "sos.circle.fill") }
+                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().sos).localized(), systemImage: "sos.circle.fill") }
                 .tag(NavigationTarget.SOS().route)
 
             ContactView()
-                .tabItem { Label("Contacts", systemImage: "person.2") }
+                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().contacts).localized(), systemImage: "person.2") }
                 .tag(NavigationTarget.Contacts().route)
 
             ProfileView()
-                .tabItem { Label("Profile", systemImage: "person.circle") }
+                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().profile).localized(), systemImage: "person.circle") }
                 .tag(NavigationTarget.Profile().route)
         }
     }
 }
 
 
-struct ContentView_Previews: PreviewProvider {
+struct MainView_Previews: PreviewProvider {
     static var previews: some View {
         MainView()
     }

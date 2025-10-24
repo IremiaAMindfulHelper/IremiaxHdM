@@ -8,8 +8,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.iremia.iremia.ui.MainScreen
-import org.iremia.iremia.MainViewModel
+import org.iremia.iremia.viewModels.MainViewModel
 
+/**
+ * Main entry point for the Android app.
+ *
+ * Hosts the [MainScreen] composable and provides it with the [MainViewModel] for
+ * managing app state, including navigation and business logic.
+ */
 class MainActivity : ComponentActivity() {
 
     private val viewModel = MainViewModel()
@@ -22,10 +28,4 @@ class MainActivity : ComponentActivity() {
             MainScreen(viewModel)
         }
     }
-}
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    MainScreen(viewModel())
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="sos_button">SOS</string>
+    <string name="welcome_title">Willkommen bei Iremia</string>
+    <string name="test_string">Das hier ist ein Test!</string>
+    <string name="home">Start</string>
+    <string name="reflection">Reflektion</string>
+    <string name="sos">SOS</string>
+    <string name="contacts">Kontakte</string>
+    <string name="profile">Profil</string>
+</resources>

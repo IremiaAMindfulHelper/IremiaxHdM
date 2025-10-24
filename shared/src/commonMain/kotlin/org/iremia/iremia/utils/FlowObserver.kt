@@ -6,6 +6,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.iremia.iremia.shared.navigation.NavigationTarget
 
+/**
+ * Observes a [StateFlow] from shared Kotlin code and provides its updates to Swift (iOS).
+ *
+ * `FlowObserver` is primarily used to bridge Kotlin's reactive flows into callback-based APIs.
+ * In iOS, for example, it allows observing shared `StateFlow` values and forwarding them to
+ * Swift closures on the main thread.
+ *
+ * The observer launches a coroutine within the provided [CoroutineScope] (default: [MainScope])
+ * and collects values from the given [StateFlow].
+ *
+ * @constructor Creates a new observer with an optional [CoroutineScope].
+ * @property scope The coroutine scope in which the observer runs.
+ */
 public class FlowObserver {
 
     private val scope: CoroutineScope

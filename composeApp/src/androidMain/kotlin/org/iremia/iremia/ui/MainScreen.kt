@@ -18,11 +18,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import org.iremia.iremia.MainViewModel
+import androidx.compose.ui.platform.LocalContext
+import org.iremia.iremia.viewModels.MainViewModel
 import org.iremia.iremia.shared.navigation.NavigationTarget
+import org.iremia.iremia.utils.localized
 
+/**
+ * The main app screen that hosts all top-level navigation tabs.
+ *
+ * Displays a [Scaffold] with a bottom navigation bar, allowing users to switch
+ * between the main app sections: Home, Reflection, SOS, Contacts, and Profile.
+ *
+ * The currently active tab is observed from the provided [viewModel]'s
+ * [NavigationTarget] flow via `collectAsState()`.
+ *
+ * Each tab displays its respective screen composable:
+ * - [HomeScreen]
+ * - [ReflectionScreen]
+ * - [SosScreen]
+ * - [ContactScreen]
+ * - [ProfileScreen]
+ *
+ * @param viewModel The [MainViewModel] providing navigation state and handling tab selection.
+ */
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
+    val context = LocalContext.current
     val currentTarget by viewModel.navigation.currentTarget.collectAsState()
 
     Scaffold(
@@ -47,7 +68,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         }
                             Icon(icon, contentDescription = null)
                                },
-                        label = { Text(target.route) },
+                        label = { Text(localized(target.route).toString(context)) },
                         selected = currentTarget == target,
                         onClick = { viewModel.onTabSelected(target) }
                     )
