@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		299B4EB42E7C37FA00A788A0 /* Shared.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 299B4EB32E7C37FA00A788A0 /* Shared.xcframework */; };
-		299B4EB52E7C37FA00A788A0 /* Shared.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 299B4EB32E7C37FA00A788A0 /* Shared.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4634DCC72EAB8EA100CEF9E1 /* Shared.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -18,7 +17,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				299B4EB52E7C37FA00A788A0 /* Shared.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -26,7 +24,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		299B4EB32E7C37FA00A788A0 /* Shared.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Shared.xcframework; path = ../shared/build/cocoapods/publish/debug/Shared.xcframework; sourceTree = "<group>"; };
+		4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Shared.xcframework; sourceTree = "<group>"; };
 		B9DA97B12DC1472C00A4DA20 /* iremia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iremia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -61,7 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				299B4EB42E7C37FA00A788A0 /* Shared.xcframework in Frameworks */,
+				4634DCC72EAB8EA100CEF9E1 /* Shared.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,7 +69,7 @@
 		299B4EB22E7C37FA00A788A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				299B4EB32E7C37FA00A788A0 /* Shared.xcframework */,
+				4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -347,7 +345,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = 4BRM6GNQ75;
+				DEVELOPMENT_TEAM = TDLUDGGT93;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -380,7 +378,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = 4BRM6GNQ75;
+				DEVELOPMENT_TEAM = TDLUDGGT93;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

@@ -1,0 +1,17 @@
+package org.iremia.iremia.ui
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+
+@Composable
+fun SosScreen(modifier: Modifier = Modifier) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("SOS Screen")
+    }
+}
