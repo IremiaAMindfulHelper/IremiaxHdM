@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import org.iremia.iremia.viewModels.MainViewModel
 import org.iremia.iremia.shared.navigation.NavigationTarget
+import org.iremia.iremia.ui.theme.AppTheme
 import org.iremia.iremia.utils.localized
 
 /**
@@ -45,41 +46,43 @@ fun MainScreen(viewModel: MainViewModel) {
     val context = LocalContext.current
     val currentTarget by viewModel.navigation.currentTarget.collectAsState()
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                listOf(
-                    NavigationTarget.Home,
-                    NavigationTarget.Reflection,
-                    NavigationTarget.SOS,
-                    NavigationTarget.Contacts,
-                    NavigationTarget.Profile
-                ).forEach { target ->
-                    NavigationBarItem(
-                        icon = {
-                            val icon = when (target) {
-                            NavigationTarget.Home -> Icons.Filled.Home
-                            NavigationTarget.Reflection -> Icons.AutoMirrored.Filled.MenuBook
-                            NavigationTarget.SOS -> Icons.Filled.Handshake
-                            NavigationTarget.Contacts -> Icons.Filled.Group
-                            NavigationTarget.Profile -> Icons.Filled.AccountCircle
-                            }
-                            Icon(icon, contentDescription = null)
-                               },
-                        label = { Text(localized(target.route).toString(context)) },
-                        selected = currentTarget == target,
-                        onClick = { viewModel.onTabSelected(target) }
-                    )
+    AppTheme {
+        Scaffold(
+            bottomBar = {
+                NavigationBar {
+                    listOf(
+                        NavigationTarget.Home,
+                        NavigationTarget.Reflection,
+                        NavigationTarget.SOS,
+                        NavigationTarget.Contacts,
+                        NavigationTarget.Profile
+                    ).forEach { target ->
+                        NavigationBarItem(
+                            icon = {
+                                val icon = when (target) {
+                                    NavigationTarget.Home -> Icons.Filled.Home
+                                    NavigationTarget.Reflection -> Icons.AutoMirrored.Filled.MenuBook
+                                    NavigationTarget.SOS -> Icons.Filled.Handshake
+                                    NavigationTarget.Contacts -> Icons.Filled.Group
+                                    NavigationTarget.Profile -> Icons.Filled.AccountCircle
+                                }
+                                Icon(icon, contentDescription = null)
+                            },
+                            label = { Text(localized(target.route).toString(context)) },
+                            selected = currentTarget == target,
+                            onClick = { viewModel.onTabSelected(target) }
+                        )
+                    }
                 }
             }
-        }
-    ) { padding ->
-        when (currentTarget) {
-            NavigationTarget.Home -> HomeScreen(modifier = Modifier.padding(padding))
-            NavigationTarget.Reflection -> ReflectionScreen(modifier = Modifier.padding(padding))
-            NavigationTarget.SOS -> SosScreen(modifier = Modifier.padding(padding))
-            NavigationTarget.Contacts -> ContactScreen(modifier = Modifier.padding(padding))
-            NavigationTarget.Profile -> ProfileScreen(modifier = Modifier.padding(padding))
+        ) { padding ->
+            when (currentTarget) {
+                NavigationTarget.Home -> HomeScreen(modifier = Modifier.padding(padding))
+                NavigationTarget.Reflection -> ReflectionScreen(modifier = Modifier.padding(padding))
+                NavigationTarget.SOS -> SosScreen(modifier = Modifier.padding(padding))
+                NavigationTarget.Contacts -> ContactScreen(modifier = Modifier.padding(padding))
+                NavigationTarget.Profile -> ProfileScreen(modifier = Modifier.padding(padding))
+            }
         }
     }
 }
