@@ -17,10 +17,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import org.iremia.library.SharedRes
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.Image
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.res.painterResource
 import org.iremia.iremia.shared.R
+import org.iremia.iremia.ui.theme.AppTheme
 
 /**
  * This function defines the main visual structure for the Android build of Iremia.
@@ -43,16 +44,21 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     // Local state to toggle visibility of content
     var showContent by remember { mutableStateOf(false) }
 
-    MaterialTheme {
+    AppTheme {
         Column(
             modifier = Modifier
                 // NOTE: Use shared color from moko-resources for consistent theming
-                .background(Color(SharedRes.colors.secondary.getColor(context)))
+                .background(MaterialTheme.colorScheme.background)
                 .safeContentPadding()
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Button(onClick = { showContent = !showContent }) {
+            Button(
+                onClick = { showContent = !showContent }, colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            ) {
                 // NOTE: Text comes from shared string resource, enabling localization
                 Text(localized(SharedRes.strings.sos_button).toString(context))
             }
@@ -64,7 +70,11 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     // Shared string resource (title text)
-                    Text(localized(SharedRes.strings.welcome_title).toString(context))
+                    Text(
+                        text = localized(SharedRes.strings.welcome_title).toString(context),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
 
                     // Shared image (example from resources)
                     Image(
