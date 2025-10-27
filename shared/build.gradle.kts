@@ -38,6 +38,7 @@ plugins {
 
     // moko-resources for shared strings, colors, and images
     id("dev.icerock.mobile.multiplatform-resources")
+
 }
 
 kotlin {
@@ -99,6 +100,7 @@ kotlin {
                 api(libs.resources)
                 api(libs.graphics)
                 api(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
 
