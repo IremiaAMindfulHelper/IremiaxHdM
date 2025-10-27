@@ -55,13 +55,15 @@ kotlin {
     iosSimulatorArm64()
 
     // XCFramework combines multiple iOS frameworks into one bundle
-    val xcf = XCFramework()
+    val xcf = XCFramework("Shared")
+
 
     // Configure each native target to generate a static framework
     targets.withType(KotlinNativeTarget::class.java).configureEach {
         binaries.framework {
             baseName = "Shared"
             isStatic = true
+            freeCompilerArgs += listOf("-Xbinary=bundleId=org.iremia.shared")
             xcf.add(this) // NOTE: Generates assemble*XCFramework tasks on macOS
         }
     }
@@ -96,6 +98,7 @@ kotlin {
                 // NOTE: Use api to expose shared resources to iOS headers
                 api(libs.resources)
                 api(libs.graphics)
+                api(libs.kotlinx.coroutines.core)
             }
         }
 
@@ -105,13 +108,6 @@ kotlin {
                 implementation(libs.resources.test)
             }
         }
-
-        // iOS hierarchy (needed for shared iOS implementations)
-        val iosMain by creating {
-            dependsOn(commonMain)
-        }
-        val iosArm64Main by getting { dependsOn(iosMain) }
-        val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
     }
 }
 
