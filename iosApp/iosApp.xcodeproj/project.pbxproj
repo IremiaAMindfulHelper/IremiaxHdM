@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2938BF732EB375E300D60A2A /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2938BF722EB375E300D60A2A /* libsqlite3.tbd */; };
 		4634DCC72EAB8EA100CEF9E1 /* Shared.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */; };
 /* End PBXBuildFile section */
 
@@ -24,6 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2938BF722EB375E300D60A2A /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Shared.xcframework; sourceTree = "<group>"; };
 		B9DA97B12DC1472C00A4DA20 /* iremia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iremia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -59,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2938BF732EB375E300D60A2A /* libsqlite3.tbd in Frameworks */,
 				4634DCC72EAB8EA100CEF9E1 /* Shared.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -69,6 +72,7 @@
 		299B4EB22E7C37FA00A788A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2938BF722EB375E300D60A2A /* libsqlite3.tbd */,
 				4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */,
 			);
 			name = Frameworks;
@@ -345,7 +349,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = TDLUDGGT93;
+				DEVELOPMENT_TEAM = 4BRM6GNQ75;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -378,7 +382,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = TDLUDGGT93;
+				DEVELOPMENT_TEAM = 4BRM6GNQ75;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

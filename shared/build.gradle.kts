@@ -65,6 +65,7 @@ kotlin {
             baseName = "Shared"
             isStatic = true
             freeCompilerArgs += listOf("-Xbinary=bundleId=org.iremia.shared")
+            linkerOpts("-lsqlite3")
             xcf.add(this) // NOTE: Generates assemble*XCFramework tasks on macOS
         }
     }
@@ -75,7 +76,7 @@ kotlin {
         summary = "Shared Kotlin Multiplatform module"
         homepage = "https://iremia.app"
         authors = "Iremia – A Mindful Helper"
-        license = "MIT"
+        license = "Apache-2.0"
         ios.deploymentTarget = "14.0"
 
         framework {
@@ -100,7 +101,9 @@ kotlin {
                 api(libs.resources)
                 api(libs.graphics)
                 api(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.coroutines.core)
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+                api("app.cash.sqldelight:runtime:2.0.2")
+                api("app.cash.sqldelight:coroutines-extensions:2.0.2")
             }
         }
 
@@ -110,6 +113,20 @@ kotlin {
                 implementation(libs.resources.test)
             }
         }
+
+        val androidMain by getting {
+            dependencies {
+                implementation("app.cash.sqldelight:android-driver:2.1.0")
+            }
+        }
+        val iosMain by creating {
+            dependsOn(commonMain)
+            dependencies {
+                implementation("app.cash.sqldelight:native-driver:2.1.0")
+            }
+        }
+        val iosArm64Main by getting { dependsOn(iosMain) }
+        val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
     }
 }
 

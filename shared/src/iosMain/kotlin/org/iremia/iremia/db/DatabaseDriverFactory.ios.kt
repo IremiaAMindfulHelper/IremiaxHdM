@@ -5,7 +5,7 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import com.iremia.UserData
 
-class DatabaseDriverFactory {
-    fun createDriver(): SqlDriver =
-        NativeSqliteDriver(UserData.Schema, "UserData.db")
+actual class DriverFactory {
+    actual fun createDriver(dbName: String): SqlDriver =
+        NativeSqliteDriver(UserData.Schema, dbName)
 }
