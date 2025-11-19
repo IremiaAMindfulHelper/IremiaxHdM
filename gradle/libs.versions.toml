@@ -33,7 +33,6 @@ sqldelight = "2.1.0"
 
 [libraries]
 # Kotlin / Test
-androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -46,7 +45,14 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
+
+# SQLDelight libraries
+sqldelight-androidDriver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
+sqldelight-nativeDriver  = { module = "app.cash.sqldelight:native-driver",  version.ref = "sqldelight" }
+sqldelight-coroutines    = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 
 # moko libraries
 graphics = { module = "dev.icerock.moko:graphics", version.ref = "graphics" }
@@ -55,15 +61,14 @@ resources-test = { module = "dev.icerock.moko:resources-test", version.ref = "re
 resources-compose = { module = "dev.icerock.moko:resources-compose", version.ref = "resourcesCompose" }
 
 [plugins]
-# Android & Kotlin
 androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
+androidLibrary     = { id = "com.android.library",    version.ref = "agp" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
-composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeCompiler      = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
 # moko-resources Gradle Plugin
 mokoResources = { id = "dev.icerock.mobile.multiplatform-resources", version.ref = "mokoResourcesPlugin" }
 
-# SQLDelight Plugin
+# SQLDelight Gradle plugin
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }

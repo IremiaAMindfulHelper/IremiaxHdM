@@ -18,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import org.iremia.iremia.routes.MantraRoute
 import org.iremia.iremia.viewModels.MainViewModel
 import org.iremia.iremia.shared.navigation.NavigationTarget
 import org.iremia.iremia.ui.theme.AppTheme
@@ -78,7 +79,7 @@ fun MainScreen(viewModel: MainViewModel) {
         ) { padding ->
             when (currentTarget) {
                 NavigationTarget.Home -> HomeScreen(modifier = Modifier.padding(padding))
-                NavigationTarget.Reflection -> ReflectionScreen(modifier = Modifier.padding(padding))
+                NavigationTarget.Reflection -> MantraRoute(modifier = Modifier.padding(padding))
                 NavigationTarget.SOS -> SosScreen(modifier = Modifier.padding(padding))
                 NavigationTarget.Contacts -> ContactScreen(modifier = Modifier.padding(padding))
                 NavigationTarget.Profile -> ProfileScreen(modifier = Modifier.padding(padding))
