@@ -17,7 +17,7 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
-                .accentColor(Color.primary800)
+                .accentColor(Color.primary500)
                 .background(Color.background)
         }
     }

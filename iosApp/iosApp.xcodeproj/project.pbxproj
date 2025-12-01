@@ -7,23 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4634DCC72EAB8EA100CEF9E1 /* Shared.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */; };
+		291D916B2EC36C7900297BEC /* Shared.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */; };
+		2938BF732EB375E300D60A2A /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2938BF722EB375E300D60A2A /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		299B4EB62E7C37FA00A788A0 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
+		2938BF722EB375E300D60A2A /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Shared.xcframework; sourceTree = "<group>"; };
 		B9DA97B12DC1472C00A4DA20 /* iremia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iremia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -59,7 +48,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4634DCC72EAB8EA100CEF9E1 /* Shared.xcframework in Frameworks */,
+				291D916B2EC36C7900297BEC /* Shared.xcframework in Frameworks */,
+				2938BF732EB375E300D60A2A /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -69,6 +59,7 @@
 		299B4EB22E7C37FA00A788A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2938BF722EB375E300D60A2A /* libsqlite3.tbd */,
 				4634DCC62EAB8EA100CEF9E1 /* Shared.xcframework */,
 			);
 			name = Frameworks;
@@ -104,7 +95,6 @@
 				B9DA97AE2DC1472C00A4DA20 /* Frameworks */,
 				B9DA97AF2DC1472C00A4DA20 /* Resources */,
 				299B4EB12E7BFE2A00A788A0 /* Copy moko-resources bundle */,
-				299B4EB62E7C37FA00A788A0 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

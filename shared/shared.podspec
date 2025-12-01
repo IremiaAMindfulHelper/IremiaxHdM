@@ -4,7 +4,7 @@ Pod::Spec.new do |spec|
     spec.homepage                 = 'https://iremia.app'
     spec.source                   = { :http=> ''}
     spec.authors                  = 'Iremia – A Mindful Helper'
-    spec.license                  = 'MIT'
+    spec.license                  = 'Apache-2.0'
     spec.summary                  = 'Shared Kotlin Multiplatform module'
     spec.vendored_frameworks      = 'build/cocoapods/framework/Shared.framework'
     spec.libraries                = 'c++'
