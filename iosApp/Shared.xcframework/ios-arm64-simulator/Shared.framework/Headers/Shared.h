@@ -6,9 +6,9 @@
 #import <Foundation/NSString.h>
 #import <Foundation/NSValue.h>
 
-@class Interop, KmpCancelable, Mantra, MantrasController, MantrasState, NSBundle, NSData, NSError, NSLocale, NSURL, SharedAssetResource, SharedColor, SharedColorCompanion, SharedColorDescCompanion, SharedColorResource, SharedCompositionStringDesc, SharedDatabase, SharedDatabaseProvider, SharedDriverFactory, SharedFactory, SharedFileResource, SharedFontResource, SharedImageDescCompanion, SharedImageDescResource, SharedImageDescUrl, SharedImageResource, SharedKotlinAbstractCoroutineContextElement, SharedKotlinAbstractCoroutineContextKey<B, E>, SharedKotlinArray<T>, SharedKotlinByteArray, SharedKotlinByteIterator, SharedKotlinCancellationException, SharedKotlinException, SharedKotlinIllegalStateException, SharedKotlinRuntimeException, SharedKotlinThrowable, SharedKotlinUnit, SharedKotlinx_coroutines_coreCoroutineDispatcher, SharedKotlinx_coroutines_coreCoroutineDispatcherKey, SharedMantra, SharedMantraDao, SharedMantraQueries, SharedMantraRepository, SharedNavigationState, SharedNavigationTarget, SharedNavigationTargetContacts, SharedNavigationTargetHome, SharedNavigationTargetProfile, SharedNavigationTargetReflection, SharedNavigationTargetSOS, SharedPluralFormattedStringDesc, SharedPluralStringDesc, SharedPluralsResource, SharedRawStringDesc, SharedResourceFormattedStringDesc, SharedResourcePlatformDetails, SharedResourceStringDesc, SharedRuntimeAfterVersion, SharedRuntimeBaseTransacterImpl, SharedRuntimeExecutableQuery<__covariant RowType>, SharedRuntimeQuery<__covariant RowType>, SharedRuntimeTransacterImpl, SharedRuntimeTransacterTransaction, SharedSharedColors, SharedSharedRes, SharedSharedResColors, SharedSharedResImages, SharedSharedResStrings, SharedStringDescCompanion, SharedStringDescLocaleType, SharedStringDescLocaleTypeSystem, SharedStringResource, SharedUserDataCompanion, SharedUtils, UIColor, UIFont, UIImage;
+@class Interop, KmpCancelable, Mantra, MantrasController, MantrasState, NSBundle, SharedDatabase, SharedDatabaseProvider, SharedDriverFactory, SharedFactory, SharedKotlinAbstractCoroutineContextElement, SharedKotlinAbstractCoroutineContextKey<B, E>, SharedKotlinArray<T>, SharedKotlinByteArray, SharedKotlinByteIterator, SharedKotlinCancellationException, SharedKotlinException, SharedKotlinIllegalStateException, SharedKotlinRuntimeException, SharedKotlinThrowable, SharedKotlinUnit, SharedKotlinx_coroutines_coreCoroutineDispatcher, SharedKotlinx_coroutines_coreCoroutineDispatcherKey, SharedMantra, SharedMantraDao, SharedMantraQueries, SharedMantraRepository, SharedNavigationState, SharedNavigationTarget, SharedNavigationTargetContacts, SharedNavigationTargetHome, SharedNavigationTargetProfile, SharedNavigationTargetReflection, SharedNavigationTargetSOS, SharedResourcesColorResource, SharedResourcesImageResource, SharedResourcesResourcePlatformDetails, SharedResourcesStringResource, SharedRuntimeAfterVersion, SharedRuntimeBaseTransacterImpl, SharedRuntimeExecutableQuery<__covariant RowType>, SharedRuntimeQuery<__covariant RowType>, SharedRuntimeTransacterImpl, SharedRuntimeTransacterTransaction, SharedSharedColors, SharedSharedRes, SharedSharedResColors, SharedSharedResImages, SharedSharedResStrings, SharedUserDataCompanion, UIColor, UIImage;
 
-@protocol SharedColorDesc, SharedImageDesc, SharedKotlinContinuation, SharedKotlinContinuationInterceptor, SharedKotlinCoroutineContext, SharedKotlinCoroutineContextElement, SharedKotlinCoroutineContextKey, SharedKotlinIterator, SharedKotlinSequence, SharedKotlinx_coroutines_coreChildHandle, SharedKotlinx_coroutines_coreChildJob, SharedKotlinx_coroutines_coreCoroutineScope, SharedKotlinx_coroutines_coreDisposableHandle, SharedKotlinx_coroutines_coreFlow, SharedKotlinx_coroutines_coreFlowCollector, SharedKotlinx_coroutines_coreJob, SharedKotlinx_coroutines_coreParentJob, SharedKotlinx_coroutines_coreRunnable, SharedKotlinx_coroutines_coreSelectClause, SharedKotlinx_coroutines_coreSelectClause0, SharedKotlinx_coroutines_coreSelectInstance, SharedKotlinx_coroutines_coreSharedFlow, SharedKotlinx_coroutines_coreStateFlow, SharedResourceContainer, SharedRuntimeCloseable, SharedRuntimeQueryListener, SharedRuntimeQueryResult, SharedRuntimeSqlCursor, SharedRuntimeSqlDriver, SharedRuntimeSqlPreparedStatement, SharedRuntimeSqlSchema, SharedRuntimeTransacter, SharedRuntimeTransacterBase, SharedRuntimeTransactionCallbacks, SharedRuntimeTransactionWithReturn, SharedRuntimeTransactionWithoutReturn, SharedStringDesc, SharedUserData;
+@protocol SharedKotlinContinuation, SharedKotlinContinuationInterceptor, SharedKotlinCoroutineContext, SharedKotlinCoroutineContextElement, SharedKotlinCoroutineContextKey, SharedKotlinIterator, SharedKotlinSequence, SharedKotlinx_coroutines_coreChildHandle, SharedKotlinx_coroutines_coreChildJob, SharedKotlinx_coroutines_coreCoroutineScope, SharedKotlinx_coroutines_coreDisposableHandle, SharedKotlinx_coroutines_coreFlow, SharedKotlinx_coroutines_coreFlowCollector, SharedKotlinx_coroutines_coreJob, SharedKotlinx_coroutines_coreParentJob, SharedKotlinx_coroutines_coreRunnable, SharedKotlinx_coroutines_coreSelectClause, SharedKotlinx_coroutines_coreSelectClause0, SharedKotlinx_coroutines_coreSelectInstance, SharedKotlinx_coroutines_coreSharedFlow, SharedKotlinx_coroutines_coreStateFlow, SharedResourcesResourceContainer, SharedResourcesStringDesc, SharedRuntimeCloseable, SharedRuntimeQueryListener, SharedRuntimeQueryResult, SharedRuntimeSqlCursor, SharedRuntimeSqlDriver, SharedRuntimeSqlPreparedStatement, SharedRuntimeSqlSchema, SharedRuntimeTransacter, SharedRuntimeTransacterBase, SharedRuntimeTransactionCallbacks, SharedRuntimeTransactionWithReturn, SharedRuntimeTransactionWithoutReturn, SharedUserData;
 
 NS_ASSUME_NONNULL_BEGIN
 #pragma clang diagnostic push
@@ -230,376 +230,6 @@ __attribute__((swift_name("UserDataCompanion")))
 @end
 
 __attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("Color")))
-@interface SharedColor : SharedBase
-- (instancetype)initWithColorRGBA:(int64_t)colorRGBA __attribute__((swift_name("init(colorRGBA:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)initWithRed:(int32_t)red green:(int32_t)green blue:(int32_t)blue alpha:(int32_t)alpha __attribute__((swift_name("init(red:green:blue:alpha:)"))) __attribute__((objc_designated_initializer));
-@property (class, readonly, getter=companion) SharedColorCompanion *companion __attribute__((swift_name("companion")));
-- (SharedColor *)doCopyRed:(int32_t)red green:(int32_t)green blue:(int32_t)blue alpha:(int32_t)alpha __attribute__((swift_name("doCopy(red:green:blue:alpha:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) int32_t alpha __attribute__((swift_name("alpha")));
-@property (readonly) int64_t argb __attribute__((swift_name("argb")));
-@property (readonly) int32_t blue __attribute__((swift_name("blue")));
-@property (readonly) int32_t green __attribute__((swift_name("green")));
-@property (readonly) int32_t red __attribute__((swift_name("red")));
-@property (readonly) int64_t rgba __attribute__((swift_name("rgba")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("Color.Companion")))
-@interface SharedColorCompanion : SharedBase
-+ (instancetype)alloc __attribute__((unavailable));
-+ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
-+ (instancetype)companion __attribute__((swift_name("init()")));
-@property (class, readonly, getter=shared) SharedColorCompanion *shared __attribute__((swift_name("shared")));
-@end
-
-__attribute__((swift_name("FileResource")))
-@interface SharedFileResource : SharedBase
-- (instancetype)initWithFileName:(NSString *)fileName extension:(NSString *)extension bundle:(NSBundle *)bundle __attribute__((swift_name("init(fileName:extension:bundle:)"))) __attribute__((objc_designated_initializer));
-- (NSString *)readText __attribute__((swift_name("readText()")));
-@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
-@property (readonly) NSString *extension __attribute__((swift_name("extension")));
-@property (readonly) NSString *fileName __attribute__((swift_name("fileName")));
-@property (readonly) NSString *path __attribute__((swift_name("path")));
-@property (readonly) NSURL *url __attribute__((swift_name("url")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("AssetResource")))
-@interface SharedAssetResource : SharedFileResource
-- (instancetype)initWithOriginalPath:(NSString *)originalPath fileName:(NSString *)fileName extension:(NSString *)extension bundle:(NSBundle *)bundle __attribute__((swift_name("init(originalPath:fileName:extension:bundle:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)initWithFileName:(NSString *)fileName extension:(NSString *)extension bundle:(NSBundle *)bundle __attribute__((swift_name("init(fileName:extension:bundle:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-@property (readonly) NSString *originalPath __attribute__((swift_name("originalPath")));
-@property (readonly) NSString *path __attribute__((swift_name("path")));
-@property (readonly) NSURL *url __attribute__((swift_name("url")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ColorResource")))
-@interface SharedColorResource : SharedBase
-- (instancetype)initWithName:(NSString *)name bundle:(NSBundle *)bundle __attribute__((swift_name("init(name:bundle:)"))) __attribute__((objc_designated_initializer));
-@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
-@property (readonly) NSString *name __attribute__((swift_name("name")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("FontResource")))
-@interface SharedFontResource : SharedBase
-- (instancetype)initWithFontName:(NSString *)fontName bundle:(NSBundle *)bundle __attribute__((swift_name("init(fontName:bundle:)"))) __attribute__((objc_designated_initializer));
-
-/**
- * @note This method converts instances of ObjCErrorException to errors.
- * Other uncaught Kotlin exceptions are fatal.
-*/
-- (BOOL)registerFontAndReturnError:(NSError * _Nullable * _Nullable)error __attribute__((swift_name("registerFont()")));
-@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
-@property (readonly) NSData *data __attribute__((swift_name("data")));
-@property (readonly) NSString *filePath __attribute__((swift_name("filePath")));
-@property (readonly) NSString *fontName __attribute__((swift_name("fontName")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ImageResource")))
-@interface SharedImageResource : SharedBase
-- (instancetype)initWithAssetImageName:(NSString *)assetImageName bundle:(NSBundle *)bundle __attribute__((swift_name("init(assetImageName:bundle:)"))) __attribute__((objc_designated_initializer));
-- (SharedImageResource *)doCopyAssetImageName:(NSString *)assetImageName bundle:(NSBundle *)bundle __attribute__((swift_name("doCopy(assetImageName:bundle:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-- (UIImage * _Nullable)toUIImage __attribute__((swift_name("toUIImage()")));
-@property (readonly) NSString *assetImageName __attribute__((swift_name("assetImageName")));
-@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("PluralsResource")))
-@interface SharedPluralsResource : SharedBase
-- (instancetype)initWithResourceId:(NSString *)resourceId bundle:(NSBundle *)bundle __attribute__((swift_name("init(resourceId:bundle:)"))) __attribute__((objc_designated_initializer));
-@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
-@property (readonly) NSString *resourceId __attribute__((swift_name("resourceId")));
-@end
-
-__attribute__((swift_name("KotlinThrowable")))
-@interface SharedKotlinThrowable : SharedBase
-- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer));
-+ (instancetype)new __attribute__((availability(swift, unavailable, message="use object initializers instead")));
-- (instancetype)initWithMessage:(NSString * _Nullable)message __attribute__((swift_name("init(message:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)initWithCause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(cause:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)initWithMessage:(NSString * _Nullable)message cause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(message:cause:)"))) __attribute__((objc_designated_initializer));
-
-/**
- * @note annotations
- *   kotlin.experimental.ExperimentalNativeApi
-*/
-- (SharedKotlinArray<NSString *> *)getStackTrace __attribute__((swift_name("getStackTrace()")));
-- (void)printStackTrace __attribute__((swift_name("printStackTrace()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) SharedKotlinThrowable * _Nullable cause __attribute__((swift_name("cause")));
-@property (readonly) NSString * _Nullable message __attribute__((swift_name("message")));
-- (NSError *)asError __attribute__((swift_name("asError()")));
-@end
-
-__attribute__((swift_name("KotlinException")))
-@interface SharedKotlinException : SharedKotlinThrowable
-- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer));
-+ (instancetype)new __attribute__((availability(swift, unavailable, message="use object initializers instead")));
-- (instancetype)initWithMessage:(NSString * _Nullable)message __attribute__((swift_name("init(message:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)initWithCause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(cause:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)initWithMessage:(NSString * _Nullable)message cause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(message:cause:)"))) __attribute__((objc_designated_initializer));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ReadFileTextException")))
-@interface SharedReadFileTextException : SharedKotlinException
-- (instancetype)initWithFileResource:(SharedFileResource *)fileResource info:(NSString *)info __attribute__((swift_name("init(fileResource:info:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)initWithFileResource:(SharedFileResource *)fileResource error:(NSError *)error __attribute__((swift_name("init(fileResource:error:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-+ (instancetype)new __attribute__((unavailable));
-- (instancetype)initWithMessage:(NSString * _Nullable)message __attribute__((swift_name("init(message:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-- (instancetype)initWithCause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(cause:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-- (instancetype)initWithMessage:(NSString * _Nullable)message cause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(message:cause:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-@property (readonly) SharedFileResource *fileResource __attribute__((swift_name("fileResource")));
-@property (readonly) NSString *info __attribute__((swift_name("info")));
-@end
-
-__attribute__((swift_name("ResourceContainer")))
-@protocol SharedResourceContainer
-@required
-- (NSArray<id> *)values __attribute__((swift_name("values()")));
-@property (readonly) SharedResourcePlatformDetails *__platformDetails __attribute__((swift_name("__platformDetails")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ResourcePlatformDetails")))
-@interface SharedResourcePlatformDetails : SharedBase
-- (instancetype)initWithNsBundle:(NSBundle *)nsBundle __attribute__((swift_name("init(nsBundle:)"))) __attribute__((objc_designated_initializer));
-@property (readonly) NSBundle *nsBundle __attribute__((swift_name("nsBundle")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("StringResource")))
-@interface SharedStringResource : SharedBase
-- (instancetype)initWithResourceId:(NSString *)resourceId bundle:(NSBundle *)bundle __attribute__((swift_name("init(resourceId:bundle:)"))) __attribute__((objc_designated_initializer));
-- (SharedStringResource *)doCopyResourceId:(NSString *)resourceId bundle:(NSBundle *)bundle __attribute__((swift_name("doCopy(resourceId:bundle:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
-@property (readonly) NSString *resourceId __attribute__((swift_name("resourceId")));
-@end
-
-__attribute__((swift_name("StringDesc")))
-@protocol SharedStringDesc
-@required
-- (NSString *)localized __attribute__((swift_name("localized()")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("CompositionStringDesc")))
-@interface SharedCompositionStringDesc : SharedBase <SharedStringDesc>
-- (instancetype)initWithArgs:(id)args separator:(NSString * _Nullable)separator __attribute__((swift_name("init(args:separator:)"))) __attribute__((objc_designated_initializer));
-- (SharedCompositionStringDesc *)doCopyArgs:(id)args separator:(NSString * _Nullable)separator __attribute__((swift_name("doCopy(args:separator:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)localized __attribute__((swift_name("localized()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) id args __attribute__((swift_name("args")));
-@property (readonly) NSString * _Nullable separator __attribute__((swift_name("separator")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("PluralFormattedStringDesc")))
-@interface SharedPluralFormattedStringDesc : SharedBase <SharedStringDesc>
-- (instancetype)initWithPluralsRes:(SharedPluralsResource *)pluralsRes number:(int32_t)number args:(NSArray<id> *)args __attribute__((swift_name("init(pluralsRes:number:args:)"))) __attribute__((objc_designated_initializer));
-- (SharedPluralFormattedStringDesc *)doCopyPluralsRes:(SharedPluralsResource *)pluralsRes number:(int32_t)number args:(NSArray<id> *)args __attribute__((swift_name("doCopy(pluralsRes:number:args:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)localized __attribute__((swift_name("localized()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) NSArray<id> *args __attribute__((swift_name("args")));
-@property (readonly) int32_t number __attribute__((swift_name("number")));
-@property (readonly) SharedPluralsResource *pluralsRes __attribute__((swift_name("pluralsRes")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("PluralStringDesc")))
-@interface SharedPluralStringDesc : SharedBase <SharedStringDesc>
-- (instancetype)initWithPluralsRes:(SharedPluralsResource *)pluralsRes number:(int32_t)number __attribute__((swift_name("init(pluralsRes:number:)"))) __attribute__((objc_designated_initializer));
-- (SharedPluralStringDesc *)doCopyPluralsRes:(SharedPluralsResource *)pluralsRes number:(int32_t)number __attribute__((swift_name("doCopy(pluralsRes:number:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)localized __attribute__((swift_name("localized()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) int32_t number __attribute__((swift_name("number")));
-@property (readonly) SharedPluralsResource *pluralsRes __attribute__((swift_name("pluralsRes")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("RawStringDesc")))
-@interface SharedRawStringDesc : SharedBase <SharedStringDesc>
-- (instancetype)initWithString:(NSString *)string __attribute__((swift_name("init(string:)"))) __attribute__((objc_designated_initializer));
-- (SharedRawStringDesc *)doCopyString:(NSString *)string __attribute__((swift_name("doCopy(string:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)localized __attribute__((swift_name("localized()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) NSString *string __attribute__((swift_name("string")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ResourceFormattedStringDesc")))
-@interface SharedResourceFormattedStringDesc : SharedBase <SharedStringDesc>
-- (instancetype)initWithStringRes:(SharedStringResource *)stringRes args:(NSArray<id> *)args __attribute__((swift_name("init(stringRes:args:)"))) __attribute__((objc_designated_initializer));
-- (SharedResourceFormattedStringDesc *)doCopyStringRes:(SharedStringResource *)stringRes args:(NSArray<id> *)args __attribute__((swift_name("doCopy(stringRes:args:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)localized __attribute__((swift_name("localized()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) NSArray<id> *args __attribute__((swift_name("args")));
-@property (readonly) SharedStringResource *stringRes __attribute__((swift_name("stringRes")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ResourceStringDesc")))
-@interface SharedResourceStringDesc : SharedBase <SharedStringDesc>
-- (instancetype)initWithStringRes:(SharedStringResource *)stringRes __attribute__((swift_name("init(stringRes:)"))) __attribute__((objc_designated_initializer));
-- (SharedResourceStringDesc *)doCopyStringRes:(SharedStringResource *)stringRes __attribute__((swift_name("doCopy(stringRes:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)localized __attribute__((swift_name("localized()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) SharedStringResource *stringRes __attribute__((swift_name("stringRes")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("StringDescCompanion")))
-@interface SharedStringDescCompanion : SharedBase
-+ (instancetype)alloc __attribute__((unavailable));
-+ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
-+ (instancetype)companion __attribute__((swift_name("init()")));
-@property (class, readonly, getter=shared) SharedStringDescCompanion *shared __attribute__((swift_name("shared")));
-@property SharedStringDescLocaleType *localeType __attribute__((swift_name("localeType")));
-@end
-
-__attribute__((swift_name("StringDescLocaleType")))
-@interface SharedStringDescLocaleType : SharedBase
-- (NSBundle *)getLocaleBundleRootBundle:(NSBundle *)rootBundle __attribute__((swift_name("getLocaleBundle(rootBundle:)")));
-@property (readonly) NSLocale *locale __attribute__((swift_name("locale")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("StringDescLocaleType.Custom")))
-@interface SharedStringDescLocaleTypeCustom : SharedStringDescLocaleType
-- (instancetype)initWithLocale:(NSString *)locale __attribute__((swift_name("init(locale:)"))) __attribute__((objc_designated_initializer));
-- (NSBundle *)getLocaleBundleRootBundle:(NSBundle *)rootBundle __attribute__((swift_name("getLocaleBundle(rootBundle:)")));
-@property (readonly) NSLocale *locale __attribute__((swift_name("locale")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("StringDescLocaleType.System")))
-@interface SharedStringDescLocaleTypeSystem : SharedStringDescLocaleType
-+ (instancetype)alloc __attribute__((unavailable));
-+ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
-+ (instancetype)system __attribute__((swift_name("init()")));
-@property (class, readonly, getter=shared) SharedStringDescLocaleTypeSystem *shared __attribute__((swift_name("shared")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSBundle *)getLocaleBundleRootBundle:(NSBundle *)rootBundle __attribute__((swift_name("getLocaleBundle(rootBundle:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) NSLocale *locale __attribute__((swift_name("locale")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("Utils")))
-@interface SharedUtils : SharedBase
-+ (instancetype)alloc __attribute__((unavailable));
-+ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
-+ (instancetype)utils __attribute__((swift_name("init()")));
-@property (class, readonly, getter=shared) SharedUtils *shared __attribute__((swift_name("shared")));
-- (NSString *)localizedStringStringRes:(SharedStringResource *)stringRes __attribute__((swift_name("localizedString(stringRes:)")));
-- (SharedKotlinArray<id> *)processArgsArgs:(NSArray<id> *)args __attribute__((swift_name("processArgs(args:)")));
-- (NSString *)stringWithFormatFormat:(NSString *)format args:(SharedKotlinArray<id> *)args __attribute__((swift_name("stringWithFormat(format:args:)")));
-@property (readonly) NSString *BASE_LOCALIZATION __attribute__((swift_name("BASE_LOCALIZATION")));
-@end
-
-__attribute__((swift_name("ColorDesc")))
-@protocol SharedColorDesc
-@required
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ColorDescCompanion")))
-@interface SharedColorDescCompanion : SharedBase
-+ (instancetype)alloc __attribute__((unavailable));
-+ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
-+ (instancetype)companion __attribute__((swift_name("init()")));
-@property (class, readonly, getter=shared) SharedColorDescCompanion *shared __attribute__((swift_name("shared")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ColorDescResource")))
-@interface SharedColorDescResource : SharedBase <SharedColorDesc>
-- (instancetype)initWithResource:(SharedColorResource *)resource __attribute__((swift_name("init(resource:)"))) __attribute__((objc_designated_initializer));
-@property (readonly) SharedColorResource *resource __attribute__((swift_name("resource")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ColorDescSingle")))
-@interface SharedColorDescSingle : SharedBase <SharedColorDesc>
-- (instancetype)initWithColor:(SharedColor *)color __attribute__((swift_name("init(color:)"))) __attribute__((objc_designated_initializer));
-@property (readonly) SharedColor *color __attribute__((swift_name("color")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ColorDescThemed")))
-@interface SharedColorDescThemed : SharedBase <SharedColorDesc>
-- (instancetype)initWithLightColor:(SharedColor *)lightColor darkColor:(SharedColor *)darkColor __attribute__((swift_name("init(lightColor:darkColor:)"))) __attribute__((objc_designated_initializer));
-@property (readonly) SharedColor *darkColor __attribute__((swift_name("darkColor")));
-@property (readonly) SharedColor *lightColor __attribute__((swift_name("lightColor")));
-@end
-
-__attribute__((swift_name("ImageDesc")))
-@protocol SharedImageDesc
-@required
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ImageDescCompanion")))
-@interface SharedImageDescCompanion : SharedBase
-+ (instancetype)alloc __attribute__((unavailable));
-+ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
-+ (instancetype)companion __attribute__((swift_name("init()")));
-@property (class, readonly, getter=shared) SharedImageDescCompanion *shared __attribute__((swift_name("shared")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ImageDescResource")))
-@interface SharedImageDescResource : SharedBase <SharedImageDesc>
-- (instancetype)initWithResource:(SharedImageResource *)resource __attribute__((swift_name("init(resource:)"))) __attribute__((objc_designated_initializer));
-- (SharedImageDescResource *)doCopyResource:(SharedImageResource *)resource __attribute__((swift_name("doCopy(resource:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) SharedImageResource *resource __attribute__((swift_name("resource")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ImageDescUrl")))
-@interface SharedImageDescUrl : SharedBase <SharedImageDesc>
-- (instancetype)initWithUrl:(NSString *)url __attribute__((swift_name("init(url:)"))) __attribute__((objc_designated_initializer));
-- (SharedImageDescUrl *)doCopyUrl:(NSString *)url __attribute__((swift_name("doCopy(url:)")));
-- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
-- (NSUInteger)hash __attribute__((swift_name("hash()")));
-- (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) NSString *url __attribute__((swift_name("url")));
-@end
-
-__attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("SharedColors")))
 @interface SharedSharedColors : SharedBase
 + (instancetype)alloc __attribute__((unavailable));
@@ -748,7 +378,7 @@ __attribute__((swift_name("NavigationState")))
 
 __attribute__((swift_name("NavigationTarget")))
 @interface SharedNavigationTarget : SharedBase
-@property (readonly) SharedStringResource *route __attribute__((swift_name("route")));
+@property (readonly) SharedResourcesStringResource *route __attribute__((swift_name("route")));
 @end
 
 __attribute__((objc_subclassing_restricted))
@@ -839,149 +469,66 @@ __attribute__((swift_name("SharedRes")))
 @property (class, readonly, getter=shared) SharedSharedRes *shared __attribute__((swift_name("shared")));
 @end
 
+__attribute__((swift_name("ResourcesResourceContainer")))
+@protocol SharedResourcesResourceContainer
+@required
+- (NSArray<id> *)values __attribute__((swift_name("values()")));
+@property (readonly) SharedResourcesResourcePlatformDetails *__platformDetails __attribute__((swift_name("__platformDetails")));
+@end
+
 __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("SharedRes.colors")))
-@interface SharedSharedResColors : SharedBase <SharedResourceContainer>
+@interface SharedSharedResColors : SharedBase <SharedResourcesResourceContainer>
 + (instancetype)alloc __attribute__((unavailable));
 + (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
 + (instancetype)colors __attribute__((swift_name("init()")));
 @property (class, readonly, getter=shared) SharedSharedResColors *shared __attribute__((swift_name("shared")));
-- (NSArray<SharedColorResource *> *)values __attribute__((swift_name("values()")));
-@property (readonly) SharedResourcePlatformDetails *__platformDetails __attribute__((swift_name("__platformDetails")));
-@property (readonly) SharedColorResource *background __attribute__((swift_name("background")));
-@property (readonly) SharedColorResource *brand __attribute__((swift_name("brand")));
-@property (readonly) SharedColorResource *brandRef __attribute__((swift_name("brandRef")));
-@property (readonly) SharedColorResource *error __attribute__((swift_name("error")));
-@property (readonly) SharedColorResource *primary __attribute__((swift_name("primary")));
-@property (readonly) SharedColorResource *primaryReference __attribute__((swift_name("primaryReference")));
-@property (readonly) SharedColorResource *secondary __attribute__((swift_name("secondary")));
+- (NSArray<SharedResourcesColorResource *> *)values __attribute__((swift_name("values()")));
+@property (readonly) SharedResourcesResourcePlatformDetails *__platformDetails __attribute__((swift_name("__platformDetails")));
+@property (readonly) SharedResourcesColorResource *background __attribute__((swift_name("background")));
+@property (readonly) SharedResourcesColorResource *brand __attribute__((swift_name("brand")));
+@property (readonly) SharedResourcesColorResource *brandRef __attribute__((swift_name("brandRef")));
+@property (readonly) SharedResourcesColorResource *error __attribute__((swift_name("error")));
+@property (readonly) SharedResourcesColorResource *primary __attribute__((swift_name("primary")));
+@property (readonly) SharedResourcesColorResource *primaryReference __attribute__((swift_name("primaryReference")));
+@property (readonly) SharedResourcesColorResource *secondary __attribute__((swift_name("secondary")));
 @end
 
 __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("SharedRes.images")))
-@interface SharedSharedResImages : SharedBase <SharedResourceContainer>
+@interface SharedSharedResImages : SharedBase <SharedResourcesResourceContainer>
 + (instancetype)alloc __attribute__((unavailable));
 + (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
 + (instancetype)images __attribute__((swift_name("init()")));
 @property (class, readonly, getter=shared) SharedSharedResImages *shared __attribute__((swift_name("shared")));
-- (NSArray<SharedImageResource *> *)values __attribute__((swift_name("values()")));
-@property (readonly) SharedResourcePlatformDetails *__platformDetails __attribute__((swift_name("__platformDetails")));
-@property (readonly) SharedImageResource *onboarding_2 __attribute__((swift_name("onboarding_2")));
+- (NSArray<SharedResourcesImageResource *> *)values __attribute__((swift_name("values()")));
+@property (readonly) SharedResourcesResourcePlatformDetails *__platformDetails __attribute__((swift_name("__platformDetails")));
+@property (readonly) SharedResourcesImageResource *onboarding_2 __attribute__((swift_name("onboarding_2")));
 @end
 
 __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("SharedRes.strings")))
-@interface SharedSharedResStrings : SharedBase <SharedResourceContainer>
+@interface SharedSharedResStrings : SharedBase <SharedResourcesResourceContainer>
 + (instancetype)alloc __attribute__((unavailable));
 + (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
 + (instancetype)strings __attribute__((swift_name("init()")));
 @property (class, readonly, getter=shared) SharedSharedResStrings *shared __attribute__((swift_name("shared")));
-- (NSArray<SharedStringResource *> *)values __attribute__((swift_name("values()")));
-@property (readonly) SharedResourcePlatformDetails *__platformDetails __attribute__((swift_name("__platformDetails")));
-@property (readonly) SharedStringResource *contacts __attribute__((swift_name("contacts")));
-@property (readonly) SharedStringResource *home __attribute__((swift_name("home")));
-@property (readonly) SharedStringResource *profile __attribute__((swift_name("profile")));
-@property (readonly) SharedStringResource *reflection __attribute__((swift_name("reflection")));
-@property (readonly) SharedStringResource *sos __attribute__((swift_name("sos")));
-@property (readonly) SharedStringResource *sos_button __attribute__((swift_name("sos_button")));
-@property (readonly) SharedStringResource *test_string __attribute__((swift_name("test_string")));
-@property (readonly) SharedStringResource *welcome_title __attribute__((swift_name("welcome_title")));
-@end
-
-@interface SharedColor (Extensions)
-- (id<SharedColorDesc>)asColorDesc __attribute__((swift_name("asColorDesc()")));
-- (UIColor *)toUIColor __attribute__((swift_name("toUIColor()")));
-@end
-
-@interface SharedColorCompanion (Extensions)
-- (SharedColor *)parseColorColorHEX:(NSString *)colorHEX __attribute__((swift_name("parseColor(colorHEX:)")));
-@end
-
-@interface SharedColorResource (Extensions)
-- (id<SharedColorDesc>)asColorDesc __attribute__((swift_name("asColorDesc()")));
-- (UIColor *)getUIColor __attribute__((swift_name("getUIColor()")));
-@end
-
-@interface SharedFontResource (Extensions)
-- (UIFont *)uiFontWithSize:(double)withSize __attribute__((swift_name("uiFont(withSize:)")));
-@end
-
-@interface SharedImageResource (Extensions)
-- (id<SharedImageDesc>)asImageDesc __attribute__((swift_name("asImageDesc()")));
-@end
-
-@interface SharedPluralsResource (Extensions)
-- (SharedPluralStringDesc *)descNumber:(int32_t)number __attribute__((swift_name("desc(number:)")));
-- (SharedPluralFormattedStringDesc *)formatNumber:(int32_t)number args:(SharedKotlinArray<id> *)args __attribute__((swift_name("format(number:args:)")));
-- (SharedPluralFormattedStringDesc *)formatNumber:(int32_t)number args_:(NSArray<id> *)args __attribute__((swift_name("format(number:args_:)")));
-@end
-
-@interface SharedStringResource (Extensions)
-- (SharedResourceStringDesc *)desc __attribute__((swift_name("desc()")));
-- (SharedResourceFormattedStringDesc *)formatArgs:(SharedKotlinArray<id> *)args __attribute__((swift_name("format(args:)")));
-- (SharedResourceFormattedStringDesc *)formatArgs_:(NSArray<id> *)args __attribute__((swift_name("format(args_:)")));
-@end
-
-@interface SharedStringDescCompanion (Extensions)
-- (SharedCompositionStringDesc *)CompositionArgs:(id)args separator:(NSString * _Nullable)separator __attribute__((swift_name("Composition(args:separator:)")));
-- (SharedPluralStringDesc *)PluralPluralsRes:(SharedPluralsResource *)pluralsRes number:(int32_t)number __attribute__((swift_name("Plural(pluralsRes:number:)")));
-- (SharedPluralFormattedStringDesc *)PluralFormattedPluralsRes:(SharedPluralsResource *)pluralsRes number:(int32_t)number args:(SharedKotlinArray<id> *)args __attribute__((swift_name("PluralFormatted(pluralsRes:number:args:)")));
-- (SharedPluralFormattedStringDesc *)PluralFormattedPluralsRes:(SharedPluralsResource *)pluralsRes number:(int32_t)number args_:(NSArray<id> *)args __attribute__((swift_name("PluralFormatted(pluralsRes:number:args_:)")));
-- (SharedRawStringDesc *)RawString:(NSString *)string __attribute__((swift_name("Raw(string:)")));
-- (SharedResourceStringDesc *)ResourceStringRes:(SharedStringResource *)stringRes __attribute__((swift_name("Resource(stringRes:)")));
-- (SharedResourceFormattedStringDesc *)ResourceFormattedStringRes:(SharedStringResource *)stringRes args:(SharedKotlinArray<id> *)args __attribute__((swift_name("ResourceFormatted(stringRes:args:)")));
-- (SharedResourceFormattedStringDesc *)ResourceFormattedStringRes:(SharedStringResource *)stringRes args_:(NSArray<id> *)args __attribute__((swift_name("ResourceFormatted(stringRes:args_:)")));
-@end
-
-@interface SharedColorDescCompanion (Extensions)
-- (id<SharedColorDesc>)ResourceResource:(SharedColorResource *)resource __attribute__((swift_name("Resource(resource:)")));
-- (id<SharedColorDesc>)SingleColor:(SharedColor *)color __attribute__((swift_name("Single(color:)")));
-- (id<SharedColorDesc>)ThemedLightColor:(SharedColor *)lightColor darkColor:(SharedColor *)darkColor __attribute__((swift_name("Themed(lightColor:darkColor:)")));
-@end
-
-@interface SharedImageDescCompanion (Extensions)
-- (id<SharedImageDesc>)ResourceResource:(SharedImageResource *)resource __attribute__((swift_name("Resource(resource:)")));
-- (id<SharedImageDesc>)UrlUrl:(NSString *)url __attribute__((swift_name("Url(url:)")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ColorDescExtKt")))
-@interface SharedColorDescExtKt : SharedBase
-+ (UIColor *)getUIColor:(id<SharedColorDesc>)receiver __attribute__((swift_name("getUIColor(_:)")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ImageDescUrlKt")))
-@interface SharedImageDescUrlKt : SharedBase
-+ (id<SharedImageDesc>)asImageUrl:(NSString *)receiver __attribute__((swift_name("asImageUrl(_:)")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("NSBundleExtKt")))
-@interface SharedNSBundleExtKt : SharedBase
-+ (NSBundle *)loadableBundle:(Class)receiver identifier:(NSString *)identifier __attribute__((swift_name("loadableBundle(_:identifier:)")));
-@property (class) BOOL isBundleSearchLogEnabled __attribute__((swift_name("isBundleSearchLogEnabled")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("ResourceContainerExtKt")))
-@interface SharedResourceContainerExtKt : SharedBase
-+ (SharedAssetResource * _Nullable)getAssetByFilePath:(id<SharedResourceContainer>)receiver filePath:(NSString *)filePath __attribute__((swift_name("getAssetByFilePath(_:filePath:)")));
-+ (SharedImageResource * _Nullable)getImageByFileName:(id<SharedResourceContainer>)receiver fileName:(NSString *)fileName __attribute__((swift_name("getImageByFileName(_:fileName:)")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("StringDescKt")))
-@interface SharedStringDescKt : SharedBase
-+ (SharedRawStringDesc *)desc:(NSString *)receiver __attribute__((swift_name("desc(_:)")));
-+ (id<SharedStringDesc>)joinToStringDesc:(id)receiver separator:(NSString *)separator __attribute__((swift_name("joinToStringDesc(_:separator:)")));
-+ (id<SharedStringDesc>)plus:(id<SharedStringDesc>)receiver other:(id<SharedStringDesc>)other __attribute__((swift_name("plus(_:other:)")));
+- (NSArray<SharedResourcesStringResource *> *)values __attribute__((swift_name("values()")));
+@property (readonly) SharedResourcesResourcePlatformDetails *__platformDetails __attribute__((swift_name("__platformDetails")));
+@property (readonly) SharedResourcesStringResource *contacts __attribute__((swift_name("contacts")));
+@property (readonly) SharedResourcesStringResource *home __attribute__((swift_name("home")));
+@property (readonly) SharedResourcesStringResource *profile __attribute__((swift_name("profile")));
+@property (readonly) SharedResourcesStringResource *reflection __attribute__((swift_name("reflection")));
+@property (readonly) SharedResourcesStringResource *sos __attribute__((swift_name("sos")));
+@property (readonly) SharedResourcesStringResource *sos_button __attribute__((swift_name("sos_button")));
+@property (readonly) SharedResourcesStringResource *test_string __attribute__((swift_name("test_string")));
+@property (readonly) SharedResourcesStringResource *welcome_title __attribute__((swift_name("welcome_title")));
 @end
 
 __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("StringsKt")))
 @interface SharedStringsKt : SharedBase
-+ (id<SharedStringDesc>)localizedRes:(SharedStringResource *)res __attribute__((swift_name("localized(res:)")));
++ (id<SharedResourcesStringDesc>)localizedRes:(SharedResourcesStringResource *)res __attribute__((swift_name("localized(res:)")));
 @end
 
 __attribute__((objc_subclassing_restricted))
@@ -1043,6 +590,26 @@ __attribute__((swift_name("RuntimeTransacterTransaction")))
 @property (readonly) SharedRuntimeTransacterTransaction * _Nullable enclosingTransaction __attribute__((swift_name("enclosingTransaction")));
 @end
 
+__attribute__((swift_name("KotlinThrowable")))
+@interface SharedKotlinThrowable : SharedBase
+- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer));
++ (instancetype)new __attribute__((availability(swift, unavailable, message="use object initializers instead")));
+- (instancetype)initWithMessage:(NSString * _Nullable)message __attribute__((swift_name("init(message:)"))) __attribute__((objc_designated_initializer));
+- (instancetype)initWithCause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(cause:)"))) __attribute__((objc_designated_initializer));
+- (instancetype)initWithMessage:(NSString * _Nullable)message cause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(message:cause:)"))) __attribute__((objc_designated_initializer));
+
+/**
+ * @note annotations
+ *   kotlin.experimental.ExperimentalNativeApi
+*/
+- (SharedKotlinArray<NSString *> *)getStackTrace __attribute__((swift_name("getStackTrace()")));
+- (void)printStackTrace __attribute__((swift_name("printStackTrace()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) SharedKotlinThrowable * _Nullable cause __attribute__((swift_name("cause")));
+@property (readonly) NSString * _Nullable message __attribute__((swift_name("message")));
+- (NSError *)asError __attribute__((swift_name("asError()")));
+@end
+
 __attribute__((swift_name("RuntimeTransactionWithoutReturn")))
 @protocol SharedRuntimeTransactionWithoutReturn <SharedRuntimeTransactionCallbacks>
 @required
@@ -1094,34 +661,19 @@ __attribute__((swift_name("RuntimeSqlSchema")))
 @property (readonly) int64_t version __attribute__((swift_name("version")));
 @end
 
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("KotlinObjCErrorException")))
-@interface SharedKotlinObjCErrorException : SharedKotlinException
-- (instancetype)initWithMessage:(NSString * _Nullable)message error:(id)error __attribute__((swift_name("init(message:error:)"))) __attribute__((objc_designated_initializer));
-- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-+ (instancetype)new __attribute__((unavailable));
-- (instancetype)initWithMessage:(NSString * _Nullable)message __attribute__((swift_name("init(message:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-- (instancetype)initWithCause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(cause:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-- (instancetype)initWithMessage:(NSString * _Nullable)message cause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(message:cause:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
-- (NSString *)description __attribute__((swift_name("description()")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("KotlinArray")))
-@interface SharedKotlinArray<T> : SharedBase
-+ (instancetype)arrayWithSize:(int32_t)size init:(T _Nullable (^)(SharedInt *))init __attribute__((swift_name("init(size:init:)")));
-+ (instancetype)alloc __attribute__((unavailable));
-+ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
-- (T _Nullable)getIndex:(int32_t)index __attribute__((swift_name("get(index:)")));
-- (id<SharedKotlinIterator>)iterator __attribute__((swift_name("iterator()")));
-- (void)setIndex:(int32_t)index value:(T _Nullable)value __attribute__((swift_name("set(index:value:)")));
-@property (readonly) int32_t size __attribute__((swift_name("size")));
-@end
-
 __attribute__((swift_name("Kotlinx_coroutines_coreCoroutineScope")))
 @protocol SharedKotlinx_coroutines_coreCoroutineScope
 @required
 @property (readonly) id<SharedKotlinCoroutineContext> coroutineContext __attribute__((swift_name("coroutineContext")));
+@end
+
+__attribute__((swift_name("KotlinException")))
+@interface SharedKotlinException : SharedKotlinThrowable
+- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer));
++ (instancetype)new __attribute__((availability(swift, unavailable, message="use object initializers instead")));
+- (instancetype)initWithMessage:(NSString * _Nullable)message __attribute__((swift_name("init(message:)"))) __attribute__((objc_designated_initializer));
+- (instancetype)initWithCause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(cause:)"))) __attribute__((objc_designated_initializer));
+- (instancetype)initWithMessage:(NSString * _Nullable)message cause:(SharedKotlinThrowable * _Nullable)cause __attribute__((swift_name("init(message:cause:)"))) __attribute__((objc_designated_initializer));
 @end
 
 __attribute__((swift_name("KotlinRuntimeException")))
@@ -1287,6 +839,64 @@ __attribute__((swift_name("Kotlinx_coroutines_coreJob")))
 @property (readonly) id<SharedKotlinx_coroutines_coreJob> _Nullable parent __attribute__((swift_name("parent")));
 @end
 
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("ResourcesStringResource")))
+@interface SharedResourcesStringResource : SharedBase
+- (instancetype)initWithResourceId:(NSString *)resourceId bundle:(NSBundle *)bundle __attribute__((swift_name("init(resourceId:bundle:)"))) __attribute__((objc_designated_initializer));
+- (SharedResourcesStringResource *)doCopyResourceId:(NSString *)resourceId bundle:(NSBundle *)bundle __attribute__((swift_name("doCopy(resourceId:bundle:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
+@property (readonly) NSString *resourceId __attribute__((swift_name("resourceId")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("ResourcesResourcePlatformDetails")))
+@interface SharedResourcesResourcePlatformDetails : SharedBase
+- (instancetype)initWithNsBundle:(NSBundle *)nsBundle __attribute__((swift_name("init(nsBundle:)"))) __attribute__((objc_designated_initializer));
+@property (readonly) NSBundle *nsBundle __attribute__((swift_name("nsBundle")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("ResourcesColorResource")))
+@interface SharedResourcesColorResource : SharedBase
+- (instancetype)initWithName:(NSString *)name bundle:(NSBundle *)bundle __attribute__((swift_name("init(name:bundle:)"))) __attribute__((objc_designated_initializer));
+@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
+@property (readonly) NSString *name __attribute__((swift_name("name")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("ResourcesImageResource")))
+@interface SharedResourcesImageResource : SharedBase
+- (instancetype)initWithAssetImageName:(NSString *)assetImageName bundle:(NSBundle *)bundle __attribute__((swift_name("init(assetImageName:bundle:)"))) __attribute__((objc_designated_initializer));
+- (SharedResourcesImageResource *)doCopyAssetImageName:(NSString *)assetImageName bundle:(NSBundle *)bundle __attribute__((swift_name("doCopy(assetImageName:bundle:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+- (UIImage * _Nullable)toUIImage __attribute__((swift_name("toUIImage()")));
+@property (readonly) NSString *assetImageName __attribute__((swift_name("assetImageName")));
+@property (readonly) NSBundle *bundle __attribute__((swift_name("bundle")));
+@end
+
+__attribute__((swift_name("ResourcesStringDesc")))
+@protocol SharedResourcesStringDesc
+@required
+- (NSString *)localized __attribute__((swift_name("localized()")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("KotlinArray")))
+@interface SharedKotlinArray<T> : SharedBase
++ (instancetype)arrayWithSize:(int32_t)size init:(T _Nullable (^)(SharedInt *))init __attribute__((swift_name("init(size:init:)")));
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
+- (T _Nullable)getIndex:(int32_t)index __attribute__((swift_name("get(index:)")));
+- (id<SharedKotlinIterator>)iterator __attribute__((swift_name("iterator()")));
+- (void)setIndex:(int32_t)index value:(T _Nullable)value __attribute__((swift_name("set(index:value:)")));
+@property (readonly) int32_t size __attribute__((swift_name("size")));
+@end
+
 __attribute__((swift_name("RuntimeQueryListener")))
 @protocol SharedRuntimeQueryListener
 @required
@@ -1320,13 +930,6 @@ __attribute__((swift_name("RuntimeAfterVersion")))
 - (instancetype)initWithAfterVersion:(int64_t)afterVersion block:(void (^)(id<SharedRuntimeSqlDriver>))block __attribute__((swift_name("init(afterVersion:block:)"))) __attribute__((objc_designated_initializer));
 @property (readonly) int64_t afterVersion __attribute__((swift_name("afterVersion")));
 @property (readonly) void (^block)(id<SharedRuntimeSqlDriver>) __attribute__((swift_name("block")));
-@end
-
-__attribute__((swift_name("KotlinIterator")))
-@protocol SharedKotlinIterator
-@required
-- (BOOL)hasNext __attribute__((swift_name("hasNext()")));
-- (id _Nullable)next __attribute__((swift_name("next()")));
 @end
 
 __attribute__((swift_name("Kotlinx_coroutines_coreFlowCollector")))
@@ -1456,6 +1059,13 @@ __attribute__((swift_name("Kotlinx_coroutines_coreSelectClause")))
 __attribute__((swift_name("Kotlinx_coroutines_coreSelectClause0")))
 @protocol SharedKotlinx_coroutines_coreSelectClause0 <SharedKotlinx_coroutines_coreSelectClause>
 @required
+@end
+
+__attribute__((swift_name("KotlinIterator")))
+@protocol SharedKotlinIterator
+@required
+- (BOOL)hasNext __attribute__((swift_name("hasNext()")));
+- (id _Nullable)next __attribute__((swift_name("next()")));
 @end
 
 __attribute__((objc_subclassing_restricted))

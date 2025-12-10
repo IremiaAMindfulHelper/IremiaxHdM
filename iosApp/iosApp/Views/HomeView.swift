@@ -38,9 +38,9 @@ struct HomeView: View {
                         .foregroundColor(.accentColor)
 
                     // NOTE: Text values pulled from shared string resources (moko-resources)
-                    Text(StringsKt.localized(res: SharedRes.strings().welcome_title).localized())
-                    Text(StringsKt.localized(res: SharedRes.strings().sos_button).localized())
-                    Text(StringsKt.localized(res: SharedRes.strings().test_string).localized())
+                    Text(Strings.welcome_title)
+                    Text(Strings.sos_button)
+                    Text(Strings.test_string)
 
                     // Shared image example (onboarding illustration)
                     let res = SharedRes.images().onboarding_2
