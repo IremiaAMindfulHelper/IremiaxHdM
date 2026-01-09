@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct JournalMainView: View {
+struct JournalMainView: View { // Anke
 
     // nur für Optik (Toggle bewegt sich, sonst keine Navigation/Logik nötig)
     @State private var isPanic: Bool = false
