@@ -22,7 +22,7 @@ struct MainView: View {
                 .tabItem { Label(StringsKt.localized(res: SharedRes.strings().home).localized(), systemImage: "house") }
                 .tag(NavigationTarget.Home().route)
 
-            ReflectionView()
+            JournalMainView()
                 .tabItem { Label(StringsKt.localized(res: SharedRes.strings().reflection).localized(), systemImage: "book") }
                 .tag(NavigationTarget.Reflection().route)
 
