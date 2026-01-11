@@ -34,6 +34,15 @@ struct JournalEntryView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
                 
+                HStack {
+                    Text("Aktivitäten")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 40)
+                
                 Spacer(minLength: 100)
             }
         }
@@ -125,23 +134,27 @@ struct JournalEntryView: View {
                 }
                 .position(x: centerX, y: geo.size.height - 25)
                 
-                HStack(spacing: 2) {
+                HStack(spacing: 4) {
+                    VStack(spacing: 2) {
                         Text("😔")
                             .font(.system(size: 16))
                         Text("deprimiert")
                             .font(.system(size: 12, weight: .medium))
                             .multilineTextAlignment(.center)
-                    .offset(y: 6)
+                            .offset(y: 6)
+                    }
                 }
                 .position(x: 40, y: centerY)
                 
-                HStack(spacing: 2) {
+                HStack(spacing: 4) {
+                    VStack(spacing: 2) {
                         Text("😃")
                             .font(.system(size: 16))
                         Text("fröhlich")
                             .font(.system(size: 12, weight: .medium))
                             .multilineTextAlignment(.center)
                     .offset(y: 6)
+                }
                 }
                 .position(x: geo.size.width - 40, y: centerY)
                 
