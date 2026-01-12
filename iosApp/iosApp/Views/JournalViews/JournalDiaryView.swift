@@ -1,7 +1,13 @@
-//
-//  JournalDiaryView.swift
-//  iosApp
-//
-//  Created by Anke Raab on 09.01.26.
-// Basti
+import SwiftUI
 
+struct JournalDiaryView: View {
+    var body: some View {
+        Text("Tagebuch")
+    }
+}
+
+#Preview {
+    NavigationView {
+        JournalDiaryView()
+    }
+}
