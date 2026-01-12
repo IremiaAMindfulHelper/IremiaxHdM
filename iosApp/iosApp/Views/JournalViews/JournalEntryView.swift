@@ -4,50 +4,42 @@ struct JournalEntryView: View {
     @State private var currentDate = Date()
     @State private var ballPosition = CGPoint(x: 0, y: 0)
     @State private var isLocked = false
+    @State private var activityMode: ActivityMode = .symbols
+    @State private var selectedActivities: Set<ActivitySymbol> = []
+    @State private var freeTextActivity: String = ""
+    @State private var waterAmount: String = "0"
+    @State private var sleepHours: String = "0"
+    @State private var notes: String = ""
     
-    // MARK: - Selbstcheck & Stimmung
+    private var waterInLiters: String {
+        guard let ml = Double(waterAmount), ml > 0 else {
+            return "0"
+        }
+        let liters = ml / 1000.0
+        return String(format: "%.1f", liters)
+    }
     
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // HEADER
-                headerView
-                
-                Text("Selbstcheck")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 20)
-                
-                HStack {
-                    Text("Stimmung")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    Spacer()
-                    lockButton
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                
-                moodCoordinateSystem
-                    .frame(height: 400)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                
-                HStack {
-                    Text("Aktivitäten")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 40)
-                
-                Spacer(minLength: 100)
+    enum ActivitySymbol: String, CaseIterable, Identifiable {
+        case football = "soccerball"
+        case university = "graduationcap"
+        case shopping = "cart"
+        case train = "tram"
+        
+        var id: String { rawValue }
+        
+        var label: String {
+            switch self {
+            case .football: return "Fußball"
+            case .university: return "Uni"
+            case .shopping: return "Einkaufen"
+            case .train: return "Zug"
             }
         }
-        .navigationTitle("Journal")
-        .navigationBarHidden(true)
+    }
+    
+    enum ActivityMode: String, CaseIterable {
+        case symbols = "Symbole"
+        case freetext = "Freitext"
     }
     
     // MARK: - Header
@@ -68,7 +60,8 @@ struct JournalEntryView: View {
                     .fontWeight(.semibold)
                 
                 Spacer()
-                // Placeholder for space
+                
+                // Placeholder for symmetry
                 Color.clear.frame(width: 40)
             }
             .padding(.horizontal, 20)
@@ -97,21 +90,21 @@ struct JournalEntryView: View {
         }
     }
     
-    // MARK: - Koordinatensystem
+    // MARK: - Mood Coordinate System
     private var moodCoordinateSystem: some View {
         GeometryReader { geo in
             let centerX = geo.size.width / 2
             let centerY = geo.size.height / 2
             let maxDistanceX: CGFloat = centerX - 70
-            let maxDistanceY: CGFloat = centerY - 60
+            let maxDistanceY: CGFloat = centerY - 70
             
             ZStack {
                 Path { path in
-                    // Y-Achse
-                    path.move(to: CGPoint(x: centerX, y: 60))
-                    path.addLine(to: CGPoint(x: centerX, y: geo.size.height - 60))
+                    // Y-axis
+                    path.move(to: CGPoint(x: centerX, y: 70))
+                    path.addLine(to: CGPoint(x: centerX, y: geo.size.height - 70))
                     
-                    // X-Achse
+                    // X-axis
                     path.move(to: CGPoint(x: 60, y: centerY))
                     path.addLine(to: CGPoint(x: geo.size.width - 60, y: centerY))
                 }
@@ -153,12 +146,12 @@ struct JournalEntryView: View {
                         Text("fröhlich")
                             .font(.system(size: 12, weight: .medium))
                             .multilineTextAlignment(.center)
-                    .offset(y: 6)
-                }
+                            .offset(y: 6)
+                    }
                 }
                 .position(x: geo.size.width - 40, y: centerY)
                 
-                // Daggable
+                // Draggable ball
                 Circle()
                     .frame(width: 30, height: 30)
                     .shadow(radius: 6, y: 2)
@@ -174,9 +167,8 @@ struct JournalEntryView: View {
                         y: centerY - ballPosition.y * maxDistanceY
                     )
                     .gesture(
-                        // Unlocked Dragging
                         isLocked ? nil :
-                        DragGesture()
+                            DragGesture()
                             .onChanged { value in
                                 let deltaX = value.location.x - centerX
                                 let deltaY = centerY - value.location.y
@@ -193,6 +185,258 @@ struct JournalEntryView: View {
                     .opacity(isLocked ? 0.7 : 1.0)
             }
         }
+    }
+    
+    // MARK: - Main View
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                // Header
+                headerView
+                
+                Text("Selbstcheck")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 20)
+                
+                HStack {
+                    Text("Stimmung")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
+                    lockButton
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                
+                moodCoordinateSystem
+                    .frame(height: 400)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                
+                // MARK: - Activities Section
+                HStack {
+                    Text("Aktivitäten")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 40)
+                
+                Picker("Aktivitätsmodus", selection: $activityMode) {
+                    ForEach(ActivityMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                
+                if activityMode == .symbols {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 16),
+                        GridItem(.flexible(), spacing: 16),
+                        GridItem(.flexible(), spacing: 16)
+                    ], spacing: 16) {
+                        ForEach(ActivitySymbol.allCases) { activity in
+                            Button(action: {
+                                if selectedActivities.contains(activity) {
+                                    selectedActivities.remove(activity)
+                                } else {
+                                    selectedActivities.insert(activity)
+                                }
+                            }) {
+                                VStack(spacing: 8) {
+                                    Image(systemName: activity.rawValue)
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.primary)
+                                    Text(activity.label)
+                                        .font(.caption)
+                                        .foregroundColor(.primary)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 80)
+                                .background(selectedActivities.contains(activity) ? Color.black.opacity(0.2) : Color(.systemGray6))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(selectedActivities.contains(activity) ? Color.black : Color.clear, lineWidth: 2)
+                                )
+                            }
+                        }
+                        
+                        // Plus button for adding new activity
+                        Button(action: {
+                            // TODO: Add new activity functionality
+                        }) {
+                            VStack(spacing: 8) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.primary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 80)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.primary, lineWidth: 1)
+                                    .opacity(0.3)
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                }
+                
+                if activityMode == .freetext {
+                    ZStack(alignment: .topLeading) {
+                        TextEditor(text: $freeTextActivity)
+                            .frame(height: 200)
+                            .scrollContentBackground(.hidden)
+                            .padding(8)
+                            .background(Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.black, lineWidth: 1)
+                            )
+                        
+                        // Placeholder text
+                        if freeTextActivity.isEmpty {
+                            Text("Was hast du heute gemacht?")
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 16)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                }
+                
+                // MARK: - Health Tracker
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Gesundheitstracker")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 40)
+                    
+                    HStack(spacing: 40) {
+                        // Water intake
+                        VStack(spacing: 8) {
+                            Text("\(waterInLiters) Liter")
+                                .font(.caption)
+                                .foregroundColor(.primary)
+                            
+                            Image(systemName: "waterbottle")
+                                .font(.system(size: 40))
+                                .foregroundColor(.primary)
+                            
+                            HStack(spacing: 4) {
+                                TextField("ml", text: $waterAmount)
+                                    .keyboardType(.numberPad)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 100)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                        
+                        // Sleep hours
+                        VStack(spacing: 8) {
+                            Text("\(sleepHours) Stunden")
+                                .font(.caption)
+                                .foregroundColor(.primary)
+                            
+                            Image(systemName: "bed.double")
+                                .font(.system(size: 40))
+                                .foregroundColor(.primary)
+                            
+                            HStack(spacing: 4) {
+                                TextField("h", text: $sleepHours)
+                                    .keyboardType(.numberPad)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 100)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
+                }
+                
+                // MARK: - Notes
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Notizen")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
+                    
+                    TextEditor(text: $notes)
+                        .frame(height: 60)
+                        .scrollContentBackground(.hidden)
+                        .padding(8)
+                        .background(Color.clear)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.black, lineWidth: 1)
+                        )
+                        .padding(.horizontal, 20)
+                }
+                
+                // MARK: - Navigation Buttons
+                HStack(spacing: 16) {
+                    NavigationLink(destination: JournalDiaryView()) {
+                        ZStack(alignment: .bottomTrailing) {
+                            Text("Tagebuch")
+                                .font(.system(size: 16, weight: .medium))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            Text("4/6")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.clear)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.black, lineWidth: 1)
+                        )
+                    }
+                    .foregroundColor(.primary)
+                    
+                    NavigationLink(destination: PanicReflexion()) {
+                        ZStack(alignment: .bottomTrailing) {
+                            Text("Panik Reflexion")
+                                .font(.system(size: 16, weight: .medium))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            Text("5/6")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.clear)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.black, lineWidth: 1)
+                        )
+                    }
+                    .foregroundColor(.primary)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                
+                Spacer(minLength: 100)
+            }
+        }
+        .navigationTitle("Journal")
+        .navigationBarHidden(true)
     }
 }
 
