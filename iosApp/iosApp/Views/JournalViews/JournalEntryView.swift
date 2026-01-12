@@ -127,6 +127,7 @@ struct JournalEntryView: View {
                 }
                 .position(x: centerX, y: geo.size.height - 25)
                 
+                // TODO: Get better emojis for Happy & Sad mood
                 HStack(spacing: 4) {
                     VStack(spacing: 2) {
                         Text("😔")
@@ -151,6 +152,7 @@ struct JournalEntryView: View {
                 }
                 .position(x: geo.size.width - 40, y: centerY)
                 
+                // TODO: Add color changing ball
                 // Draggable ball
                 Circle()
                     .frame(width: 30, height: 30)
