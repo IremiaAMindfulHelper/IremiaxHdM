@@ -1,11 +1,18 @@
+//
+//  JournalMainViewPanicAttacks.swift
+//  iosApp
+//
+//  Created by Anke Raab on 12.01.26.
+//
+
 import SwiftUI
 
-struct JournalMainView: View { // Anke
+struct JournalMainViewPanicAttacks: View { // Anke
 
     // nur für Optik (Toggle bewegt sich, sonst keine Navigation/Logik nötig)
-    @State private var isPanic: Bool = false
+    @State private var isPanic: Bool = true
 
-    // MARK: - Tuning (wie bei deinem Kalender)
+
     private let titleTopInset: CGFloat = 34
     private let gridCircleSize: CGFloat = 38
     private let gridPlusSize: CGFloat = 16
@@ -29,6 +36,7 @@ struct JournalMainView: View { // Anke
 
             // Mode Switch (nur Optik)
             HStack(spacing: 16) {
+
                 VStack(spacing: 6) {
                     Image(systemName: "circle.fill")
                         .font(.system(size: 28))
@@ -100,7 +108,7 @@ struct JournalMainView: View { // Anke
             .padding(.horizontal, 18)
             .padding(.top, 12)
 
-            // Days grid (nur Mock-Optik)
+            // Days grid (nur Mock-Optik) – statt bunten Kugeln: gebrochene Herzen
             let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
             let cells = demoCells
 
@@ -126,17 +134,21 @@ struct JournalMainView: View { // Anke
         .background(Color.white)
     }
 
-    // MARK: - Demo Cells (42 Zellen, Optik wie Kalender)
+
     private var demoCells: [DemoCell] {
         // Beispiel: Januar 2026 startet Do (Mo-basiert: 4. Spalte)
-        // Wir legen 3 Vormonatstage (29,30,31) + 31 Tage + Rest auffüllen
+        // 3 Vormonatstage (29,30,31) + 31 Tage + Rest auffüllen
         let leading = [29, 30, 31].map { DemoCell(day: $0, isInDisplayedMonth: false, mark: .plus) }
+
         let monthDays: [DemoCell] = (1...31).map { d in
-            // Nur optische Demo-Marks (wie deine 6/7 bunt)
-            if d == 6 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .moodGradientA) }
-            if d == 7 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .moodGradientB) }
+            // Demo: 6 & 7 = brokenHeart (statt Mood-Grads)
+            if d == 6 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .brokenHeart) }
+            if d == 7 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .brokenHeart) }
+
+            // Demo: 16/17/18 = filled
             if [16, 17, 18].contains(d) { return DemoCell(day: d, isInDisplayedMonth: true, mark: .filled) }
-            // Rest: plus (damit es nach deinem Mock aussieht)
+
+            // Rest: plus (wie Mock)
             return DemoCell(day: d, isInDisplayedMonth: true, mark: .plus)
         }
 
@@ -149,7 +161,7 @@ struct JournalMainView: View { // Anke
     }
 }
 
-// MARK: - Supporting Types (nur für JournalMainView Mock)
+
 
 private struct DemoCell: Identifiable {
     let id = UUID()
@@ -161,8 +173,7 @@ private struct DemoCell: Identifiable {
 private enum DemoMark: Equatable {
     case plus
     case filled
-    case moodGradientA
-    case moodGradientB
+    case brokenHeart
     case none
 }
 
@@ -189,6 +200,10 @@ private struct DayCell: View {
                         .font(.system(size: plusSize, weight: .bold))
                         .foregroundStyle(.black.opacity(0.8))
                 }
+
+                if mark == .brokenHeart {
+                    BrokenHeartIcon(size: 22, isActive: true)
+                }
             }
 
             Text("\(day)")
@@ -204,29 +219,15 @@ private struct DayCell: View {
             return AnyShapeStyle(Color.black.opacity(0.25))
         case .filled:
             return AnyShapeStyle(Color.black.opacity(0.12))
-        case .moodGradientA:
-            return AnyShapeStyle(
-                LinearGradient(
-                    colors: [Color.red.opacity(0.9), Color.blue.opacity(0.9)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-        case .moodGradientB:
-            return AnyShapeStyle(
-                LinearGradient(
-                    colors: [Color.green.opacity(0.9), Color.blue.opacity(0.9)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
+        case .brokenHeart:
+            return AnyShapeStyle(Color.black.opacity(0.06))
         case .none:
             return AnyShapeStyle(Color.black.opacity(0.06))
         }
     }
 }
 
-// MARK: - Broken Heart Icon
+
 
 private struct BrokenHeartIcon: View {
     let size: CGFloat
@@ -245,8 +246,8 @@ private struct BrokenHeartIcon: View {
     }
 }
 
-struct JournalMainView_Previews: PreviewProvider {
+struct JournalMainViewPanicAttacks_Previews: PreviewProvider {
     static var previews: some View {
-        JournalMainView()
+        JournalMainViewPanicAttacks()
     }
 }
