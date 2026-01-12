@@ -24,9 +24,13 @@ struct MainView: View {
                     .tag(NavigationTarget.Home().route)
 
             
-                JournalMainViewPanicAttacks()
-                    .tabItem { Label(StringsKt.localized(res: SharedRes.strings().reflection).localized(), systemImage: "book") }
+                PanicReflexion()
+                    .tabItem {
+                        Label("Panik", systemImage: "heart.circle")
+                    }
                     .tag(NavigationTarget.Reflection().route)
+
+
 
                 SosView()
                     .tabItem { Label(StringsKt.localized(res: SharedRes.strings().sos).localized(), systemImage: "sos.circle.fill") }
@@ -42,10 +46,15 @@ struct MainView: View {
             }
 
             //Popup ÜBER der TabBar (weil außerhalb der TabView)
+            
+            
+            /*
             if vm.currentTarget.route == NavigationTarget.Reflection().route {
                 JournalMainPopUpView()
                     .ignoresSafeArea()
             }
+            
+            */
         }
     }
 }
