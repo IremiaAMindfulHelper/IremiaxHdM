@@ -24,13 +24,11 @@ struct MainView: View {
                     .tag(NavigationTarget.Home().route)
 
             
-                PanicReflexion()
+                JournalMainViewEmotions()
                     .tabItem {
-                        Label("Panik", systemImage: "heart.circle")
+                        Label("Panik", systemImage: "book.circle")
                     }
                     .tag(NavigationTarget.Reflection().route)
-
-
 
                 SosView()
                     .tabItem { Label(StringsKt.localized(res: SharedRes.strings().sos).localized(), systemImage: "sos.circle.fill") }
