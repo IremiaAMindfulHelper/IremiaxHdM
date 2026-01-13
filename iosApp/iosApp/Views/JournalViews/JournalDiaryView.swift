@@ -25,8 +25,30 @@ struct JournalDiaryView: View {
     
     private let moodEmojis = ["😢", "🙁", "😐", "😊", "😄"]
     
-    var body: some View {  // Temp
-        Text("Variablen fertig! 7 Fragen + Emoji-States.")
+    var body: some View {
+        NavigationStack {
+            Color.gray.opacity(0.1)
+                .ignoresSafeArea()
+                .navigationTitle("Tagebuch")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "chevron.left")
+                        }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            // TODO: Nagvigation
+                            print("Edit Fragenkatalog")
+                        } label: {
+                            Image(systemName: "pencil")
+                        }
+                    }
+                }
+        }
     }
 }
 
