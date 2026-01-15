@@ -8,7 +8,6 @@ enum AppRoute: Hashable {
 }
 
 struct JournalNavigationView: View {
-    
     @State private var navigationPath = NavigationPath()
     @State private var showJournalPopup = false
     
@@ -19,11 +18,16 @@ struct JournalNavigationView: View {
                     showJournalPopup = true
                 }
             )
+            .navigationDestination(for: AppRoute.self) { route in  // ← HIER DRIN!
+                destinationView(for: route)
+            }
             .sheet(isPresented: $showJournalPopup) {
-                JournalMainPopUpView()
-        }
-            .navigationDestination(for: AppRoute.self) {
-                route in destinationView(for: route)
+                JournalMainPopUpView(
+                    onEintragBearbeiten: {
+                        showJournalPopup = false
+                        navigationPath.append(AppRoute.journalEntry)
+                    }
+                )
             }
         }
     }
@@ -31,15 +35,14 @@ struct JournalNavigationView: View {
     @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
-        case .journalDiary:
-                Text("Journal Diary")
         case .journalEntry:
-            Text("Journal Entry")
+            JournalEntryView()
+        case .journalDiary:
+            Text("Journal Diary")
         case .panicReflexion:
             Text("Panic Reflexion")
         case .questionCatalog:
             Text("Question Catalog")
         }
     }
-    
 }
