@@ -2,8 +2,8 @@ import SwiftUI
 
 enum AppRoute: Hashable {
     case journalEntry
-    case journalDiary
-    case panicReflexion
+    case journalDiaryView
+    case panicReflection
     case questionCatalog
 }
 
@@ -39,12 +39,26 @@ struct JournalNavigationView: View {
             JournalEntryView(
                 onBack: {
                     navigationPath.removeLast()
+                },
+                onOpenDiary: {
+                    navigationPath.append(AppRoute.journalDiaryView)
+                },
+                onOpenPanicReflexion: {
+                    navigationPath.append(AppRoute.panicReflection)
                 }
             )
-        case .journalDiary:
-            Text("Journal Diary")
-        case .panicReflexion:
-            Text("Panic Reflexion")
+        case .journalDiaryView:
+            JournalDiaryView(
+                                onBack: {
+                                    navigationPath.removeLast()
+                                }
+                            )
+        case .panicReflection: 
+            PanicReflexion(
+                onBack: {
+                    navigationPath.removeLast()
+                }
+            )
         case .questionCatalog:
             Text("Question Catalog")
         }
