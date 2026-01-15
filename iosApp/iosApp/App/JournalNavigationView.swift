@@ -36,7 +36,11 @@ struct JournalNavigationView: View {
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
         case .journalEntry:
-            JournalEntryView()
+            JournalEntryView(
+                onBack: {
+                    navigationPath.removeLast()
+                }
+            )
         case .journalDiary:
             Text("Journal Diary")
         case .panicReflexion:

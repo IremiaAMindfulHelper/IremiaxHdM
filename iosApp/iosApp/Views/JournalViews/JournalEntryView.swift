@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct JournalEntryView: View {
+    
+    let onBack: () -> Void
+    
     @State private var currentDate = Date()
     @State private var ballPosition = CGPoint(x: 0, y: 0)
     @State private var isLocked = false
@@ -46,7 +49,7 @@ struct JournalEntryView: View {
     private var headerView: some View {
         VStack(spacing: 0) {
             HStack {
-                Button(action: {}) {
+                Button(action: onBack) {
                     Image(systemName: "chevron.left")
                         .font(.title3)
                         .foregroundColor(.primary)
@@ -446,6 +449,6 @@ struct JournalEntryView: View {
 
 #Preview {
     NavigationView {
-        JournalEntryView()
+        JournalEntryView(onBack: {})
     }
 }
