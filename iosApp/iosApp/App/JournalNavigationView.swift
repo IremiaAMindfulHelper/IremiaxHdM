@@ -14,7 +14,11 @@ struct JournalNavigationView: View {
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            JournalMainViewEmotions()
+            JournalMainViewEmotions(
+                onPlusButtonTapped: {
+                    showJournalPopup = true
+                }
+            )
             .sheet(isPresented: $showJournalPopup) {
                 JournalMainPopUpView()
         }
