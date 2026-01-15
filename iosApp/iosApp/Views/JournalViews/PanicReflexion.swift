@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct PanicReflexion: View {
-    @Environment(\.dismiss) private var dismiss
+    
+    let onBack: () -> Void
 
     // UI (auf/zu)
     @State private var expanded: [Bool] = [true, true, true, true]
@@ -31,7 +32,6 @@ struct PanicReflexion: View {
     ]
 
     var body: some View {
-        NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
 
@@ -96,7 +96,7 @@ struct PanicReflexion: View {
 
                     // Button + Update unter den Kategorien (nicht sticky)
                     VStack(spacing: 10) {
-                        Button { } label: {
+                        Button {onBack()} label: {
                             Text("Eintrag abschließen")
                                 .frame(maxWidth: .infinity)
                         }
@@ -115,16 +115,16 @@ struct PanicReflexion: View {
             .background(Color(.systemBackground))
             .navigationTitle("Panik Reflexion")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button { dismiss() } label: {
+                    Button { onBack() } label: {
                         Image(systemName: "chevron.left")
                     }
                 }
             }
         }
     }
-}
 
 // MARK: - Category 1 Content
 
@@ -509,5 +509,5 @@ private struct RoundedTextField: View {
 }
 
 #Preview {
-    PanicReflexion()
+    PanicReflexion(onBack: {})
 }

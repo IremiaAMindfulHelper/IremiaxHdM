@@ -2,7 +2,9 @@ import SwiftUI
 
 // MARK: - Main View
 struct JournalDiaryView: View {
-    @Environment(\.dismiss) private var dismiss
+    
+    let onBack: () -> Void
+    
     
     // MARK: - State Variables
     @State private var expanded: [Bool] = Array(repeating: true, count: 7)
@@ -29,7 +31,6 @@ struct JournalDiaryView: View {
         
     // MARK: - Body
     var body: some View {
-        NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
                     VStack(spacing: 12) {
@@ -73,7 +74,7 @@ struct JournalDiaryView: View {
                     // MARK: Submit Button
                     VStack(spacing: 10) {
                         Button {
-                            dismiss()
+                            onBack()
                         } label: {
                             Text("Eintrag abschließen")
                                 .font(.system(size: 18, weight: .regular))
@@ -96,9 +97,10 @@ struct JournalDiaryView: View {
             .background(Color(red: 0.95, green: 0.95, blue: 0.95))
             .navigationTitle("Tagebuch")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button { dismiss() } label: {
+                    Button { onBack() } label: {
                         Image(systemName: "chevron.left")
                             .foregroundColor(.black)
                     }
@@ -115,7 +117,6 @@ struct JournalDiaryView: View {
             }
         }
     }
-}
 
 // MARK: - Diary Content
 private struct DiaryContent: View {
@@ -251,5 +252,5 @@ private struct RoundedTextField: View {
 
 // MARK: - Preview
 #Preview {
-    JournalDiaryView()
+    JournalDiaryView(onBack: {})
 }
