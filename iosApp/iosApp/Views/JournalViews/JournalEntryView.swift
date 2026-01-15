@@ -3,6 +3,8 @@ import SwiftUI
 struct JournalEntryView: View {
     
     let onBack: () -> Void
+    let onOpenDiary: () -> Void
+    let onOpenPanicReflexion: () -> Void
     
     @State private var currentDate = Date()
     @State private var ballPosition = CGPoint(x: 0, y: 0)
@@ -394,7 +396,7 @@ struct JournalEntryView: View {
                 
                 // MARK: - Navigation Buttons
                 HStack(spacing: 16) {
-                    NavigationLink(destination: JournalDiaryView()) {
+                    Button(action: onOpenDiary) {
                         ZStack(alignment: .bottomTrailing) {
                             Text("Tagebuch")
                                 .font(.system(size: 16, weight: .medium))
@@ -413,8 +415,8 @@ struct JournalEntryView: View {
                         )
                     }
                     .foregroundColor(.primary)
-                    
-                    NavigationLink(destination: PanicReflexion()) {
+
+                    Button(action: onOpenPanicReflexion) {
                         ZStack(alignment: .bottomTrailing) {
                             Text("Panik Reflexion")
                                 .font(.system(size: 16, weight: .medium))
@@ -433,6 +435,7 @@ struct JournalEntryView: View {
                         )
                     }
                     .foregroundColor(.primary)
+
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 24)
@@ -449,6 +452,10 @@ struct JournalEntryView: View {
 
 #Preview {
     NavigationView {
-        JournalEntryView(onBack: {})
+        JournalEntryView(
+            onBack: {},
+            onOpenDiary: {},
+            onOpenPanicReflexion: {}
+        )
     }
 }
