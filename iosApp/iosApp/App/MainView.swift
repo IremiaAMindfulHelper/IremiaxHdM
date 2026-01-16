@@ -24,7 +24,7 @@ struct MainView: View {
                     .tag(NavigationTarget.Home().route)
 
             
-                PanicReflexion()
+                JournalMainViewEmotions()
                     .tabItem {
                         Label("Journal", systemImage: "book.circle")
                     }
