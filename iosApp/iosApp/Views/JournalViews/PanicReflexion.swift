@@ -20,7 +20,7 @@ struct PanicReflexion: View {
     @State private var skillEffectiveness: Double = 5
     @State private var nextTimeText: String = ""
 
-    // Category 4 (UI-State)
+    // Category 4
     @State private var shortReflection: String = ""
 
     private let symptomOptions = ["dizziness", "shortness of breath", "rapid heartbeat"]
@@ -35,90 +35,74 @@ struct PanicReflexion: View {
             ScrollView {
                 VStack(spacing: 14) {
 
-                    HStack(alignment: .top, spacing: 12) {
-                        ResultBar()
-                            .padding(.top, 18)
+                    // ✅ Layout wie im Tagebuch: nur die Cards (ohne linke ResultBar Optik)
+                    VStack(spacing: 12) {
 
-                        VStack(spacing: 12) {
+                        CategoryCard(title: "Category 1", dateText: "10.11.2025", isExpanded: $expanded[0]) {
+                            Category1Content(
+                                location: $location1,
+                                intensity: $intensity1,
+                                cause: $cause1
+                            )
+                        }
 
-                            // CATEGORY 1
-                            CategoryCard(
-                                title: "Category 1",
-                                dateText: "10.11.2025",
-                                isExpanded: $expanded[0]
-                            ) {
-                                Category1Content(
-                                    location: $location1,
-                                    intensity: $intensity1,
-                                    cause: $cause1
-                                )
-                            }
+                        CategoryCard(title: "Category 2", dateText: "10.11.2025", isExpanded: $expanded[1]) {
+                            Category2Content(
+                                symptomOptions: symptomOptions,
+                                selectedSymptoms: $selectedSymptoms,
+                                newSymptomText: $newSymptomText,
+                                feelingOptions: feelingOptions,
+                                selectedFeelings: $selectedFeelings
+                            )
+                        }
 
-                            // CATEGORY 2
-                            CategoryCard(
-                                title: "Category 2",
-                                dateText: "10.11.2025",
-                                isExpanded: $expanded[1]
-                            ) {
-                                Category2Content(
-                                    symptomOptions: symptomOptions,
-                                    selectedSymptoms: $selectedSymptoms,
-                                    newSymptomText: $newSymptomText,
-                                    feelingOptions: feelingOptions,
-                                    selectedFeelings: $selectedFeelings
-                                )
-                            }
+                        CategoryCard(title: "Category 3", dateText: "10.11.2025", isExpanded: $expanded[2]) {
+                            Category3Content(
+                                effectiveness: $skillEffectiveness,
+                                nextTimeText: $nextTimeText
+                            )
+                        }
 
-                            // CATEGORY 3
-                            CategoryCard(
-                                title: "Category 3",
-                                dateText: "10.11.2025",
-                                isExpanded: $expanded[2]
-                            ) {
-                                Category3Content(
-                                    effectiveness: $skillEffectiveness,
-                                    nextTimeText: $nextTimeText
-                                )
-                            }
-
-                            // CATEGORY 4 (NEU)
-                            CategoryCard(
-                                title: "Category 4",
-                                dateText: "10.11.2025",
-                                isExpanded: $expanded[3]
-                            ) {
-                                Category4Content(shortReflection: $shortReflection)
-                            }
+                        CategoryCard(title: "Category 4", dateText: "10.11.2025", isExpanded: $expanded[3]) {
+                            Category4Content(shortReflection: $shortReflection)
                         }
                     }
                     .padding(.horizontal, 12)
                     .padding(.top, 10)
 
-                    // Button + Update unter den Kategorien (nicht sticky)
+                    // ✅ Button wie Tagebuch (outlined, mittig, gleiche Breite)
                     VStack(spacing: 10) {
-                        Button { } label: {
+                        Button {
+                            // TODO: Speichern
+                            dismiss()
+                        } label: {
                             Text("Eintrag abschließen")
+                                .font(.system(size: 18, weight: .regular))
+                                .foregroundColor(.black)
                                 .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .padding(.horizontal, 24)
+                                .background(Color.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.black, lineWidth: 2)
+                                )
                         }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
-
-                        Text("update 00:00 alles gespeichert!")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 80)
                     .padding(.top, 6)
                     .padding(.bottom, 18)
                 }
             }
-            .background(Color(.systemBackground))
+            // ✅ Background wie Tagebuch
+            .background(Color(red: 0.95, green: 0.95, blue: 0.95))
             .navigationTitle("Panik Reflexion")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { dismiss() } label: {
                         Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
                     }
                 }
             }
@@ -142,9 +126,10 @@ private struct Category1Content: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Intensity")
                     .font(.subheadline)
+                    .foregroundColor(.black)
 
                 HStack(alignment: .center, spacing: 10) {
-                    Text("0").font(.title3)
+                    Text("0").font(.title3).foregroundColor(.black)
 
                     VStack(spacing: 6) {
                         Slider(value: $intensity, in: 0...10, step: 1)
@@ -153,7 +138,7 @@ private struct Category1Content: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Text("10").font(.title3)
+                    Text("10").font(.title3).foregroundColor(.black)
                 }
             }
 
@@ -181,6 +166,7 @@ private struct Category2Content: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Symptoms")
                     .font(.subheadline)
+                    .foregroundColor(.black)
 
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(symptomOptions, id: \.self) { item in
@@ -212,6 +198,7 @@ private struct Category2Content: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Feelings")
                     .font(.subheadline)
+                    .foregroundColor(.black)
 
                 HStack(spacing: 10) {
                     ForEach(feelingOptions, id: \.key) { f in
@@ -246,6 +233,7 @@ private struct Category3Content: View {
 
             Text("Which skills did you use and how well did they work?")
                 .font(.subheadline)
+                .foregroundColor(.black)
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(alignment: .center, spacing: 12) {
@@ -253,7 +241,7 @@ private struct Category3Content: View {
                     Button { } label: {
                         ZStack {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.secondary.opacity(0.20))
+                                .fill(Color(.systemGray6))
                                 .frame(width: 72, height: 56)
 
                             Image(systemName: "wind")
@@ -284,7 +272,7 @@ private struct Category3Content: View {
             Button { } label: {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.secondary.opacity(0.20))
+                        .fill(Color(.systemGray6))
                         .frame(width: 72, height: 56)
 
                     Image(systemName: "plus")
@@ -297,6 +285,7 @@ private struct Category3Content: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("What would you do next time in a similar situation?")
                     .font(.subheadline)
+                    .foregroundColor(.black)
                     .fixedSize(horizontal: false, vertical: true)
 
                 RoundedTextField(placeholder: "…", text: $nextTimeText)
@@ -306,7 +295,7 @@ private struct Category3Content: View {
     }
 }
 
-// MARK: - Category 4 Content (NEU)
+// MARK: - Category 4 Content
 
 private struct Category4Content: View {
     @Binding var shortReflection: String
@@ -315,6 +304,7 @@ private struct Category4Content: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Short Reflexion")
                 .font(.subheadline)
+                .foregroundColor(.black)
 
             RoundedTextField(placeholder: "…", text: $shortReflection)
         }
@@ -322,7 +312,7 @@ private struct Category4Content: View {
     }
 }
 
-// MARK: - Category Card (rechts Platz für Lasche)
+// MARK: - Tagebuch Style Category Card (gleiches Design)
 
 private struct CategoryCard<Content: View>: View {
     let title: String
@@ -333,69 +323,61 @@ private struct CategoryCard<Content: View>: View {
     private let sideInset: CGFloat = 40
 
     var body: some View {
-        DisclosureGroup(isExpanded: $isExpanded) {
-            content
-                .padding(.trailing, sideInset)
-        } label: {
-            VStack(spacing: 2) {
-                Text(title)
-                    .font(.system(size: 20, weight: .regular, design: .rounded))
-                    .foregroundStyle(.primary)
-
-                if let dateText {
-                    Text(dateText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation {
+                    isExpanded.toggle()
                 }
+            } label: {
+                HStack {
+                    VStack(spacing: 2) {
+                        Text(title)
+                            .font(.system(size: 20, weight: .regular, design: .rounded))
+                            .foregroundColor(.black)
+
+                        if let dateText {
+                            Text(dateText)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.trailing, sideInset + 12)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 12)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.trailing, sideInset)
-            .padding(.vertical, 12)
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                content
+                    .padding(.trailing, sideInset)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 10)
+            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(.secondarySystemBackground))
+                .fill(Color.white)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.secondary.opacity(0.18))
+                .fill(Color(red: 0.4, green: 0.4, blue: 0.4))
                 .frame(width: sideInset),
             alignment: .trailing
+        )
+        .overlay(
+            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                .foregroundColor(.white)
+                .font(.system(size: 14, weight: .bold))
+                .padding(.trailing, 12)
+                .padding(.top, 12),
+            alignment: .topTrailing
         )
     }
 }
 
-// MARK: - Left Result Bar
-
-private struct ResultBar: View {
-    var body: some View {
-        VStack(spacing: 0) {
-            ForEach(0..<4) { i in
-                ResultCheckbox()
-
-                if i < 3 {
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.35))
-                        .frame(width: 4, height: 70)
-                        .padding(.vertical, 8)
-                }
-            }
-        }
-        .padding(.leading, 2)
-    }
-}
-
-private struct ResultCheckbox: View {
-    var body: some View {
-        RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .stroke(Color.secondary.opacity(0.6), lineWidth: 1.5)
-            .frame(width: 24, height: 24)
-    }
-}
-
-// MARK: - Reusable UI Bits
+// MARK: - Reusable UI Bits (unverändert)
 
 private struct SymptomRow: View {
     let title: String
@@ -437,7 +419,11 @@ private struct FeelingButton: View {
             VStack(spacing: 6) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.secondary.opacity(isSelected ? 0.28 : 0.20))
+                        .fill(Color(.systemGray6))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(isSelected ? Color.black : Color.clear, lineWidth: 2)
+                        )
                         .frame(width: 66, height: 50)
 
                     Text(emoji)
@@ -462,7 +448,7 @@ private struct FeelingPlusButton: View {
             VStack(spacing: 6) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.secondary.opacity(0.20))
+                        .fill(Color(.systemGray6))
                         .frame(width: 66, height: 50)
 
                     Image(systemName: "plus")
@@ -487,24 +473,28 @@ private struct LabeledField<Content: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.subheadline)
+                .foregroundColor(.black)
             content
         }
     }
 }
 
+// ✅ RoundedTextField wie Tagebuch
 private struct RoundedTextField: View {
     let placeholder: String
     @Binding var text: String
 
     var body: some View {
-        TextField(placeholder, text: $text)
+        TextField(placeholder, text: $text, axis: .vertical)
             .textFieldStyle(.plain)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
+            .lineLimit(1...6)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.secondary.opacity(0.6), lineWidth: 2)
+                    .stroke(Color.black, lineWidth: 1)
             )
+            .background(Color.white)
     }
 }
 

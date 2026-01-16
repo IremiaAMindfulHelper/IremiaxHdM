@@ -24,9 +24,9 @@ struct MainView: View {
                     .tag(NavigationTarget.Home().route)
 
             
-                JournalMainViewEmotions()
+                PanicReflexion()
                     .tabItem {
-                        Label("Panik", systemImage: "book.circle")
+                        Label("Journal", systemImage: "book.circle")
                     }
                     .tag(NavigationTarget.Reflection().route)
 
