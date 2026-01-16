@@ -35,7 +35,6 @@ struct PanicReflexion: View {
             ScrollView {
                 VStack(spacing: 14) {
 
-                    // ✅ Layout wie im Tagebuch: nur die Cards (ohne linke ResultBar Optik)
                     VStack(spacing: 12) {
 
                         CategoryCard(title: "Category 1", dateText: "10.11.2025", isExpanded: $expanded[0]) {
@@ -70,10 +69,9 @@ struct PanicReflexion: View {
                     .padding(.horizontal, 12)
                     .padding(.top, 10)
 
-                    // ✅ Button wie Tagebuch (outlined, mittig, gleiche Breite)
+                    // Button wie Tagebuch (outlined, mittig, gleiche Breite)
                     VStack(spacing: 10) {
                         Button {
-                            // TODO: Speichern
                             dismiss()
                         } label: {
                             Text("Eintrag abschließen")
@@ -94,7 +92,6 @@ struct PanicReflexion: View {
                     .padding(.bottom, 18)
                 }
             }
-            // ✅ Background wie Tagebuch
             .background(Color(red: 0.95, green: 0.95, blue: 0.95))
             .navigationTitle("Panik Reflexion")
             .navigationBarTitleDisplayMode(.inline)
@@ -150,7 +147,7 @@ private struct Category1Content: View {
     }
 }
 
-// MARK: - Category 2 Content
+// MARK: - Category 2 Content  ✅ Plus-Button bei Symptoms entfernt + Toggle fix
 
 private struct Category2Content: View {
     let symptomOptions: [String]
@@ -174,6 +171,7 @@ private struct Category2Content: View {
                             title: item,
                             isSelected: selectedSymptoms.contains(item)
                         ) {
+                            // ✅ kein ?:, damit kein Typfehler
                             if selectedSymptoms.contains(item) {
                                 selectedSymptoms.remove(item)
                             } else {
@@ -183,16 +181,8 @@ private struct Category2Content: View {
                     }
                 }
 
-                HStack(spacing: 10) {
-                    RoundedTextField(placeholder: "add symptom", text: $newSymptomText)
-
-                    Button { } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 18, weight: .semibold))
-                            .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(.bordered)
-                }
+                // ✅ nur Textfeld, kein Plus-Button mehr
+                RoundedTextField(placeholder: "add symptom", text: $newSymptomText)
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -207,6 +197,7 @@ private struct Category2Content: View {
                             label: f.label,
                             isSelected: selectedFeelings.contains(f.key)
                         ) {
+                            // ✅ kein ?:, damit kein Typfehler
                             if selectedFeelings.contains(f.key) {
                                 selectedFeelings.remove(f.key)
                             } else {
@@ -312,7 +303,7 @@ private struct Category4Content: View {
     }
 }
 
-// MARK: - Tagebuch Style Category Card (gleiches Design)
+// MARK: - Tagebuch Style Category Card
 
 private struct CategoryCard<Content: View>: View {
     let title: String
@@ -377,7 +368,7 @@ private struct CategoryCard<Content: View>: View {
     }
 }
 
-// MARK: - Reusable UI Bits (unverändert)
+// MARK: - Reusable UI Bits
 
 private struct SymptomRow: View {
     let title: String
@@ -479,7 +470,6 @@ private struct LabeledField<Content: View>: View {
     }
 }
 
-// ✅ RoundedTextField wie Tagebuch
 private struct RoundedTextField: View {
     let placeholder: String
     @Binding var text: String

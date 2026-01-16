@@ -36,29 +36,18 @@ struct QuestionCatalog: View {
                     }
                     .padding(.horizontal, 16)
 
-                    // Neue Frage hinzufügen (Textfeld + Plus)
-                    HStack(spacing: 10) {
-                        TextField("Neue Frage hinzufügen", text: $newQuestionText)
-                            .textFieldStyle(.plain)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous) // ✅ fix
-                                    .stroke(Color.secondary.opacity(0.5), lineWidth: 1.5)
-                            )
-
-                        Button {
-                            // UI-only
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 18, weight: .semibold))
-                                .frame(width: 44, height: 44)
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
+                    // ✅ Neue Frage hinzufügen (NUR Textfeld, kein Plus Button)
+                    TextField("Neue Frage hinzufügen", text: $newQuestionText)
+                        .textFieldStyle(.plain)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.secondary.opacity(0.5), lineWidth: 1.5)
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 24)
                 }
             }
             .background(Color(.systemBackground))
