@@ -8,7 +8,7 @@ struct EmergencyPlanView: View {
     @State private var phaseTime = 4
     @State private var dragOffset = CGSize.zero
     @State private var startCalculation = false
-
+    
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     // Die Icons für die statische Vorschau oben
@@ -20,31 +20,49 @@ struct EmergencyPlanView: View {
         (title: "Halten", duration: 4, emoji: "😌"),
         (title: "Atme aus", duration: 4, emoji: "🌬️")
     ]
-
+    
     var body: some View {
         ZStack {
-            // 1. Einfacher weißer Hintergrund
             Color.white.ignoresSafeArea()
             
-            // Den GeometryReader mit der Canvas-Komponente haben wir entfernt,
-            // um das Punkt-Raster zu löschen.
-
             VStack(spacing: 30) {
-                // Obere Symbol-Kette (Statisch)
+                
+                // Obere Symbol-Kette (wie in CheckpointView, aber ohne Zoomen)
                 HStack(spacing: 0) {
-                    ForEach(previewIcons, id: \.self) { icon in
-                        Circle()
-                            .stroke(Color.black.opacity(0.4), lineWidth: 1)
+                    ForEach(0..<previewIcons.count, id: \.self) { index in
+                        VStack(spacing: 8) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: 45, height: 45)
+                                
+                                Circle()
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                    .frame(width: 45, height: 45)
+                                
+                                Image(systemName: previewIcons[index])
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.gray.opacity(0.8))
+                            }
                             .frame(width: 45, height: 45)
-                            .overlay(Image(systemName: icon).font(.system(size: 18)))
+                            
+                            // Platzhalter, damit die Höhe stabil bleibt
+                            Text("")
+                                .font(.system(size: 12))
+                                .frame(height: 16)
+                        }
+                        .frame(maxWidth: .infinity)
                         
-                        if icon != previewIcons.last {
+                        // Verbindungslinie
+                        if index != previewIcons.count - 1 {
                             Rectangle()
                                 .frame(width: 20, height: 1)
-                                .foregroundColor(.black.opacity(0.4))
+                                .foregroundColor(Color.gray.opacity(0.3))
+                                .padding(.bottom, 24)
                         }
                     }
                 }
+                .padding(.horizontal, 20)
                 .padding(.top, 60)
                 .padding(.bottom, 30)
                 
@@ -70,7 +88,7 @@ struct EmergencyPlanView: View {
                         advanceBreathing()
                     }
                 }
-
+                
                 Spacer()
                 
                 // Abbrechen-Button
@@ -101,6 +119,7 @@ struct EmergencyPlanView: View {
                                             }
                                         }
                                 )
+                            
                             Text("Zum\nAbbrechen\nWischen")
                                 .font(.custom("Marker Felt", size: 16))
                                 .multilineTextAlignment(.center)
@@ -131,6 +150,7 @@ struct EmergencyPlanView: View {
         }
     }
 }
+
 struct EmergencyPlan_Previews: PreviewProvider {
     static var previews: some View {
         EmergencyPlanView(isShowing: .constant(true))
