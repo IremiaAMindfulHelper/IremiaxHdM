@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct JournalMainViewEmotions: View { // Anke
+    
+    let onPlusButtonTapped: () -> Void
 
     @State private var isPanic: Bool = false
 
@@ -110,7 +112,12 @@ struct JournalMainViewEmotions: View { // Anke
                         isInDisplayedMonth: cell.isInDisplayedMonth,
                         circleSize: gridCircleSize,
                         plusSize: gridPlusSize,
-                        dayFontSize: dayFontSize
+                        dayFontSize: dayFontSize,
+                        onTap: {
+                            if cell.mark == .plus {
+                                onPlusButtonTapped()
+                            }
+                        }
                     )
                     // ✅ Out-of-month wird automatisch heller (wie 29/30/31)
                     .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
@@ -177,6 +184,7 @@ private struct DayCell: View {
     let circleSize: CGFloat
     let plusSize: CGFloat
     let dayFontSize: CGFloat
+    let onTap: () -> Void
 
     var body: some View {
         VStack(spacing: 5) {
@@ -191,6 +199,9 @@ private struct DayCell: View {
                         .font(.system(size: plusSize, weight: .bold))
                         .foregroundStyle(.black.opacity(0.8))
                 }
+            }
+            .onTapGesture {
+                onTap()
             }
 
             Text("\(day)")
@@ -252,6 +263,6 @@ private struct BrokenHeartIcon: View {
 
 struct JournalMainView_Previews: PreviewProvider {
     static var previews: some View {
-        JournalMainViewEmotions()
+        JournalNavigationView()
     }
 }

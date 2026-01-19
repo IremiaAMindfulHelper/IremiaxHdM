@@ -10,6 +10,7 @@ import SwiftUI
 
 struct JournalMainPopUpView: View {
 
+    let onEintragBearbeiten: () -> Void
     
     @State private var dragOffset: CGFloat = 0
 
@@ -84,7 +85,7 @@ struct JournalMainPopUpView: View {
                 .padding(.top, 16)
 
                 // Button
-                Button { } label: {
+                Button { onEintragBearbeiten() } label: {
                     Text("Eintrag bearbeiten")
                         .font(.system(size: 20, weight: .regular, design: .rounded))
                         .foregroundStyle(.black.opacity(0.95))
@@ -149,6 +150,8 @@ private struct BrokenHeartIcon: View {
 
 struct JournalMainPopUpView_Previews: PreviewProvider {
     static var previews: some View {
-        JournalMainPopUpView()
+        JournalMainPopUpView(
+            onEintragBearbeiten: {}
+        )
     }
 }

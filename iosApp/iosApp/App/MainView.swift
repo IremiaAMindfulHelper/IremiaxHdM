@@ -23,8 +23,7 @@ struct MainView: View {
                     .tabItem { Label(StringsKt.localized(res: SharedRes.strings().home).localized(), systemImage: "house") }
                     .tag(NavigationTarget.Home().route)
 
-            
-                JournalMainViewEmotions()
+                JournalNavigationView()
                     .tabItem {
                         Label("Journal", systemImage: "book.circle")
                     }
