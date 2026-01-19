@@ -5,7 +5,7 @@ struct JournalMainViewEmotions: View { // Anke
     let onPlusButtonTapped: () -> Void
 
     @State private var isPanic: Bool = false
-    
+
     private let titleTopInset: CGFloat = 34
     private let gridCircleSize: CGFloat = 38
     private let gridPlusSize: CGFloat = 16
@@ -119,6 +119,7 @@ struct JournalMainViewEmotions: View { // Anke
                             }
                         }
                     )
+                    // ✅ Out-of-month wird automatisch heller (wie 29/30/31)
                     .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
                 }
             }
@@ -131,30 +132,34 @@ struct JournalMainViewEmotions: View { // Anke
         .background(Color.white)
     }
 
-    
     private var demoCells: [DemoCell] {
         // Beispiel: Januar 2026 startet Do (Mo-basiert: 4. Spalte)
         // Wir legen 3 Vormonatstage (29,30,31) + 31 Tage + Rest auffüllen
-        let leading = [29, 30, 31].map { DemoCell(day: $0, isInDisplayedMonth: false, mark: .plus) }
+        let leading = [29, 30, 31].map {
+            DemoCell(day: $0, isInDisplayedMonth: false, mark: .plus)
+        }
+
         let monthDays: [DemoCell] = (1...31).map { d in
-            // Nur optische Demo-Marks (wie deine 6/7 bunt)
             if d == 6 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .moodGradientA) }
             if d == 7 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .moodGradientB) }
+
+            // ✅ 16/17/18 sollen "filled" bleiben, aber trotzdem dunkel + Plus anzeigen
             if [16, 17, 18].contains(d) { return DemoCell(day: d, isInDisplayedMonth: true, mark: .filled) }
-            // Rest: plus (damit es nach deinem Mock aussieht)
+
             return DemoCell(day: d, isInDisplayedMonth: true, mark: .plus)
         }
 
         var all = leading + monthDays
+
+        // ✅ FIX: Folgemonat (1...8) soll wie Vormonat aussehen (hellgrau + Plus)
         while all.count < 42 {
             let next = all.count - (leading.count + monthDays.count) + 1
-            all.append(DemoCell(day: next, isInDisplayedMonth: false, mark: .none))
+            all.append(DemoCell(day: next, isInDisplayedMonth: false, mark: .plus))
         }
+
         return Array(all.prefix(42))
     }
 }
-
-
 
 private struct DemoCell: Identifiable {
     let id = UUID()
@@ -170,7 +175,6 @@ private enum DemoMark: Equatable {
     case moodGradientB
     case none
 }
-
 
 private struct DayCell: View {
     let day: Int
@@ -189,7 +193,8 @@ private struct DayCell: View {
                     .fill(circleFill)
                     .frame(width: circleSize, height: circleSize)
 
-                if mark == .plus {
+                // ✅ Plus bei .plus und .filled
+                if mark == .plus || mark == .filled {
                     Image(systemName: "plus")
                         .font(.system(size: plusSize, weight: .bold))
                         .foregroundStyle(.black.opacity(0.8))
@@ -210,8 +215,11 @@ private struct DayCell: View {
         switch mark {
         case .plus:
             return AnyShapeStyle(Color.black.opacity(0.25))
+
         case .filled:
-            return AnyShapeStyle(Color.black.opacity(0.12))
+            // ✅ FIX: soll so dunkel sein wie normale Plus-Tage (z.B. 15)
+            return AnyShapeStyle(Color.black.opacity(0.25))
+
         case .moodGradientA:
             return AnyShapeStyle(
                 LinearGradient(
@@ -220,6 +228,7 @@ private struct DayCell: View {
                     endPoint: .bottomTrailing
                 )
             )
+
         case .moodGradientB:
             return AnyShapeStyle(
                 LinearGradient(
@@ -228,12 +237,12 @@ private struct DayCell: View {
                     endPoint: .bottomTrailing
                 )
             )
+
         case .none:
             return AnyShapeStyle(Color.black.opacity(0.06))
         }
     }
 }
-
 
 private struct BrokenHeartIcon: View {
     let size: CGFloat
