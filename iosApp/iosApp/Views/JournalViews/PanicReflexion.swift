@@ -1,8 +1,9 @@
 import SwiftUI
 
 struct PanicReflexion: View {
-    
+
     let onBack: () -> Void
+    @Environment(\.dismiss) private var dismiss
 
     // UI (auf/zu)
     @State private var expanded: [Bool] = [true, true, true, true]
@@ -31,81 +32,96 @@ struct PanicReflexion: View {
         ("helplessness", "🧍", "helplessness")
     ]
 
-    var body: some View {
-            ScrollView {
-                VStack(spacing: 14) {
-
-                    VStack(spacing: 12) {
-
-                        CategoryCard(title: "Category 1", dateText: "10.11.2025", isExpanded: $expanded[0]) {
-                            Category1Content(
-                                location: $location1,
-                                intensity: $intensity1,
-                                cause: $cause1
-                            )
-                        }
-
-                        CategoryCard(title: "Category 2", dateText: "10.11.2025", isExpanded: $expanded[1]) {
-                            Category2Content(
-                                symptomOptions: symptomOptions,
-                                selectedSymptoms: $selectedSymptoms,
-                                newSymptomText: $newSymptomText,
-                                feelingOptions: feelingOptions,
-                                selectedFeelings: $selectedFeelings
-                            )
-                        }
-
-                        CategoryCard(title: "Category 3", dateText: "10.11.2025", isExpanded: $expanded[2]) {
-                            Category3Content(
-                                effectiveness: $skillEffectiveness,
-                                nextTimeText: $nextTimeText
-                            )
-                        }
-
-                        CategoryCard(title: "Category 4", dateText: "10.11.2025", isExpanded: $expanded[3]) {
-                            Category4Content(shortReflection: $shortReflection)
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 10)
-
-                    // Button wie Tagebuch (outlined, mittig, gleiche Breite)
-                    VStack(spacing: 10) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Eintrag abschließen")
-                                .font(.system(size: 18, weight: .regular))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .padding(.horizontal, 24)
-                                .background(Color.clear)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.black, lineWidth: 2)
-                                )
-                        }
-                    }
-                    .padding(.horizontal, 80)
-                    .padding(.top, 6)
-                    .padding(.bottom, 18)
-                }
+    // ✅ sichere Bindings für Array-Indizes
+    private func expandedBinding(_ index: Int) -> Binding<Bool> {
+        Binding(
+            get: { expanded.indices.contains(index) ? expanded[index] : false },
+            set: { newValue in
+                guard expanded.indices.contains(index) else { return }
+                expanded[index] = newValue
             }
-            .background(Color(red: 0.95, green: 0.95, blue: 0.95))
-            .navigationTitle("Panik Reflexion")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button { onBack() } label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
+        )
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 14) {
+
+                VStack(spacing: 12) {
+
+                    CategoryCard(title: "Category 1", dateText: "10.11.2025", isExpanded: expandedBinding(0)) {
+                        Category1Content(
+                            location: $location1,
+                            intensity: $intensity1,
+                            cause: $cause1
+                        )
                     }
+
+                    CategoryCard(title: "Category 2", dateText: "10.11.2025", isExpanded: expandedBinding(1)) {
+                        Category2Content(
+                            symptomOptions: symptomOptions,
+                            selectedSymptoms: $selectedSymptoms,
+                            newSymptomText: $newSymptomText,
+                            feelingOptions: feelingOptions,
+                            selectedFeelings: $selectedFeelings
+                        )
+                    }
+
+                    CategoryCard(title: "Category 3", dateText: "10.11.2025", isExpanded: expandedBinding(2)) {
+                        Category3Content(
+                            effectiveness: $skillEffectiveness,
+                            nextTimeText: $nextTimeText
+                        )
+                    }
+
+                    CategoryCard(title: "Category 4", dateText: "10.11.2025", isExpanded: expandedBinding(3)) {
+                        Category4Content(shortReflection: $shortReflection)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+
+                // Button wie Tagebuch (outlined, mittig, gleiche Breite)
+                VStack(spacing: 10) {
+                    Button {
+                        // ✅ Standard: SwiftUI dismiss (Sheet/Navigation)
+                        dismiss()
+
+                        // Alternative, falls du IMMER nur deinen eigenen Handler willst:
+                        // onBack()
+                    } label: {
+                        Text("Eintrag abschließen")
+                            .font(.system(size: 18, weight: .regular))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 24)
+                            .background(Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.black, lineWidth: 2)
+                            )
+                    }
+                }
+                .padding(.horizontal, 80)
+                .padding(.top, 6)
+                .padding(.bottom, 18)
+            }
+        }
+        .background(Color(red: 0.95, green: 0.95, blue: 0.95))
+        .navigationTitle("Panik Reflexion")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { onBack() } label: {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.black)
                 }
             }
         }
     }
+}
 
 // MARK: - Category 1 Content
 
@@ -147,7 +163,7 @@ private struct Category1Content: View {
     }
 }
 
-// MARK: - Category 2 Content  ✅ Plus-Button bei Symptoms entfernt + Toggle fix
+// MARK: - Category 2 Content
 
 private struct Category2Content: View {
     let symptomOptions: [String]
@@ -171,7 +187,6 @@ private struct Category2Content: View {
                             title: item,
                             isSelected: selectedSymptoms.contains(item)
                         ) {
-                            // ✅ kein ?:, damit kein Typfehler
                             if selectedSymptoms.contains(item) {
                                 selectedSymptoms.remove(item)
                             } else {
@@ -181,7 +196,6 @@ private struct Category2Content: View {
                     }
                 }
 
-                // ✅ nur Textfeld, kein Plus-Button mehr
                 RoundedTextField(placeholder: "add symptom", text: $newSymptomText)
             }
 
@@ -197,7 +211,6 @@ private struct Category2Content: View {
                             label: f.label,
                             isSelected: selectedFeelings.contains(f.key)
                         ) {
-                            // ✅ kein ?:, damit kein Typfehler
                             if selectedFeelings.contains(f.key) {
                                 selectedFeelings.remove(f.key)
                             } else {
@@ -489,5 +502,7 @@ private struct RoundedTextField: View {
 }
 
 #Preview {
-    PanicReflexion(onBack: {})
+    NavigationStack {
+        PanicReflexion(onBack: {})
+    }
 }
