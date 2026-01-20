@@ -1,10 +1,14 @@
 import SwiftUI
+import Shared
 
 struct JournalMainViewEmotions: View { // Anke
     
     let onPlusButtonTapped: () -> Void
 
     @State private var isPanic: Bool = false
+    @State private var showPopup: Bool = false
+    @State private var popupHeader: String = ""
+    @State private var selectedDay: Int = 0
 
     private let titleTopInset: CGFloat = 34
     private let gridCircleSize: CGFloat = 38
