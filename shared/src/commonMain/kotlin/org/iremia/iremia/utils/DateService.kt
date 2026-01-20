@@ -2,7 +2,7 @@ package org.iremia.iremia.utils
 
 import kotlinx.datetime.*
 
-object DateService {
+class DateService {
     private val timeZone = TimeZone.currentSystemDefault()
 
     fun getToday(): LocalDate {
