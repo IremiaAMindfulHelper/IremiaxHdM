@@ -1,10 +1,23 @@
 import SwiftUI
 
 struct JournalMainViewEmotions: View { // Anke
-    
+
+    // NEU: kommt vom Parent (JournalNavigationView) und steuert den Wechsel
+    @Binding var rootMode: JournalRootMode
+
     let onPlusButtonTapped: () -> Void
 
-    @State private var isPanic: Bool = false
+    // NEU: kein eigener @State mehr nötig, wir leiten den Toggle aus rootMode ab
+    private var isPanicBinding: Binding<Bool> {
+        Binding(
+            get: { rootMode == .panicAttacks },
+            set: { isOn in
+                withAnimation {
+                    rootMode = isOn ? .panicAttacks : .emotions
+                }
+            }
+        )
+    }
 
     private let titleTopInset: CGFloat = 34
     private let gridCircleSize: CGFloat = 38
@@ -27,28 +40,28 @@ struct JournalMainViewEmotions: View { // Anke
             }
             .safeAreaPadding(.top, titleTopInset)
 
-            // Mode Switch (nur Optik)
+            // Mode Switch (JETZT FUNKTIONAL)
             HStack(spacing: 16) {
                 VStack(spacing: 6) {
                     Image(systemName: "circle.fill")
                         .font(.system(size: 28))
-                        .foregroundStyle(.black.opacity(isPanic ? 0.25 : 0.75))
+                        .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.25 : 0.75))
                     Text("Stimmung")
                         .font(.system(size: 13, design: .rounded))
-                        .foregroundStyle(.black.opacity(isPanic ? 0.45 : 0.85))
+                        .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.45 : 0.85))
                 }
 
-                Toggle("", isOn: $isPanic)
+                Toggle("", isOn: isPanicBinding)
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .tint(.black.opacity(0.8))
                     .scaleEffect(0.95)
 
                 VStack(spacing: 6) {
-                    BrokenHeartIcon(size: 26, isActive: isPanic)
+                    BrokenHeartIcon(size: 26, isActive: isPanicBinding.wrappedValue)
                     Text("Panik")
                         .font(.system(size: 13, design: .rounded))
-                        .foregroundStyle(.black.opacity(isPanic ? 0.85 : 0.45))
+                        .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.85 : 0.45))
                 }
             }
             .padding(.top, 14)
@@ -119,7 +132,6 @@ struct JournalMainViewEmotions: View { // Anke
                             }
                         }
                     )
-                    // ✅ Out-of-month wird automatisch heller (wie 29/30/31)
                     .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
                 }
             }
@@ -133,8 +145,6 @@ struct JournalMainViewEmotions: View { // Anke
     }
 
     private var demoCells: [DemoCell] {
-        // Beispiel: Januar 2026 startet Do (Mo-basiert: 4. Spalte)
-        // Wir legen 3 Vormonatstage (29,30,31) + 31 Tage + Rest auffüllen
         let leading = [29, 30, 31].map {
             DemoCell(day: $0, isInDisplayedMonth: false, mark: .plus)
         }
@@ -142,16 +152,12 @@ struct JournalMainViewEmotions: View { // Anke
         let monthDays: [DemoCell] = (1...31).map { d in
             if d == 6 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .moodGradientA) }
             if d == 7 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .moodGradientB) }
-
-            // ✅ 16/17/18 sollen "filled" bleiben, aber trotzdem dunkel + Plus anzeigen
             if [16, 17, 18].contains(d) { return DemoCell(day: d, isInDisplayedMonth: true, mark: .filled) }
-
             return DemoCell(day: d, isInDisplayedMonth: true, mark: .plus)
         }
 
         var all = leading + monthDays
 
-        // ✅ FIX: Folgemonat (1...8) soll wie Vormonat aussehen (hellgrau + Plus)
         while all.count < 42 {
             let next = all.count - (leading.count + monthDays.count) + 1
             all.append(DemoCell(day: next, isInDisplayedMonth: false, mark: .plus))
@@ -160,6 +166,8 @@ struct JournalMainViewEmotions: View { // Anke
         return Array(all.prefix(42))
     }
 }
+
+// MARK: - Helpers
 
 private struct DemoCell: Identifiable {
     let id = UUID()
@@ -193,16 +201,13 @@ private struct DayCell: View {
                     .fill(circleFill)
                     .frame(width: circleSize, height: circleSize)
 
-                // ✅ Plus bei .plus und .filled
                 if mark == .plus || mark == .filled {
                     Image(systemName: "plus")
                         .font(.system(size: plusSize, weight: .bold))
                         .foregroundStyle(.black.opacity(0.8))
                 }
             }
-            .onTapGesture {
-                onTap()
-            }
+            .onTapGesture { onTap() }
 
             Text("\(day)")
                 .font(.system(size: dayFontSize, design: .rounded))
@@ -215,11 +220,8 @@ private struct DayCell: View {
         switch mark {
         case .plus:
             return AnyShapeStyle(Color.black.opacity(0.25))
-
         case .filled:
-            // ✅ FIX: soll so dunkel sein wie normale Plus-Tage (z.B. 15)
             return AnyShapeStyle(Color.black.opacity(0.25))
-
         case .moodGradientA:
             return AnyShapeStyle(
                 LinearGradient(
@@ -228,7 +230,6 @@ private struct DayCell: View {
                     endPoint: .bottomTrailing
                 )
             )
-
         case .moodGradientB:
             return AnyShapeStyle(
                 LinearGradient(
@@ -237,7 +238,6 @@ private struct DayCell: View {
                     endPoint: .bottomTrailing
                 )
             )
-
         case .none:
             return AnyShapeStyle(Color.black.opacity(0.06))
         }
@@ -263,6 +263,10 @@ private struct BrokenHeartIcon: View {
 
 struct JournalMainView_Previews: PreviewProvider {
     static var previews: some View {
-        JournalNavigationView()
+        // Preview braucht jetzt ein Binding:
+        JournalMainViewEmotions(
+            rootMode: .constant(.emotions),
+            onPlusButtonTapped: { }
+        )
     }
 }
