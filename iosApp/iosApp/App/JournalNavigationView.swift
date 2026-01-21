@@ -20,58 +20,51 @@ struct JournalNavigationView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
 
-            ZStack {
-                // ✅ Hintergrund: Journal Root Views
-                Group {
-                    switch rootMode {
-                    case .emotions:
-                        JournalMainViewEmotions(
-                            rootMode: $rootMode,
-                            onPlusButtonTapped: {          // farbiger Kreis -> Popup
-                                withAnimation {
-                                    showJournalPopup = true
-                                }
-                            },
-                            onCreateEntry: {               // + -> JournalEntryView
-                                navigationPath.append(AppRoute.journalEntry)
-                            }
-                        )
-
-                    case .panicAttacks:
-                        JournalMainViewPanicAttacks(
-                            rootMode: $rootMode,
-                            onPlusButtonTapped: {          // broken heart -> Popup
-                                withAnimation {
-                                    showJournalPopup = true
-                                }
-                            },
-                            onCreateEntry: {               // + -> JournalEntryView
-                                navigationPath.append(AppRoute.journalEntry)
-                            }
-                        )
-                    }
-                }
-
-                // ✅ Overlay: Popup direkt über dem Kalender
-                if showJournalPopup {
-                    JournalMainPopUpView(
-                        onEintragBearbeiten: {
-                            showJournalPopup = false
-                            navigationPath.append(AppRoute.journalEntry)
+            // ✅ Hintergrund: Journal Root Views
+            Group {
+                switch rootMode {
+                case .emotions:
+                    JournalMainViewEmotions(
+                        rootMode: $rootMode,
+                        onPlusButtonTapped: {          // farbiger Kreis -> Popup
+                            showJournalPopup = true
                         },
-                        onDismiss: {
-                            withAnimation {
-                                showJournalPopup = false
-                            }
+                        onCreateEntry: {               // + -> JournalEntryView
+                            navigationPath.append(AppRoute.journalEntry)
                         }
                     )
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .zIndex(10)
+
+                case .panicAttacks:
+                    JournalMainViewPanicAttacks(
+                        rootMode: $rootMode,
+                        onPlusButtonTapped: {          // broken heart -> Popup
+                            showJournalPopup = true
+                        },
+                        onCreateEntry: {               // + -> JournalEntryView
+                            navigationPath.append(AppRoute.journalEntry)
+                        }
+                    )
                 }
             }
             .navigationDestination(for: AppRoute.self) { route in
                 destinationView(for: route)
             }
+        }
+        // ✅ Popup als Sheet -> TabBar unten ist weg
+        .sheet(isPresented: $showJournalPopup) {
+            JournalMainPopUpView(
+                onEintragBearbeiten: {
+                    showJournalPopup = false
+                    navigationPath.append(AppRoute.journalEntry)
+                },
+                onDismiss: {
+                    showJournalPopup = false
+                }
+            )
+            // optional: 40% Höhe wie vorher
+            .presentationDetents([.fraction(0.4)])
+            // optional: du hast deinen eigenen Grabber (Capsule), daher verstecken
+            .presentationDragIndicator(.hidden)
         }
     }
 
