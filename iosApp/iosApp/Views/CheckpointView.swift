@@ -5,7 +5,9 @@ struct CheckpointView: View {
     @State var currentStep: Int = 0
     @State private var showExercise = false
     
-    // Hier nutzen wir die globale Liste als Startpunkt für die Reihenfolge
+    // Die Farbe aus deinem Design
+    private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
+    
     @State private var userOrder: [SOSStep] = sosSteps
     
     var body: some View {
@@ -13,52 +15,62 @@ struct CheckpointView: View {
             Color.white.ignoresSafeArea()
             
             VStack(spacing: 30) {
-                // 1. ANIMIERTE PROGRESSBAR
-                // 1. ANIMIERTE PROGRESSBAR
+                
+                // 1. ANIMIERTE PROGRESSBAR (Lupen-Effekt)
                 HStack(spacing: 0) {
                     ForEach(0..<userOrder.count, id: \.self) { index in
-                        let isActive = currentStep == index
+                        let isActive = currentStep == index      // Aktuelle Übung (Groß & Weiß)
+                        let isCompleted = index < currentStep   // Erledigt (Blau & Klein)
                         
-                        // Jedes Element bekommt eine feste Breite, damit nichts springt
                         VStack(spacing: 8) {
                             ZStack {
+                                // Hintergrund-Kreis
                                 Circle()
-                                    .fill(isActive ? Color(red: 0.2, green: 0.45, blue: 0.55) : Color.white)
-                                    .frame(width: isActive ? 60 : 35, height: isActive ? 60 : 35)
-                                    .shadow(color: .black.opacity(isActive ? 0.2 : 0), radius: 4)
+                                    // Nur fertige Übungen sind ausgefüllt, die aktuelle bleibt weiß
+                                    .fill(isCompleted ? petrolColor : Color.white)
+                                    .frame(width: isActive ? 58 : 35, height: isActive ? 58 : 35)
+                                    .shadow(color: .black.opacity(isActive ? 0.15 : 0), radius: 6)
                                 
+                                // Rand-Logik
                                 Circle()
-                                    .stroke(isActive ? Color.clear : Color.gray.opacity(0.5), lineWidth: 1)
-                                    .frame(width: isActive ? 60 : 35, height: isActive ? 60 : 35)
+                                    .stroke(
+                                        isActive ? petrolColor : (isCompleted ? Color.clear : Color.gray.opacity(0.3)),
+                                        lineWidth: isActive ? 2.5 : 1
+                                    )
+                                    .frame(width: isActive ? 58 : 35, height: isActive ? 58 : 35)
                                 
+                                // Icon
                                 Image(systemName: userOrder[index].icon)
-                                    .font(.system(size: isActive ? 28 : 16))
-                                    .foregroundColor(isActive ? .white : .gray.opacity(0.8))
+                                    .font(.system(size: isActive ? 26 : 16, weight: .medium))
+                                    // Icon ist weiß auf blauem Grund (fertig) oder petrol auf weißem Grund (aktiv)
+                                    .foregroundColor(isCompleted ? .white : (isActive ? petrolColor : .gray.opacity(0.5)))
                             }
-                            .frame(width: 60, height: 60) // Fester Container für den Kreis
+                            .frame(width: 65, height: 65)
+                            // Langsamere Animation (0.8 Sekunden statt 0.4)
+                            .animation(.spring(response: 0.8, dampingFraction: 0.7), value: currentStep)
                             
-                            // Der Text wird absolut positioniert, um das Layout nicht zu dehnen
+                            // Text-Label unter der Lupe
                             if isActive {
                                 Text(userOrder[index].name)
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(Color(red: 0.2, green: 0.45, blue: 0.55))
-                                    .fixedSize() // Verhindert Zeilenumbruch
-                                    .padding(.top, 4)
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(petrolColor)
+                                    .fixedSize()
+                                    .transition(.opacity.combined(with: .scale))
                             } else {
-                                // Platzhalter, damit die Höhe gleich bleibt
                                 Text("")
-                                    .font(.system(size: 14))
-                                    .frame(height: 20)
+                                    .frame(height: 16)
                             }
                         }
-                        .frame(maxWidth: .infinity) // Verteilt die Icons gleichmäßig über die Breite
+                        .frame(maxWidth: .infinity)
                         
-                        // Die Verbindungslinie
+                        // Verbindungslinie
                         if index != userOrder.count - 1 {
                             Rectangle()
-                                .frame(width: 20, height: 1)
-                                .foregroundColor(Color.gray.opacity(0.3))
-                                .padding(.bottom, 28) // Zentriert die Linie vertikal zwischen den Kreisen
+                                .frame(width: 25, height: 1.5)
+                                // Linie wird erst blau, wenn die Übung davor fertig ist
+                                .foregroundColor(index < currentStep ? petrolColor : Color.gray.opacity(0.2))
+                                .padding(.bottom, 24)
+                                .animation(.easeInOut(duration: 0.6), value: currentStep)
                         }
                     }
                 }
@@ -69,7 +81,7 @@ struct CheckpointView: View {
                 
                 // 2. HAUPT-CONTENT
                 VStack(spacing: 30) {
-                    Image("Cloud") // Dein Asset-Name
+                    Image("Cloud")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 180, height: 150)
@@ -78,8 +90,8 @@ struct CheckpointView: View {
                     VStack(spacing: 12) {
                         Text("Du bist sicher.")
                             .font(.system(size: 25, weight: .bold, design: .rounded))
-                            .kerning(1.5) // Erhöht den Zeichenabstand für mehr Ästhetik
-                            .foregroundColor(Color(red: 0.1, green: 0.25, blue: 0.35)) // Sanftes Dunkelblau statt hartem Schwarz
+                            .kerning(1.5)
+                            .foregroundColor(Color(red: 0.1, green: 0.25, blue: 0.35))
                         
                         Text("Atme tief durch und nimm dir Zeit.")
                             .font(.subheadline)
@@ -92,24 +104,30 @@ struct CheckpointView: View {
                 
                 // 3. BUTTONS
                 VStack(spacing: 20) {
-                    Button(action: { showExercise = true }) {
+                    Button(action: {
+                        withAnimation {
+                            showExercise = true
+                        }
+                    }) {
                         Text("Weiter")
                             .font(.headline.bold())
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 60)
-                            .background(Color(red: 0.2, green: 0.45, blue: 0.55))
+                            .background(petrolColor)
                             .cornerRadius(30)
+                            .shadow(color: petrolColor.opacity(0.3), radius: 10, y: 5)
                     }
                     
                     Button(action: {
-                        withAnimation { currentStep = 0 }
+                        withAnimation(.easeInOut(duration: 0.8)) { currentStep = 0 }
                     }) {
                         HStack {
                             Image(systemName: "arrow.counterclockwise")
                             Text("Übung wiederholen")
                         }
-                        .foregroundColor(Color(red: 0.2, green: 0.45, blue: 0.55))
+                        .foregroundColor(petrolColor)
+                        .font(.subheadline.weight(.medium))
                     }
                 }
                 .padding(.horizontal, 40)
@@ -123,7 +141,7 @@ struct CheckpointView: View {
             case .calculation:
                 CalculationExerciseView(isShowing: $isShowing, currentStep: $currentStep)
             case .breathing:
-                BreathingExerciseView(isShowing: $isShowing, currentStep: $currentStep)
+                EmergencyPlanView(isShowing: $isShowing)
             case .memory:
                 MemoryExerciseView(isShowing: $isShowing, currentStep: $currentStep)
             case .mantra:
@@ -132,6 +150,16 @@ struct CheckpointView: View {
         }
     }
 }
+
+// Preview
+struct CheckpointView_Previews: PreviewProvider {
+    static var previews: some View {
+        CheckpointView(isShowing: .constant(true))
+    }
+}
+
+
+
 // Kleiner Platzhalter für Mantras, damit der Code kompiliert
 struct MantraPlaceholderView: View {
     @Binding var isShowing: Bool
@@ -147,11 +175,6 @@ struct MantraPlaceholderView: View {
                 }
             }
         }
-    }
-}
-struct CheckpointView_Previews: PreviewProvider {
-    static var previews: some View {
-        CheckpointView(isShowing: .constant(true))
     }
 }
 
