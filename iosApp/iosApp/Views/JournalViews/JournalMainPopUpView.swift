@@ -11,8 +11,8 @@ import SwiftUI
 struct JournalMainPopUpView: View {
 
     let onEintragBearbeiten: () -> Void
-    let onDismiss: () -> Void          // ✅ NEU (damit Overlay geschlossen werden kann)
-
+    let dateHeader: String
+    
     @State private var dragOffset: CGFloat = 0
 
     // MARK: - Tuning
@@ -27,16 +27,6 @@ struct JournalMainPopUpView: View {
     private let dismissDragThreshold: CGFloat = 120
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-
-            // Dimmed Background (liegt jetzt über dem Kalender)
-            Color.black.opacity(0.28)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    withAnimation {
-                        onDismiss()
-                    }
-                }
 
             // Sheet
             VStack(spacing: 0) {
@@ -49,7 +39,7 @@ struct JournalMainPopUpView: View {
                     .padding(.bottom, 10)
 
                 // Date Title
-                Text("Mi 12.11.25")
+                Text(dateHeader)
                     .font(.system(size: 36, weight: .regular, design: .rounded))
                     .foregroundStyle(.black.opacity(0.9))
                     .padding(.top, 12)
@@ -131,10 +121,8 @@ struct JournalMainPopUpView: View {
                         dragOffset = max(0, value.translation.height)
                     }
                     .onEnded { value in
-                        if value.translation.height > dismissDragThreshold {
-                            withAnimation {
-                                onDismiss()
-                            }
+                        if dragOffset > 100 {
+                            onEintragBearbeiten()
                         } else {
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
                                 dragOffset = 0
@@ -145,7 +133,6 @@ struct JournalMainPopUpView: View {
             .ignoresSafeArea(edges: .bottom)
         }
     }
-}
 
 private struct BrokenHeartIcon: View {
     let size: CGFloat
@@ -168,7 +155,7 @@ struct JournalMainPopUpView_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainPopUpView(
             onEintragBearbeiten: {},
-            onDismiss: {}        // ✅ NEU
+            dateHeader: "Mittwoch, 20.01."
         )
     }
 }

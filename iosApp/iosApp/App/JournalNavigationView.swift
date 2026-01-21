@@ -46,9 +46,6 @@ struct JournalNavigationView: View {
                     )
                 }
             }
-            .navigationDestination(for: AppRoute.self) { route in
-                destinationView(for: route)
-            }
         }
         // ✅ Popup als Sheet -> TabBar unten ist weg
         .sheet(isPresented: $showJournalPopup) {

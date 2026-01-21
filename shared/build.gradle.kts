@@ -104,6 +104,7 @@ kotlin {
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
                 api("app.cash.sqldelight:runtime:2.0.2")
                 api("app.cash.sqldelight:coroutines-extensions:2.0.2")
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
             }
         }
 
