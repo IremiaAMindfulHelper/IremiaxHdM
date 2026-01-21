@@ -3,10 +3,16 @@ import SwiftUI
 struct EmergencyPlanView: View {
     @Binding var isShowing: Bool
     
+    // MARK: - States
     @State private var stepIndex = 0
     @State private var phaseTime: Double = 4.0
-    @State private var dragOffset = CGSize.zero
-    @State private var startCalculation = false
+    @State private var startCalculation = false // Steuert den Übergang zur nächsten Übung
+    
+    // States für den Petrol iOS Slider
+    @State private var sliderOffset: CGFloat = 0
+    private let sliderWidth: CGFloat = 300
+    private let handleSize: CGFloat = 54
+    private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
     
     let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     let previewIcons = ["wind", "plus.forwardslash.minus", "leaf", "brain"]
@@ -57,6 +63,7 @@ struct EmergencyPlanView: View {
                 // MARK: - Atem-Bereich
                 VStack(spacing: 20) {
                     ZStack {
+                        // Wolken-Logik
                         Image(stepIndex == 1 ? "Wolkeein" : "Wolkeaus")
                             .resizable()
                             .aspectRatio(contentMode: .fit)
@@ -65,14 +72,13 @@ struct EmergencyPlanView: View {
                     .scaleEffect(calculateScale())
                     .frame(height: 200)
                     
-                    // SCHRIFTART ANGEPASST: Wie HeaderView
                     Text(phases[stepIndex].title)
                         .font(.system(size: 34, weight: .bold))
                         .foregroundColor(.black)
                     
                     Text("\(Int(phaseTime.rounded(.up)))")
                         .font(.system(size: 110, weight: .thin, design: .rounded))
-                        .foregroundColor(.blue)
+                        .foregroundColor(petrolColor)
                 }
                 .onReceive(timer) { _ in
                     if phaseTime > 0.1 {
@@ -84,56 +90,71 @@ struct EmergencyPlanView: View {
                 
                 Spacer()
                 
-                // MARK: - Abbrechen-Button
-                HStack {
+                // MARK: - Slide to Cancel (Vollflächig Petrol)
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(petrolColor)
+                        .frame(width: sliderWidth, height: 64)
+                        .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
+                    
+                    Text("Abbrechen")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.white)
+                        .frame(width: sliderWidth)
+                        .offset(x: 20)
+                    
                     ZStack {
                         Circle()
-                            .fill(Color.blue.opacity(0.1))
-                            .frame(width: 160, height: 160)
+                            .fill(Color.white)
+                            .frame(width: 56, height: 56)
+                            .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
                         
-                        VStack(spacing: 5) {
-                            Image(systemName: "xmark.circle")
-                                .font(.system(size: 60))
-                                .foregroundColor(.blue)
-                                .background(Circle().fill(.white))
-                                .offset(dragOffset)
-                                .gesture(
-                                    DragGesture()
-                                        .onChanged { gesture in
-                                            let x = max(0, gesture.translation.width)
-                                            let y = min(0, gesture.translation.height)
-                                            dragOffset = CGSize(width: x, height: y)
-                                        }
-                                        .onEnded { gesture in
-                                            if gesture.translation.width > 80 || gesture.translation.height < -80 {
-                                                isShowing = false
-                                            } else {
-                                                withAnimation(.spring()) { dragOffset = .zero }
-                                            }
-                                        }
-                                )
-                            
-                            // SCHRIFTART ANGEPASST: Wie FilterBar
-                            Text("Zum\nAbbrechen\nWischen")
-                                .font(.system(size: 16, weight: .medium))
-                                .multilineTextAlignment(.center)
-                                .foregroundColor(.blue)
-                        }
+                        Image(systemName: "xmark")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(petrolColor)
                     }
-                    .padding(.leading, 30)
-                    .padding(.bottom, 50)
-                    Spacer()
+                    .padding(.leading, 4)
+                    .offset(x: sliderOffset)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { gesture in
+                                if gesture.translation.width > 0 && sliderOffset <= (sliderWidth - handleSize - 8) {
+                                    sliderOffset = gesture.translation.width
+                                }
+                            }
+                            .onEnded { _ in
+                                if sliderOffset > (sliderWidth * 0.75) {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        sliderOffset = sliderWidth - handleSize - 8
+                                        isShowing = false
+                                    }
+                                } else {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                        sliderOffset = 0
+                                    }
+                                }
+                            }
+                    )
                 }
+                .padding(.bottom, 60)
             }
+        }
+        // Übergang zur nächsten Übung (CheckpointView)
+        .fullScreenCover(isPresented: $startCalculation) {
+            CheckpointView(isShowing: $isShowing)
         }
     }
     
+    // MARK: - Logik Funktionen
     func advanceBreathing() {
         if stepIndex < phases.count - 1 {
             stepIndex += 1
             phaseTime = phases[stepIndex].duration
         } else {
-            startCalculation = true
+            // Nach der letzten Phase (Ausatmen) zur nächsten Übung wechseln
+            withAnimation(.easeInOut) {
+                startCalculation = true
+            }
         }
     }
     
@@ -144,17 +165,15 @@ struct EmergencyPlanView: View {
         let progress = (duration - phaseTime) / duration
         
         switch stepIndex {
-        case 0:
-            return minScale + (maxScale - minScale) * CGFloat(progress)
-        case 1:
-            return maxScale
-        case 2:
-            return maxScale - (maxScale - minScale) * CGFloat(progress)
-        default:
-            return minScale
+        case 0: return minScale + (maxScale - minScale) * CGFloat(progress)
+        case 1: return maxScale
+        case 2: return maxScale - (maxScale - minScale) * CGFloat(progress)
+        default: return minScale
         }
     }
 }
+
+// Preview
 struct EmergencyPlan_Previews: PreviewProvider {
     static var previews: some View {
         EmergencyPlanView(isShowing: .constant(true))
