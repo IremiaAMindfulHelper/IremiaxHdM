@@ -7,7 +7,6 @@ enum AppRoute: Hashable {
     case questionCatalog
 }
 
-// Root-Modus fürs Journal (welche Hauptansicht im Tab angezeigt wird)
 enum JournalRootMode: Hashable {
     case emotions
     case panicAttacks
@@ -16,8 +15,6 @@ enum JournalRootMode: Hashable {
 struct JournalNavigationView: View {
     @State private var navigationPath = NavigationPath()
     @State private var showJournalPopup = false
-
-    // steuert, welche Root-View im Journal angezeigt wird
     @State private var rootMode: JournalRootMode = .emotions
 
     var body: some View {
@@ -28,16 +25,22 @@ struct JournalNavigationView: View {
                 case .emotions:
                     JournalMainViewEmotions(
                         rootMode: $rootMode,
-                        onPlusButtonTapped: {
+                        onPlusButtonTapped: {          // farbiger Kreis -> Popup
                             showJournalPopup = true
+                        },
+                        onCreateEntry: {               // + -> JournalEntryView
+                            navigationPath.append(AppRoute.journalEntry)
                         }
                     )
 
                 case .panicAttacks:
                     JournalMainViewPanicAttacks(
                         rootMode: $rootMode,
-                        onPlusButtonTapped: {
+                        onPlusButtonTapped: {          // broken heart -> Popup
                             showJournalPopup = true
+                        },
+                        onCreateEntry: {               // + -> JournalEntryView
+                            navigationPath.append(AppRoute.journalEntry)
                         }
                     )
                 }
@@ -49,14 +52,13 @@ struct JournalNavigationView: View {
                 JournalMainPopUpView(
                     onEintragBearbeiten: {
                         showJournalPopup = false
-                        navigationPath.append(AppRoute.journalEntry) // ✅ FIX
+                        navigationPath.append(AppRoute.journalEntry)
                     }
                 )
             }
         }
     }
 
-    // ✅ Crash-sicheres Zurück
     private func safePop() {
         guard !navigationPath.isEmpty else { return }
         navigationPath.removeLast()
@@ -68,19 +70,15 @@ struct JournalNavigationView: View {
         case .journalEntry:
             JournalEntryView(
                 onBack: { safePop() },
-                onOpenDiary: { navigationPath.append(AppRoute.journalDiaryView) },        // ✅ FIX
-                onOpenPanicReflexion: { navigationPath.append(AppRoute.panicReflection) } // ✅ FIX
+                onOpenDiary: { navigationPath.append(AppRoute.journalDiaryView) },
+                onOpenPanicReflexion: { navigationPath.append(AppRoute.panicReflection) }
             )
 
         case .journalDiaryView:
-            JournalDiaryView(
-                onBack: { safePop() }
-            )
+            JournalDiaryView(onBack: { safePop() })
 
         case .panicReflection:
-            PanicReflexion(
-                onBack: { safePop() }
-            )
+            PanicReflexion(onBack: { safePop() })
 
         case .questionCatalog:
             Text("Question Catalog")

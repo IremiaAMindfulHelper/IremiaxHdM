@@ -2,13 +2,14 @@ import SwiftUI
 
 struct JournalMainViewPanicAttacks: View { // Anke
 
-    // NEU: kommt vom Parent und steuert den Wechsel
     @Binding var rootMode: JournalRootMode
 
-    // Optional – falls du auch hier das Plus-Popup öffnen willst (symmetrisch zu Emotions)
+    /// broken heart -> Popup
     let onPlusButtonTapped: () -> Void
 
-    // NEU: Toggle-Status leitet sich aus rootMode ab (kein eigener @State nötig)
+    /// + -> JournalEntryView
+    let onCreateEntry: () -> Void
+
     private var isPanicBinding: Binding<Bool> {
         Binding(
             get: { rootMode == .panicAttacks },
@@ -41,7 +42,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
             }
             .safeAreaPadding(.top, titleTopInset)
 
-            // Mode Switch (JETZT FUNKTIONAL)
+            // Mode Switch
             HStack(spacing: 16) {
 
                 VStack(spacing: 6) {
@@ -69,7 +70,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
             .padding(.top, 14)
             .padding(.bottom, 4)
 
-            // Month header (Buttons ohne Funktion – nur UI)
+            // Month header (nur UI)
             HStack {
                 Button { } label: {
                     Image(systemName: "chevron.left")
@@ -115,7 +116,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
             .padding(.horizontal, 18)
             .padding(.top, 12)
 
-            // Days grid (nur Mock-Optik) – statt bunten Kugeln: gebrochene Herzen
+            // Days grid
             let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
             let cells = demoCells
 
@@ -129,8 +130,12 @@ struct JournalMainViewPanicAttacks: View { // Anke
                         plusSize: gridPlusSize,
                         dayFontSize: dayFontSize,
                         onTap: {
-                            // Optional: wenn du im Panic-Modus auch das Plus öffnen willst
+                            // ✅ + -> JournalEntryView
                             if cell.mark == .plus {
+                                onCreateEntry()
+                            }
+                            // ✅ broken heart -> Popup
+                            else if cell.mark == .brokenHeart {
                                 onPlusButtonTapped()
                             }
                         }
@@ -160,7 +165,6 @@ struct JournalMainViewPanicAttacks: View { // Anke
         var all = leading + monthDays
         while all.count < 42 {
             let next = all.count - (leading.count + monthDays.count) + 1
-            // vorher war .none → wenn du "wie Vormonat" + plus willst, nimm .plus
             all.append(DemoCell(day: next, isInDisplayedMonth: false, mark: .plus))
         }
         return Array(all.prefix(42))
@@ -183,7 +187,7 @@ private enum DemoMark: Equatable {
     case none
 }
 
-// MARK: - DayCell (Mock)
+// MARK: - DayCell
 
 private struct DayCell: View {
     let day: Int
@@ -256,7 +260,8 @@ struct JournalMainViewPanicAttacks_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainViewPanicAttacks(
             rootMode: .constant(.panicAttacks),
-            onPlusButtonTapped: { }
+            onPlusButtonTapped: { },
+            onCreateEntry: { }
         )
     }
 }

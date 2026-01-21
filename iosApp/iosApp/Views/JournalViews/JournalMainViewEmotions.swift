@@ -2,12 +2,14 @@ import SwiftUI
 
 struct JournalMainViewEmotions: View { // Anke
 
-    // NEU: kommt vom Parent (JournalNavigationView) und steuert den Wechsel
     @Binding var rootMode: JournalRootMode
 
+    /// farbiger Kreis -> Popup
     let onPlusButtonTapped: () -> Void
 
-    // NEU: kein eigener @State mehr nötig, wir leiten den Toggle aus rootMode ab
+    /// + -> JournalEntryView
+    let onCreateEntry: () -> Void
+
     private var isPanicBinding: Binding<Bool> {
         Binding(
             get: { rootMode == .panicAttacks },
@@ -40,7 +42,7 @@ struct JournalMainViewEmotions: View { // Anke
             }
             .safeAreaPadding(.top, titleTopInset)
 
-            // Mode Switch (JETZT FUNKTIONAL)
+            // Mode Switch
             HStack(spacing: 16) {
                 VStack(spacing: 6) {
                     Image(systemName: "circle.fill")
@@ -67,7 +69,7 @@ struct JournalMainViewEmotions: View { // Anke
             .padding(.top, 14)
             .padding(.bottom, 4)
 
-            // Month header (Buttons ohne Funktion – nur UI)
+            // Month header (nur UI)
             HStack {
                 Button { } label: {
                     Image(systemName: "chevron.left")
@@ -113,7 +115,7 @@ struct JournalMainViewEmotions: View { // Anke
             .padding(.horizontal, 18)
             .padding(.top, 12)
 
-            // Days grid (nur Mock-Optik)
+            // Days grid
             let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
             let cells = demoCells
 
@@ -127,7 +129,12 @@ struct JournalMainViewEmotions: View { // Anke
                         plusSize: gridPlusSize,
                         dayFontSize: dayFontSize,
                         onTap: {
+                            // ✅ + -> JournalEntryView
                             if cell.mark == .plus {
+                                onCreateEntry()
+                            }
+                            // ✅ farbig -> Popup
+                            else if cell.mark == .moodGradientA || cell.mark == .moodGradientB {
                                 onPlusButtonTapped()
                             }
                         }
@@ -157,12 +164,10 @@ struct JournalMainViewEmotions: View { // Anke
         }
 
         var all = leading + monthDays
-
         while all.count < 42 {
             let next = all.count - (leading.count + monthDays.count) + 1
             all.append(DemoCell(day: next, isInDisplayedMonth: false, mark: .plus))
         }
-
         return Array(all.prefix(42))
     }
 }
@@ -263,10 +268,10 @@ private struct BrokenHeartIcon: View {
 
 struct JournalMainView_Previews: PreviewProvider {
     static var previews: some View {
-        // Preview braucht jetzt ein Binding:
         JournalMainViewEmotions(
             rootMode: .constant(.emotions),
-            onPlusButtonTapped: { }
+            onPlusButtonTapped: { },
+            onCreateEntry: { }
         )
     }
 }
