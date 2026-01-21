@@ -7,6 +7,8 @@ struct JournalMainViewEmotions: View { // Anke
 
     /// farbiger Kreis -> Popup
     let onPlusButtonTapped: () -> Void
+    
+    let onCreateEntry: () -> Void
 
     @State private var isPanic: Bool = false
     @State private var showPopup: Bool = false
@@ -14,6 +16,15 @@ struct JournalMainViewEmotions: View { // Anke
     @State private var selectedDay: Int = 0
     @State private var currentYear: Int = 2026
     @State private var currentMonth: Int = 1
+    
+    private var isPanicBinding: Binding<Bool> {
+            Binding(
+                get: { rootMode == .panicAttacks },
+                set: { newValue in
+                    rootMode = newValue ? .panicAttacks : .emotions
+                }
+            )
+        }
 
     private let titleTopInset: CGFloat = 34
     private let gridCircleSize: CGFloat = 38
