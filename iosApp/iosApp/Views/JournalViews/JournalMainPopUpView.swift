@@ -23,6 +23,9 @@ struct JournalMainPopUpView: View {
     // 40% der Screenhöhe
     private let sheetHeightFactor: CGFloat = 0.4
 
+    // ab dieser Drag-Höhe schließen wir das Popup
+    private let dismissDragThreshold: CGFloat = 120
+
     var body: some View {
 
             // Sheet
@@ -81,7 +84,9 @@ struct JournalMainPopUpView: View {
                 .padding(.top, 16)
 
                 // Button
-                Button { onEintragBearbeiten() } label: {
+                Button {
+                    onEintragBearbeiten()
+                } label: {
                     Text("Eintrag bearbeiten")
                         .font(.system(size: 20, weight: .regular, design: .rounded))
                         .foregroundStyle(.black.opacity(0.95))
@@ -128,7 +133,6 @@ struct JournalMainPopUpView: View {
             .ignoresSafeArea(edges: .bottom)
         }
     }
-
 
 private struct BrokenHeartIcon: View {
     let size: CGFloat

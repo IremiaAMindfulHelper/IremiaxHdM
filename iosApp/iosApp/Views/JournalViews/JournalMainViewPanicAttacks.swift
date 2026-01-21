@@ -1,17 +1,25 @@
-//
-//  JournalMainViewPanicAttacks.swift
-//  iosApp
-//
-//  Created by Anke Raab on 12.01.26.
-//
-
 import SwiftUI
 
 struct JournalMainViewPanicAttacks: View { // Anke
 
-    // nur für Optik (Toggle bewegt sich, sonst keine Navigation/Logik nötig)
-    @State private var isPanic: Bool = true
+    @Binding var rootMode: JournalRootMode
 
+    /// broken heart -> Popup
+    let onPlusButtonTapped: () -> Void
+
+    /// + -> JournalEntryView
+    let onCreateEntry: () -> Void
+
+    private var isPanicBinding: Binding<Bool> {
+        Binding(
+            get: { rootMode == .panicAttacks },
+            set: { isOn in
+                withAnimation {
+                    rootMode = isOn ? .panicAttacks : .emotions
+                }
+            }
+        )
+    }
 
     private let titleTopInset: CGFloat = 34
     private let gridCircleSize: CGFloat = 38
@@ -34,35 +42,35 @@ struct JournalMainViewPanicAttacks: View { // Anke
             }
             .safeAreaPadding(.top, titleTopInset)
 
-            // Mode Switch (nur Optik)
+            // Mode Switch
             HStack(spacing: 16) {
 
                 VStack(spacing: 6) {
                     Image(systemName: "circle.fill")
                         .font(.system(size: 28))
-                        .foregroundStyle(.black.opacity(isPanic ? 0.25 : 0.75))
+                        .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.25 : 0.75))
                     Text("Stimmung")
                         .font(.system(size: 13, design: .rounded))
-                        .foregroundStyle(.black.opacity(isPanic ? 0.45 : 0.85))
+                        .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.45 : 0.85))
                 }
 
-                Toggle("", isOn: $isPanic)
+                Toggle("", isOn: isPanicBinding)
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .tint(.black.opacity(0.8))
                     .scaleEffect(0.95)
 
                 VStack(spacing: 6) {
-                    BrokenHeartIcon(size: 26, isActive: isPanic)
+                    BrokenHeartIcon(size: 26, isActive: isPanicBinding.wrappedValue)
                     Text("Panik")
                         .font(.system(size: 13, design: .rounded))
-                        .foregroundStyle(.black.opacity(isPanic ? 0.85 : 0.45))
+                        .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.85 : 0.45))
                 }
             }
             .padding(.top, 14)
             .padding(.bottom, 4)
 
-            // Month header (Buttons ohne Funktion – nur UI)
+            // Month header (nur UI)
             HStack {
                 Button { } label: {
                     Image(systemName: "chevron.left")
@@ -108,7 +116,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
             .padding(.horizontal, 18)
             .padding(.top, 12)
 
-            // Days grid (nur Mock-Optik) – statt bunten Kugeln: gebrochene Herzen
+            // Days grid
             let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
             let cells = demoCells
 
@@ -120,7 +128,17 @@ struct JournalMainViewPanicAttacks: View { // Anke
                         isInDisplayedMonth: cell.isInDisplayedMonth,
                         circleSize: gridCircleSize,
                         plusSize: gridPlusSize,
-                        dayFontSize: dayFontSize
+                        dayFontSize: dayFontSize,
+                        onTap: {
+                            // ✅ + -> JournalEntryView
+                            if cell.mark == .plus {
+                                onCreateEntry()
+                            }
+                            // ✅ broken heart -> Popup
+                            else if cell.mark == .brokenHeart {
+                                onPlusButtonTapped()
+                            }
+                        }
                     )
                     .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
                 }
@@ -134,34 +152,26 @@ struct JournalMainViewPanicAttacks: View { // Anke
         .background(Color.white)
     }
 
-
     private var demoCells: [DemoCell] {
-        // Beispiel: Januar 2026 startet Do (Mo-basiert: 4. Spalte)
-        // 3 Vormonatstage (29,30,31) + 31 Tage + Rest auffüllen
         let leading = [29, 30, 31].map { DemoCell(day: $0, isInDisplayedMonth: false, mark: .plus) }
 
         let monthDays: [DemoCell] = (1...31).map { d in
-            // Demo: 6 & 7 = brokenHeart (statt Mood-Grads)
             if d == 6 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .brokenHeart) }
             if d == 7 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .brokenHeart) }
-
-            // Demo: 16/17/18 = filled
             if [16, 17, 18].contains(d) { return DemoCell(day: d, isInDisplayedMonth: true, mark: .filled) }
-
-            // Rest: plus (wie Mock)
             return DemoCell(day: d, isInDisplayedMonth: true, mark: .plus)
         }
 
         var all = leading + monthDays
         while all.count < 42 {
             let next = all.count - (leading.count + monthDays.count) + 1
-            all.append(DemoCell(day: next, isInDisplayedMonth: false, mark: .none))
+            all.append(DemoCell(day: next, isInDisplayedMonth: false, mark: .plus))
         }
         return Array(all.prefix(42))
     }
 }
 
-
+// MARK: - Helpers
 
 private struct DemoCell: Identifiable {
     let id = UUID()
@@ -177,7 +187,7 @@ private enum DemoMark: Equatable {
     case none
 }
 
-// MARK: - DayCell (Mock)
+// MARK: - DayCell
 
 private struct DayCell: View {
     let day: Int
@@ -187,6 +197,7 @@ private struct DayCell: View {
     let circleSize: CGFloat
     let plusSize: CGFloat
     let dayFontSize: CGFloat
+    let onTap: () -> Void
 
     var body: some View {
         VStack(spacing: 5) {
@@ -205,6 +216,7 @@ private struct DayCell: View {
                     BrokenHeartIcon(size: 22, isActive: true)
                 }
             }
+            .onTapGesture { onTap() }
 
             Text("\(day)")
                 .font(.system(size: dayFontSize, design: .rounded))
@@ -227,8 +239,6 @@ private struct DayCell: View {
     }
 }
 
-
-
 private struct BrokenHeartIcon: View {
     let size: CGFloat
     let isActive: Bool
@@ -248,6 +258,10 @@ private struct BrokenHeartIcon: View {
 
 struct JournalMainViewPanicAttacks_Previews: PreviewProvider {
     static var previews: some View {
-        JournalMainViewPanicAttacks()
+        JournalMainViewPanicAttacks(
+            rootMode: .constant(.panicAttacks),
+            onPlusButtonTapped: { },
+            onCreateEntry: { }
+        )
     }
 }

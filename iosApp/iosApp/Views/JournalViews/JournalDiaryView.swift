@@ -2,20 +2,22 @@ import SwiftUI
 
 // MARK: - Main View
 struct JournalDiaryView: View {
-    
+
     let onBack: () -> Void
-    
-    
+
+    // ✅ Keyboard Focus
+    @FocusState private var isKeyboardActive: Bool
+
     // MARK: - State Variables
     @State private var expanded: [Bool] = Array(repeating: true, count: 7)
     @State private var answer1: String = ""
     @State private var answer2: String = ""
     @State private var answer3: String = ""
     @State private var answer4: String = ""
-    @State private var answer5: [String] = Array(repeating: "", count: 4) // 4 times of day (Morning, Midday, Evening, Night)
+    @State private var answer5: [String] = Array(repeating: "", count: 4) // Morning, Midday, Evening, Night
     @State private var answer6: String = ""
     @State private var answer7: String = ""
-    
+
     // MARK: - Data
     private let diaryQuestions = [
         "Were there any difficult moments for you today?",
@@ -26,105 +28,118 @@ struct JournalDiaryView: View {
         "What are you grateful for today?",
         "Is there anything you would like to do differently tomorrow?"
     ]
-    
+
     private let moodEmojis = ["😢", "🙁", "😐", "😊", "😄"]
-        
+
     // MARK: - Body
     var body: some View {
-            ScrollView {
-                VStack(spacing: 14) {
-                    VStack(spacing: 12) {
-                        CategoryCard(title: diaryQuestions[0], dateText: nil, isExpanded: $expanded[0]) {
-                            DiaryContent(text: $answer1)
-                        }
-                        
-                        CategoryCard(title: diaryQuestions[1], dateText: nil, isExpanded: $expanded[1]) {
-                            DiaryContent(text: $answer2)
-                        }
-                        
-                        CategoryCard(title: diaryQuestions[2], dateText: nil, isExpanded: $expanded[2]) {
-                            DiaryContent(text: $answer3)
-                        }
-                        
-                        CategoryCard(title: diaryQuestions[3], dateText: nil, isExpanded: $expanded[3]) {
-                            DiaryContent(text: $answer4)
-                        }
-                        
-                        // Question 5: Emoji mood picker
-                        CategoryCard(title: diaryQuestions[4], dateText: nil, isExpanded: $expanded[4]) {
-                            VStack(alignment: .leading, spacing: 14) {
-                                MoodPickerRow(title: "Morning ☀️", emojis: moodEmojis, selection: $answer5[0])
-                                MoodPickerRow(title: "Midday 🌤", emojis: moodEmojis, selection: $answer5[1])
-                                MoodPickerRow(title: "Evening 🌆", emojis: moodEmojis, selection: $answer5[2])
-                                MoodPickerRow(title: "Night 🌙", emojis: moodEmojis, selection: $answer5[3])
-                            }
-                        }
-                        
-                        CategoryCard(title: diaryQuestions[5], dateText: nil, isExpanded: $expanded[5]) {
-                            DiaryContent(text: $answer6)
-                        }
-                        
-                        CategoryCard(title: diaryQuestions[6], dateText: nil, isExpanded: $expanded[6]) {
-                            DiaryContent(text: $answer7)
+        ScrollView {
+            VStack(spacing: 14) {
+                VStack(spacing: 12) {
+                    CategoryCard(title: diaryQuestions[0], dateText: nil, isExpanded: $expanded[0]) {
+                        DiaryContent(text: $answer1, isKeyboardActive: $isKeyboardActive)
+                    }
+
+                    CategoryCard(title: diaryQuestions[1], dateText: nil, isExpanded: $expanded[1]) {
+                        DiaryContent(text: $answer2, isKeyboardActive: $isKeyboardActive)
+                    }
+
+                    CategoryCard(title: diaryQuestions[2], dateText: nil, isExpanded: $expanded[2]) {
+                        DiaryContent(text: $answer3, isKeyboardActive: $isKeyboardActive)
+                    }
+
+                    CategoryCard(title: diaryQuestions[3], dateText: nil, isExpanded: $expanded[3]) {
+                        DiaryContent(text: $answer4, isKeyboardActive: $isKeyboardActive)
+                    }
+
+                    // Question 5: Emoji mood picker
+                    CategoryCard(title: diaryQuestions[4], dateText: nil, isExpanded: $expanded[4]) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            MoodPickerRow(title: "Morning ☀️", emojis: moodEmojis, selection: $answer5[0])
+                            MoodPickerRow(title: "Midday 🌤", emojis: moodEmojis, selection: $answer5[1])
+                            MoodPickerRow(title: "Evening 🌆", emojis: moodEmojis, selection: $answer5[2])
+                            MoodPickerRow(title: "Night 🌙", emojis: moodEmojis, selection: $answer5[3])
                         }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 10)
-                    
-                    // MARK: Submit Button
-                    VStack(spacing: 10) {
-                        Button {
-                            onBack()
-                        } label: {
-                            Text("Eintrag abschließen")
-                                .font(.system(size: 18, weight: .regular))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .padding(.horizontal, 24)
-                                .background(Color.clear)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.black, lineWidth: 2)
-                                )
-                        }
+
+                    CategoryCard(title: diaryQuestions[5], dateText: nil, isExpanded: $expanded[5]) {
+                        DiaryContent(text: $answer6, isKeyboardActive: $isKeyboardActive)
                     }
-                    .padding(.horizontal, 80) // Adjust button width here
-                    .padding(.top, 6)
-                    .padding(.bottom, 18)
+
+                    CategoryCard(title: diaryQuestions[6], dateText: nil, isExpanded: $expanded[6]) {
+                        DiaryContent(text: $answer7, isKeyboardActive: $isKeyboardActive)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+
+                // MARK: Submit Button
+                VStack(spacing: 10) {
+                    Button {
+                        onBack()
+                    } label: {
+                        Text("Eintrag abschließen")
+                            .font(.system(size: 18, weight: .regular))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 24)
+                            .background(Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.black, lineWidth: 2)
+                            )
+                    }
+                }
+                .padding(.horizontal, 80)
+                .padding(.top, 6)
+                .padding(.bottom, 18)
+            }
+        }
+        .background(Color(red: 0.95, green: 0.95, blue: 0.95))
+        .navigationTitle("Tagebuch")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { onBack() } label: {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.black)
                 }
             }
-            .background(Color(red: 0.95, green: 0.95, blue: 0.95))
-            .navigationTitle("Tagebuch")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button { onBack() } label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                    }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    print("Edit Fragenkatalog") // TODO: Navigate to question catalog editor
+                } label: {
+                    Image(systemName: "pencil")
+                        .foregroundColor(.black)
+                        .imageScale(.large)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        print("Edit Fragenkatalog") // TODO: Navigate to question catalog editor
-                    } label: {
-                        Image(systemName: "pencil")
-                            .foregroundColor(.black)
-                            .imageScale(.large)
-                    }
+            }
+
+            // ✅ Done Button on Keyboard
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Fertig") {
+                    isKeyboardActive = false
                 }
             }
         }
+        // ✅ Tap outside closes keyboard
+        .onTapGesture {
+            isKeyboardActive = false
+        }
     }
+}
 
 // MARK: - Diary Content
 private struct DiaryContent: View {
     @Binding var text: String
-    
+    @FocusState.Binding var isKeyboardActive: Bool
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RoundedTextField(placeholder: "…", text: $text)
+            RoundedTextField(placeholder: "…", text: $text, isKeyboardActive: $isKeyboardActive)
         }
         .padding(.top, 8)
     }
@@ -135,13 +150,13 @@ private struct MoodPickerRow: View {
     let title: String
     let emojis: [String]
     @Binding var selection: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.subheadline)
                 .foregroundColor(.black)
-            
+
             HStack(spacing: 10) {
                 ForEach(emojis, id: \.self) { emoji in
                     Button {
@@ -155,7 +170,7 @@ private struct MoodPickerRow: View {
                                         .stroke(selection == emoji ? Color.black : Color.clear, lineWidth: 2)
                                 )
                                 .frame(width: 50, height: 40)
-                            
+
                             Text(emoji)
                                 .font(.system(size: 24))
                         }
@@ -173,9 +188,9 @@ private struct CategoryCard<Content: View>: View {
     let dateText: String?
     @Binding var isExpanded: Bool
     @ViewBuilder var content: Content
-    
-    private let sideInset: CGFloat = 40 // Dark gray panel width
-    
+
+    private let sideInset: CGFloat = 40
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
@@ -188,7 +203,7 @@ private struct CategoryCard<Content: View>: View {
                         Text(title)
                             .font(.system(size: 20, weight: .regular, design: .rounded))
                             .foregroundColor(.black)
-                        
+
                         if let dateText {
                             Text(dateText)
                                 .font(.caption)
@@ -202,7 +217,7 @@ private struct CategoryCard<Content: View>: View {
                 .padding(.vertical, 12)
             }
             .buttonStyle(.plain)
-            
+
             if isExpanded {
                 content
                     .padding(.trailing, sideInset)
@@ -235,9 +250,11 @@ private struct CategoryCard<Content: View>: View {
 private struct RoundedTextField: View {
     let placeholder: String
     @Binding var text: String
-    
+    @FocusState.Binding var isKeyboardActive: Bool
+
     var body: some View {
         TextField(placeholder, text: $text, axis: .vertical)
+            .focused($isKeyboardActive)
             .textFieldStyle(.plain)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)

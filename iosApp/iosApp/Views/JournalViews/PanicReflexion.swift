@@ -5,6 +5,9 @@ struct PanicReflexion: View {
     let onBack: () -> Void
     @Environment(\.dismiss) private var dismiss
 
+    // ✅ Keyboard Focus
+    @FocusState private var isKeyboardActive: Bool
+
     // UI (auf/zu)
     @State private var expanded: [Bool] = [true, true, true, true]
 
@@ -53,7 +56,8 @@ struct PanicReflexion: View {
                         Category1Content(
                             location: $location1,
                             intensity: $intensity1,
-                            cause: $cause1
+                            cause: $cause1,
+                            isKeyboardActive: $isKeyboardActive
                         )
                     }
 
@@ -63,19 +67,24 @@ struct PanicReflexion: View {
                             selectedSymptoms: $selectedSymptoms,
                             newSymptomText: $newSymptomText,
                             feelingOptions: feelingOptions,
-                            selectedFeelings: $selectedFeelings
+                            selectedFeelings: $selectedFeelings,
+                            isKeyboardActive: $isKeyboardActive
                         )
                     }
 
                     CategoryCard(title: "Category 3", dateText: "10.11.2025", isExpanded: expandedBinding(2)) {
                         Category3Content(
                             effectiveness: $skillEffectiveness,
-                            nextTimeText: $nextTimeText
+                            nextTimeText: $nextTimeText,
+                            isKeyboardActive: $isKeyboardActive
                         )
                     }
 
                     CategoryCard(title: "Category 4", dateText: "10.11.2025", isExpanded: expandedBinding(3)) {
-                        Category4Content(shortReflection: $shortReflection)
+                        Category4Content(
+                            shortReflection: $shortReflection,
+                            isKeyboardActive: $isKeyboardActive
+                        )
                     }
                 }
                 .padding(.horizontal, 12)
@@ -86,9 +95,6 @@ struct PanicReflexion: View {
                     Button {
                         // ✅ Standard: SwiftUI dismiss (Sheet/Navigation)
                         dismiss()
-
-                        // Alternative, falls du IMMER nur deinen eigenen Handler willst:
-                        // onBack()
                     } label: {
                         Text("Eintrag abschließen")
                             .font(.system(size: 18, weight: .regular))
@@ -119,6 +125,18 @@ struct PanicReflexion: View {
                         .foregroundColor(.black)
                 }
             }
+
+            // ✅ Done Button in Keyboard
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Fertig") {
+                    isKeyboardActive = false
+                }
+            }
+        }
+        // ✅ Tap outside closes keyboard
+        .onTapGesture {
+            isKeyboardActive = false
         }
     }
 }
@@ -130,10 +148,12 @@ private struct Category1Content: View {
     @Binding var intensity: Double
     @Binding var cause: String
 
+    @FocusState.Binding var isKeyboardActive: Bool
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             LabeledField(title: "Location") {
-                RoundedTextField(placeholder: "…", text: $location)
+                RoundedTextField(placeholder: "…", text: $location, isKeyboardActive: $isKeyboardActive)
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -156,7 +176,7 @@ private struct Category1Content: View {
             }
 
             LabeledField(title: "Cause") {
-                RoundedTextField(placeholder: "…", text: $cause)
+                RoundedTextField(placeholder: "…", text: $cause, isKeyboardActive: $isKeyboardActive)
             }
         }
         .padding(.top, 8)
@@ -172,6 +192,8 @@ private struct Category2Content: View {
 
     let feelingOptions: [(key: String, emoji: String, label: String)]
     @Binding var selectedFeelings: Set<String>
+
+    @FocusState.Binding var isKeyboardActive: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -196,7 +218,7 @@ private struct Category2Content: View {
                     }
                 }
 
-                RoundedTextField(placeholder: "add symptom", text: $newSymptomText)
+                RoundedTextField(placeholder: "add symptom", text: $newSymptomText, isKeyboardActive: $isKeyboardActive)
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -231,6 +253,8 @@ private struct Category2Content: View {
 private struct Category3Content: View {
     @Binding var effectiveness: Double
     @Binding var nextTimeText: String
+
+    @FocusState.Binding var isKeyboardActive: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -292,7 +316,7 @@ private struct Category3Content: View {
                     .foregroundColor(.black)
                     .fixedSize(horizontal: false, vertical: true)
 
-                RoundedTextField(placeholder: "…", text: $nextTimeText)
+                RoundedTextField(placeholder: "…", text: $nextTimeText, isKeyboardActive: $isKeyboardActive)
             }
         }
         .padding(.top, 8)
@@ -303,6 +327,7 @@ private struct Category3Content: View {
 
 private struct Category4Content: View {
     @Binding var shortReflection: String
+    @FocusState.Binding var isKeyboardActive: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -310,7 +335,7 @@ private struct Category4Content: View {
                 .font(.subheadline)
                 .foregroundColor(.black)
 
-            RoundedTextField(placeholder: "…", text: $shortReflection)
+            RoundedTextField(placeholder: "…", text: $shortReflection, isKeyboardActive: $isKeyboardActive)
         }
         .padding(.top, 8)
     }
@@ -487,17 +512,27 @@ private struct RoundedTextField: View {
     let placeholder: String
     @Binding var text: String
 
+    // ✅ optional Focus (damit alte Calls weiterhin gehen würden, aber wir nutzen es hier überall)
+    var isKeyboardActive: FocusState<Bool>.Binding? = nil
+
     var body: some View {
-        TextField(placeholder, text: $text, axis: .vertical)
-            .textFieldStyle(.plain)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .lineLimit(1...6)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.black, lineWidth: 1)
-            )
-            .background(Color.white)
+        Group {
+            if let isKeyboardActive {
+                TextField(placeholder, text: $text, axis: .vertical)
+                    .focused(isKeyboardActive)
+            } else {
+                TextField(placeholder, text: $text, axis: .vertical)
+            }
+        }
+        .textFieldStyle(.plain)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .lineLimit(1...6)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.black, lineWidth: 1)
+        )
+        .background(Color.white)
     }
 }
 
