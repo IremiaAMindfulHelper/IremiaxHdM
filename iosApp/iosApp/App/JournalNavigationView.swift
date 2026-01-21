@@ -61,10 +61,12 @@ struct JournalNavigationView: View {
                     showJournalPopup = false
                 }
             )
-            // optional: 40% Höhe wie vorher
+            // ✅ 40% Höhe wie vorher
             .presentationDetents([.fraction(0.4)])
-            // optional: du hast deinen eigenen Grabber (Capsule), daher verstecken
+            // ✅ eigener Grabber -> System-Grabber verstecken
             .presentationDragIndicator(.hidden)
+            // ✅ FIX: grauen Streifen unten entfernen
+            .presentationBackground(Color.white)
         }
     }
 

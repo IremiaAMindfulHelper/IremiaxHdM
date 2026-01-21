@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct JournalEntryView: View {
-    
+
     let onBack: () -> Void
     let onOpenDiary: () -> Void
     let onOpenPanicReflexion: () -> Void
-    
+
     @State private var currentDate = Date()
     @State private var ballPosition = CGPoint(x: 0, y: 0)
     @State private var isLocked = false
@@ -15,23 +15,31 @@ struct JournalEntryView: View {
     @State private var waterAmount: String = "0"
     @State private var sleepHours: String = "0"
     @State private var notes: String = ""
-    
+
+    // ✅ Keyboard focus
+    @FocusState private var focusedField: Field?
+
+    private enum Field: Hashable {
+        case freeTextActivity
+        case waterAmount
+        case sleepHours
+        case notes
+    }
+
     private var waterInLiters: String {
-        guard let ml = Double(waterAmount), ml > 0 else {
-            return "0"
-        }
+        guard let ml = Double(waterAmount), ml > 0 else { return "0" }
         let liters = ml / 1000.0
         return String(format: "%.1f", liters)
     }
-    
+
     enum ActivitySymbol: String, CaseIterable, Identifiable {
         case football = "soccerball"
         case university = "graduationcap"
         case shopping = "cart"
         case train = "tram"
-        
+
         var id: String { rawValue }
-        
+
         var label: String {
             switch self {
             case .football: return "Fußball"
@@ -41,12 +49,12 @@ struct JournalEntryView: View {
             }
         }
     }
-    
+
     enum ActivityMode: String, CaseIterable {
         case symbols = "Symbole"
         case freetext = "Freitext"
     }
-    
+
     // MARK: - Header
     private var headerView: some View {
         VStack(spacing: 0) {
@@ -57,32 +65,31 @@ struct JournalEntryView: View {
                         .foregroundColor(.primary)
                 }
                 .frame(width: 40, alignment: .leading)
-                
+
                 Spacer()
-                
+
                 Text(formattedDate)
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Spacer()
-                
-                // Placeholder for symmetry
+
                 Color.clear.frame(width: 40)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            
+
             Divider()
         }
     }
-    
+
     private var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd.MM.yy"
         formatter.locale = Locale(identifier: "de_DE")
         return formatter.string(from: currentDate)
     }
-    
+
     private var lockButton: some View {
         Button(action: {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
@@ -94,7 +101,7 @@ struct JournalEntryView: View {
                 .foregroundColor(.primary)
         }
     }
-    
+
     // MARK: - Mood Coordinate System
     private var moodCoordinateSystem: some View {
         GeometryReader { geo in
@@ -102,20 +109,17 @@ struct JournalEntryView: View {
             let centerY = geo.size.height / 2
             let maxDistanceX: CGFloat = centerX - 70
             let maxDistanceY: CGFloat = centerY - 70
-            
+
             ZStack {
                 Path { path in
-                    // Y-axis
                     path.move(to: CGPoint(x: centerX, y: 70))
                     path.addLine(to: CGPoint(x: centerX, y: geo.size.height - 70))
-                    
-                    // X-axis
+
                     path.move(to: CGPoint(x: 60, y: centerY))
                     path.addLine(to: CGPoint(x: geo.size.width - 60, y: centerY))
                 }
                 .stroke(Color.black, lineWidth: 2)
-                
-                // Labels
+
                 VStack(spacing: 4) {
                     Text("energiegeladen")
                         .font(.system(size: 12, weight: .medium))
@@ -123,7 +127,7 @@ struct JournalEntryView: View {
                         .font(.system(size: 16))
                 }
                 .position(x: centerX, y: 25)
-                
+
                 VStack(spacing: 4) {
                     Image(systemName: "moon.zzz.fill")
                         .font(.system(size: 16))
@@ -131,8 +135,7 @@ struct JournalEntryView: View {
                         .font(.system(size: 12, weight: .medium))
                 }
                 .position(x: centerX, y: geo.size.height - 25)
-                
-                // TODO: Get better emojis for Happy & Sad mood
+
                 HStack(spacing: 4) {
                     VStack(spacing: 2) {
                         Text("😔")
@@ -144,7 +147,7 @@ struct JournalEntryView: View {
                     }
                 }
                 .position(x: 40, y: centerY)
-                
+
                 HStack(spacing: 4) {
                     VStack(spacing: 2) {
                         Text("😃")
@@ -156,9 +159,7 @@ struct JournalEntryView: View {
                     }
                 }
                 .position(x: geo.size.width - 40, y: centerY)
-                
-                // TODO: Add color changing ball
-                // Draggable ball
+
                 Circle()
                     .frame(width: 30, height: 30)
                     .shadow(radius: 6, y: 2)
@@ -176,37 +177,36 @@ struct JournalEntryView: View {
                     .gesture(
                         isLocked ? nil :
                             DragGesture()
-                            .onChanged { value in
-                                let deltaX = value.location.x - centerX
-                                let deltaY = centerY - value.location.y
-                                
-                                var normalizedX = deltaX / maxDistanceX
-                                var normalizedY = deltaY / maxDistanceY
-                                
-                                normalizedX = max(-1.0, min(1.0, normalizedX))
-                                normalizedY = max(-1.0, min(1.0, normalizedY))
-                                
-                                ballPosition = CGPoint(x: normalizedX, y: normalizedY)
-                            }
+                                .onChanged { value in
+                                    let deltaX = value.location.x - centerX
+                                    let deltaY = centerY - value.location.y
+
+                                    var normalizedX = deltaX / maxDistanceX
+                                    var normalizedY = deltaY / maxDistanceY
+
+                                    normalizedX = max(-1.0, min(1.0, normalizedX))
+                                    normalizedY = max(-1.0, min(1.0, normalizedY))
+
+                                    ballPosition = CGPoint(x: normalizedX, y: normalizedY)
+                                }
                     )
                     .opacity(isLocked ? 0.7 : 1.0)
             }
         }
     }
-    
+
     // MARK: - Main View
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Header
                 headerView
-                
+
                 Text("Selbstcheck")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 20)
-                
+
                 HStack {
                     Text("Stimmung")
                         .font(.subheadline)
@@ -216,12 +216,12 @@ struct JournalEntryView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
-                
+
                 moodCoordinateSystem
                     .frame(height: 400)
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
-                
+
                 // MARK: - Activities Section
                 HStack {
                     Text("Aktivitäten")
@@ -231,7 +231,7 @@ struct JournalEntryView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 40)
-                
+
                 Picker("Aktivitätsmodus", selection: $activityMode) {
                     ForEach(ActivityMode.allCases, id: \.self) { mode in
                         Text(mode.rawValue).tag(mode)
@@ -240,7 +240,7 @@ struct JournalEntryView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
-                
+
                 if activityMode == .symbols {
                     LazyVGrid(columns: [
                         GridItem(.flexible(), spacing: 16),
@@ -273,8 +273,7 @@ struct JournalEntryView: View {
                                 )
                             }
                         }
-                        
-                        // Plus button for adding new activity
+
                         Button(action: {
                             // TODO: Add new activity functionality
                         }) {
@@ -297,10 +296,11 @@ struct JournalEntryView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
                 }
-                
+
                 if activityMode == .freetext {
                     ZStack(alignment: .topLeading) {
                         TextEditor(text: $freeTextActivity)
+                            .focused($focusedField, equals: .freeTextActivity) // ✅
                             .frame(height: 200)
                             .scrollContentBackground(.hidden)
                             .padding(8)
@@ -309,8 +309,7 @@ struct JournalEntryView: View {
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.black, lineWidth: 1)
                             )
-                        
-                        // Placeholder text
+
                         if freeTextActivity.isEmpty {
                             Text("Was hast du heute gemacht?")
                                 .foregroundColor(.gray)
@@ -322,7 +321,7 @@ struct JournalEntryView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
                 }
-                
+
                 // MARK: - Health Tracker
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Gesundheitstracker")
@@ -330,50 +329,50 @@ struct JournalEntryView: View {
                         .fontWeight(.medium)
                         .padding(.horizontal, 20)
                         .padding(.top, 40)
-                    
+
                     HStack(spacing: 40) {
-                        // Water intake
                         VStack(spacing: 8) {
                             Text("\(waterInLiters) Liter")
                                 .font(.caption)
                                 .foregroundColor(.primary)
-                            
+
                             Image(systemName: "waterbottle")
                                 .font(.system(size: 40))
                                 .foregroundColor(.primary)
-                            
+
                             HStack(spacing: 4) {
                                 TextField("ml", text: $waterAmount)
                                     .keyboardType(.numberPad)
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 100)
                                     .multilineTextAlignment(.center)
+                                    .focused($focusedField, equals: .waterAmount) // ✅
                             }
                         }
-                        
-                        // Sleep hours
+
                         VStack(spacing: 8) {
                             Text("\(sleepHours) Stunden")
                                 .font(.caption)
                                 .foregroundColor(.primary)
-                            
+
                             Image(systemName: "bed.double")
                                 .font(.system(size: 40))
                                 .foregroundColor(.primary)
-                            
+
                             HStack(spacing: 4) {
                                 TextField("h", text: $sleepHours)
                                     .keyboardType(.numberPad)
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 100)
                                     .multilineTextAlignment(.center)
+                                    .focused($focusedField, equals: .sleepHours) // ✅
                             }
                         }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 20)
                 }
-                
+
                 // MARK: - Notes
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Notizen")
@@ -381,8 +380,9 @@ struct JournalEntryView: View {
                         .fontWeight(.medium)
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
-                    
+
                     TextEditor(text: $notes)
+                        .focused($focusedField, equals: .notes) // ✅
                         .frame(height: 60)
                         .scrollContentBackground(.hidden)
                         .padding(8)
@@ -393,7 +393,7 @@ struct JournalEntryView: View {
                         )
                         .padding(.horizontal, 20)
                 }
-                
+
                 // MARK: - Navigation Buttons
                 HStack(spacing: 16) {
                     Button(action: onOpenDiary) {
@@ -401,7 +401,7 @@ struct JournalEntryView: View {
                             Text("Tagebuch")
                                 .font(.system(size: 16, weight: .medium))
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            
+
                             Text("4/6")
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
@@ -421,7 +421,7 @@ struct JournalEntryView: View {
                             Text("Panik Reflexion")
                                 .font(.system(size: 16, weight: .medium))
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            
+
                             Text("5/6")
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
@@ -435,21 +435,34 @@ struct JournalEntryView: View {
                         )
                     }
                     .foregroundColor(.primary)
-
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 24)
-                
+
                 Spacer(minLength: 100)
             }
         }
         .navigationTitle("Journal")
         .navigationBarHidden(true)
+
+        // ✅ Done Button in der Tastatur
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Fertig") {
+                    focusedField = nil // ✅ Tastatur zu
+                }
+            }
+        }
+
+        // ✅ optional: Tap outside closes keyboard
+        .onTapGesture {
+            focusedField = nil
+        }
     }
 }
 
 // MARK: - Preview
-
 #Preview {
     NavigationView {
         JournalEntryView(
