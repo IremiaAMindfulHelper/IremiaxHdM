@@ -21,14 +21,6 @@ struct JournalNavigationView: View {
             .navigationDestination(for: AppRoute.self) { route in  // ← HIER DRIN!
                 destinationView(for: route)
             }
-            .sheet(isPresented: $showJournalPopup) {
-                JournalMainPopUpView(
-                    onEintragBearbeiten: {
-                        showJournalPopup = false
-                        navigationPath.append(AppRoute.journalEntry)
-                    }
-                )
-            }
         }
     }
     

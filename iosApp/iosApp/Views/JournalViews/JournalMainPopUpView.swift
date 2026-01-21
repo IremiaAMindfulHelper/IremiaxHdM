@@ -11,6 +11,7 @@ import SwiftUI
 struct JournalMainPopUpView: View {
 
     let onEintragBearbeiten: () -> Void
+    let dateHeader: String
     
     @State private var dragOffset: CGFloat = 0
 
@@ -23,11 +24,6 @@ struct JournalMainPopUpView: View {
     private let sheetHeightFactor: CGFloat = 0.4
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-
-            // Dimmed Background (bis in alle SafeAreas)
-            Color.black.opacity(0.28)
-                .ignoresSafeArea()
 
             // Sheet
             VStack(spacing: 0) {
@@ -40,7 +36,7 @@ struct JournalMainPopUpView: View {
                     .padding(.bottom, 10)
 
                 // Date Title
-                Text("Mi 12.11.25")
+                Text(dateHeader)
                     .font(.system(size: 36, weight: .regular, design: .rounded))
                     .foregroundStyle(.black.opacity(0.9))
                     .padding(.top, 12)
@@ -119,16 +115,19 @@ struct JournalMainPopUpView: View {
                     .onChanged { value in
                         dragOffset = max(0, value.translation.height)
                     }
-                    .onEnded { _ in
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                            dragOffset = 0
+                    .onEnded { value in
+                        if dragOffset > 100 {
+                            onEintragBearbeiten()
+                        } else {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                                dragOffset = 0
+                            }
                         }
                     }
             )
             .ignoresSafeArea(edges: .bottom)
         }
     }
-}
 
 
 private struct BrokenHeartIcon: View {
@@ -151,7 +150,8 @@ private struct BrokenHeartIcon: View {
 struct JournalMainPopUpView_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainPopUpView(
-            onEintragBearbeiten: {}
+            onEintragBearbeiten: {},
+            dateHeader: "Mittwoch, 20.01."
         )
     }
 }
