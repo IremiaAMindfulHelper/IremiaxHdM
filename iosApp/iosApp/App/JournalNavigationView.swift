@@ -20,41 +20,57 @@ struct JournalNavigationView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
 
-            Group {
-                switch rootMode {
-                case .emotions:
-                    JournalMainViewEmotions(
-                        rootMode: $rootMode,
-                        onPlusButtonTapped: {          // farbiger Kreis -> Popup
-                            showJournalPopup = true
-                        },
-                        onCreateEntry: {               // + -> JournalEntryView
-                            navigationPath.append(AppRoute.journalEntry)
-                        }
-                    )
+            ZStack {
+                // ✅ Hintergrund: Journal Root Views
+                Group {
+                    switch rootMode {
+                    case .emotions:
+                        JournalMainViewEmotions(
+                            rootMode: $rootMode,
+                            onPlusButtonTapped: {          // farbiger Kreis -> Popup
+                                withAnimation {
+                                    showJournalPopup = true
+                                }
+                            },
+                            onCreateEntry: {               // + -> JournalEntryView
+                                navigationPath.append(AppRoute.journalEntry)
+                            }
+                        )
 
-                case .panicAttacks:
-                    JournalMainViewPanicAttacks(
-                        rootMode: $rootMode,
-                        onPlusButtonTapped: {          // broken heart -> Popup
-                            showJournalPopup = true
-                        },
-                        onCreateEntry: {               // + -> JournalEntryView
+                    case .panicAttacks:
+                        JournalMainViewPanicAttacks(
+                            rootMode: $rootMode,
+                            onPlusButtonTapped: {          // broken heart -> Popup
+                                withAnimation {
+                                    showJournalPopup = true
+                                }
+                            },
+                            onCreateEntry: {               // + -> JournalEntryView
+                                navigationPath.append(AppRoute.journalEntry)
+                            }
+                        )
+                    }
+                }
+
+                // ✅ Overlay: Popup direkt über dem Kalender
+                if showJournalPopup {
+                    JournalMainPopUpView(
+                        onEintragBearbeiten: {
+                            showJournalPopup = false
                             navigationPath.append(AppRoute.journalEntry)
+                        },
+                        onDismiss: {
+                            withAnimation {
+                                showJournalPopup = false
+                            }
                         }
                     )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(10)
                 }
             }
             .navigationDestination(for: AppRoute.self) { route in
                 destinationView(for: route)
-            }
-            .sheet(isPresented: $showJournalPopup) {
-                JournalMainPopUpView(
-                    onEintragBearbeiten: {
-                        showJournalPopup = false
-                        navigationPath.append(AppRoute.journalEntry)
-                    }
-                )
             }
         }
     }

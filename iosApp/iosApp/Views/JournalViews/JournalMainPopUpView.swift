@@ -11,7 +11,8 @@ import SwiftUI
 struct JournalMainPopUpView: View {
 
     let onEintragBearbeiten: () -> Void
-    
+    let onDismiss: () -> Void          // ✅ NEU (damit Overlay geschlossen werden kann)
+
     @State private var dragOffset: CGFloat = 0
 
     // MARK: - Tuning
@@ -22,12 +23,20 @@ struct JournalMainPopUpView: View {
     // 40% der Screenhöhe
     private let sheetHeightFactor: CGFloat = 0.4
 
+    // ab dieser Drag-Höhe schließen wir das Popup
+    private let dismissDragThreshold: CGFloat = 120
+
     var body: some View {
         ZStack(alignment: .bottom) {
 
-            // Dimmed Background (bis in alle SafeAreas)
+            // Dimmed Background (liegt jetzt über dem Kalender)
             Color.black.opacity(0.28)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation {
+                        onDismiss()
+                    }
+                }
 
             // Sheet
             VStack(spacing: 0) {
@@ -85,7 +94,9 @@ struct JournalMainPopUpView: View {
                 .padding(.top, 16)
 
                 // Button
-                Button { onEintragBearbeiten() } label: {
+                Button {
+                    onEintragBearbeiten()
+                } label: {
                     Text("Eintrag bearbeiten")
                         .font(.system(size: 20, weight: .regular, design: .rounded))
                         .foregroundStyle(.black.opacity(0.95))
@@ -119,9 +130,15 @@ struct JournalMainPopUpView: View {
                     .onChanged { value in
                         dragOffset = max(0, value.translation.height)
                     }
-                    .onEnded { _ in
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                            dragOffset = 0
+                    .onEnded { value in
+                        if value.translation.height > dismissDragThreshold {
+                            withAnimation {
+                                onDismiss()
+                            }
+                        } else {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                                dragOffset = 0
+                            }
                         }
                     }
             )
@@ -129,7 +146,6 @@ struct JournalMainPopUpView: View {
         }
     }
 }
-
 
 private struct BrokenHeartIcon: View {
     let size: CGFloat
@@ -151,7 +167,8 @@ private struct BrokenHeartIcon: View {
 struct JournalMainPopUpView_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainPopUpView(
-            onEintragBearbeiten: {}
+            onEintragBearbeiten: {},
+            onDismiss: {}        // ✅ NEU
         )
     }
 }
