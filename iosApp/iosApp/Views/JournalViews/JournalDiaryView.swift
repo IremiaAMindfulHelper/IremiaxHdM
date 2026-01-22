@@ -37,136 +37,168 @@ struct JournalDiaryView: View {
 
     // MARK: - Body
     var body: some View {
-        ScrollView {
-            VStack(spacing: 14) {
-                VStack(spacing: 12) {
-                    CategoryCard(title: diaryQuestions[0], dateText: nil, isExpanded: $expanded[0]) {
-                        DiaryContent(text: $answer1, isKeyboardActive: $isKeyboardActive)
-                    }
+        ZStack {
+            // ===== Main Content =====
+            ScrollView {
+                VStack(spacing: 14) {
+                    VStack(spacing: 12) {
+                        CategoryCard(title: diaryQuestions[0], dateText: nil, isExpanded: $expanded[0]) {
+                            DiaryContent(text: $answer1, isKeyboardActive: $isKeyboardActive)
+                        }
 
-                    CategoryCard(title: diaryQuestions[1], dateText: nil, isExpanded: $expanded[1]) {
-                        DiaryContent(text: $answer2, isKeyboardActive: $isKeyboardActive)
-                    }
+                        CategoryCard(title: diaryQuestions[1], dateText: nil, isExpanded: $expanded[1]) {
+                            DiaryContent(text: $answer2, isKeyboardActive: $isKeyboardActive)
+                        }
 
-                    CategoryCard(title: diaryQuestions[2], dateText: nil, isExpanded: $expanded[2]) {
-                        DiaryContent(text: $answer3, isKeyboardActive: $isKeyboardActive)
-                    }
+                        CategoryCard(title: diaryQuestions[2], dateText: nil, isExpanded: $expanded[2]) {
+                            DiaryContent(text: $answer3, isKeyboardActive: $isKeyboardActive)
+                        }
 
-                    CategoryCard(title: diaryQuestions[3], dateText: nil, isExpanded: $expanded[3]) {
-                        DiaryContent(text: $answer4, isKeyboardActive: $isKeyboardActive)
-                    }
+                        CategoryCard(title: diaryQuestions[3], dateText: nil, isExpanded: $expanded[3]) {
+                            DiaryContent(text: $answer4, isKeyboardActive: $isKeyboardActive)
+                        }
 
-                    // Question 5: Emoji mood picker
-                    CategoryCard(title: diaryQuestions[4], dateText: nil, isExpanded: $expanded[4]) {
-                        VStack(alignment: .leading, spacing: 14) {
-                            MoodPickerRow(title: "Morning ☀️", emojis: moodEmojis, selection: $answer5[0])
-                            MoodPickerRow(title: "Midday 🌤", emojis: moodEmojis, selection: $answer5[1])
-                            MoodPickerRow(title: "Evening 🌆", emojis: moodEmojis, selection: $answer5[2])
-                            MoodPickerRow(title: "Night 🌙", emojis: moodEmojis, selection: $answer5[3])
+                        CategoryCard(title: diaryQuestions[4], dateText: nil, isExpanded: $expanded[4]) {
+                            VStack(alignment: .leading, spacing: 14) {
+                                MoodPickerRow(title: "Morning ☀️", emojis: moodEmojis, selection: $answer5[0])
+                                MoodPickerRow(title: "Midday 🌤", emojis: moodEmojis, selection: $answer5[1])
+                                MoodPickerRow(title: "Evening 🌆", emojis: moodEmojis, selection: $answer5[2])
+                                MoodPickerRow(title: "Night 🌙", emojis: moodEmojis, selection: $answer5[3])
+                            }
+                        }
+
+                        CategoryCard(title: diaryQuestions[5], dateText: nil, isExpanded: $expanded[5]) {
+                            DiaryContent(text: $answer6, isKeyboardActive: $isKeyboardActive)
+                        }
+
+                        CategoryCard(title: diaryQuestions[6], dateText: nil, isExpanded: $expanded[6]) {
+                            DiaryContent(text: $answer7, isKeyboardActive: $isKeyboardActive)
                         }
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 10)
 
-                    CategoryCard(title: diaryQuestions[5], dateText: nil, isExpanded: $expanded[5]) {
-                        DiaryContent(text: $answer6, isKeyboardActive: $isKeyboardActive)
+                    // MARK: Submit Button
+                    VStack(spacing: 10) {
+                        Button { onBack() } label: {
+                            Text("Eintrag abschließen")
+                                .font(.system(size: 18, weight: .regular))
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .padding(.horizontal, 24)
+                                .background(Color.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.black, lineWidth: 2)
+                                )
+                        }
                     }
-
-                    CategoryCard(title: diaryQuestions[6], dateText: nil, isExpanded: $expanded[6]) {
-                        DiaryContent(text: $answer7, isKeyboardActive: $isKeyboardActive)
-                    }
+                    .padding(.horizontal, 80)
+                    .padding(.top, 6)
+                    .padding(.bottom, 18)
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 10)
-
-                // MARK: Submit Button
-                VStack(spacing: 10) {
+            }
+            .background(Color(red: 0.95, green: 0.95, blue: 0.95))
+            .navigationTitle("Tagebuch")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
                     Button { onBack() } label: {
-                        Text("Eintrag abschließen")
-                            .font(.system(size: 18, weight: .regular))
+                        Image(systemName: "chevron.left")
                             .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .padding(.horizontal, 24)
-                            .background(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.black, lineWidth: 2)
-                            )
                     }
                 }
-                .padding(.horizontal, 80)
-                .padding(.top, 6)
-                .padding(.bottom, 18)
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        // Tooltip aus, dann navigieren
+                        showPencilTooltip = false
+                        onOpenQuestionCatalog()
+                    } label: {
+                        Image(systemName: "pencil")
+                            .foregroundColor(.black)
+                            .imageScale(.large)
+                    }
+                }
+
+                // ✅ Done Button on Keyboard
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Fertig") { isKeyboardActive = false }
+                }
             }
-        }
-        .background(Color(red: 0.95, green: 0.95, blue: 0.95))
-        .navigationTitle("Tagebuch")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-
-        // ✅ TabBar ausblenden (damit unten keine Navbar/Homebar erscheint)
-        .toolbar(.hidden, for: .tabBar)
-
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button { onBack() } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.black)
+            .onTapGesture { isKeyboardActive = false }
+            .onAppear {
+                // ✅ Tooltip beim Öffnen anzeigen
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                        showPencilTooltip = true
+                    }
                 }
             }
 
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showPencilTooltip = false
-                    onOpenQuestionCatalog()
-                } label: {
-                    Image(systemName: "pencil")
-                        .foregroundColor(.black)
-                        .imageScale(.large)
-                }
-                // ✅ Tooltip kommt DIREKT vom Stift (Popover-Anker)
-                // ✅ Pfeil nach unten (zeigt auf den Stift) + etwas höher durch padding im Tooltip
-                .popover(
-                    isPresented: $showPencilTooltip,
-                    attachmentAnchor: .rect(.bounds),
-                    arrowEdge: .top
-                ) {
-                    PencilTooltipCard(
-                        text: "Hier kannst du deine Fragen\nanpassen!",
-                        buttonTitle: "OK!",
-                        onClose: { showPencilTooltip = false }
-                    )
-                    // iPhone: bleibt Popover (statt fullscreen sheet)
-                    .presentationCompactAdaptation(.popover)
-                }
-            }
+            // ===== Tooltip Overlay (immer oben RECHTS zum Stift) =====
+            if showPencilTooltip {
+                // leichter "Tap-Catcher", damit man außerhalb schließen kann
+                Color.black.opacity(0.001)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        isKeyboardActive = false
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                            showPencilTooltip = false
+                        }
+                    }
+                    .zIndex(9)
 
-            // ✅ Done Button on Keyboard
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Fertig") { isKeyboardActive = false }
+                TooltipSpeechBubble(
+                    text: "Hier kannst du\ndeine Fragen\nanpassen!",
+                    buttonTitle: "OK!",
+                    arrowX: 0.86, // ✅ Pfeil rechts (zeigt zum Stift)
+                    onClose: {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                            showPencilTooltip = false
+                        }
+                    }
+                )
+                .frame(width: 260)
+                // ✅ FIX: immer oben rechts, unter der NavBar
+                .position(
+                    x: UIScreen.main.bounds.width - 260/2 - 8,   // ➜ etwas weiter nach rechts
+                    y: 105                                      // ➜ ein Stück höher
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+                .zIndex(10)
             }
         }
-        .onAppear {
-            // ✅ Tooltip beim Öffnen anzeigen
-            DispatchQueue.main.async {
-                showPencilTooltip = true
-            }
-        }
-        // ✅ Tap outside closes keyboard
-        .onTapGesture { isKeyboardActive = false }
     }
 }
 
-// MARK: - Tooltip Content (weiß wie Sprechblase + weißes Dreieck)
-private struct PencilTooltipCard: View {
+// MARK: - Tooltip Speech Bubble (3 Ebenen wie Figma)
+private struct TooltipSpeechBubble: View {
     let text: String
     let buttonTitle: String
+    let arrowX: CGFloat          // 0.0 ... 1.0 (links -> rechts)
     let onClose: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            // 1) Shadow Layer (außen)
+            BubbleShape(arrowX: arrowX)
+                .fill(Color.black.opacity(0.18))
+                .offset(y: 6)
+                .blur(radius: 0.8)
 
-            // ✅ "Sprechblasen"-Body (weiß)
+            // 2) Border Layer (schwarzer Rand)
+            BubbleShape(arrowX: arrowX)
+                .fill(Color.white)
+                .overlay(
+                    BubbleShape(arrowX: arrowX)
+                        .stroke(Color.black.opacity(0.9), lineWidth: 2)
+                )
+
+            // 3) Content
             VStack(spacing: 14) {
                 Text(text)
                     .font(.system(size: 18, weight: .regular))
@@ -188,37 +220,88 @@ private struct PencilTooltipCard: View {
                 .padding(.horizontal, 18)
                 .padding(.bottom, 18)
             }
-            .frame(width: 260)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white)
-            )
-            .shadow(color: .black.opacity(0.18), radius: 10, x: 0, y: 6)
-
-            // ✅ Weißes Dreieck (wie Figma), zeigt NACH OBEN zum Stift
-            Triangle()
-                .fill(Color.white)
-                .frame(width: 20, height: 12)
-                .shadow(color: .black.opacity(0.12), radius: 4, x: 0, y: 3)
-                .padding(.top, -2)
         }
-        // ✅ "noch etwas höher": Popover-Inhalt leicht nach oben schieben
-        .padding(.top, -8)
-        .padding(10)
-        .background(Color.clear)
+        .frame(height: 160)
     }
 }
 
-// MARK: - Triangle Shape
-private struct Triangle: Shape {
+// MARK: - Bubble Shape (weißes Dreieck integriert)
+private struct BubbleShape: Shape {
+    let arrowX: CGFloat
+
     func path(in rect: CGRect) -> Path {
+        // Bubble
+        let corner: CGFloat = 18
+        let strokePad: CGFloat = 2
+
+        // Arrow
+        let arrowW: CGFloat = 26
+        let arrowH: CGFloat = 14
+
+        let bodyRect = CGRect(
+            x: rect.minX + strokePad,
+            y: rect.minY + arrowH + strokePad,
+            width: rect.width - strokePad * 2,
+            height: rect.height - arrowH - strokePad * 2
+        )
+
+        let ax = bodyRect.minX + (bodyRect.width * arrowX)
+        let arrowLeft = max(bodyRect.minX + corner + 8, ax - arrowW / 2)
+        let arrowRight = min(bodyRect.maxX - corner - 8, ax + arrowW / 2)
+        let arrowMid = (arrowLeft + arrowRight) / 2
+
         var p = Path()
-        // Spitze oben
-        p.move(to: CGPoint(x: rect.midX, y: rect.minY))
+
+        // Start oben links (unter dem Pfeilbereich)
+        p.move(to: CGPoint(x: bodyRect.minX + corner, y: bodyRect.minY))
+
+        // oben bis Pfeil links
+        p.addLine(to: CGPoint(x: arrowLeft, y: bodyRect.minY))
+
+        // Pfeil
+        p.addLine(to: CGPoint(x: arrowMid, y: bodyRect.minY - arrowH))
+        p.addLine(to: CGPoint(x: arrowRight, y: bodyRect.minY))
+
+        // oben rechts
+        p.addLine(to: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY))
+        p.addArc(
+            center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY + corner),
+            radius: corner,
+            startAngle: Angle(degrees: -90),
+            endAngle: Angle(degrees: 0),
+            clockwise: false
+        )
+
+        // rechts runter
+        p.addLine(to: CGPoint(x: bodyRect.maxX, y: bodyRect.maxY - corner))
+        p.addArc(
+            center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.maxY - corner),
+            radius: corner,
+            startAngle: Angle(degrees: 0),
+            endAngle: Angle(degrees: 90),
+            clockwise: false
+        )
+
         // unten links
-        p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        // unten rechts
-        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        p.addLine(to: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY))
+        p.addArc(
+            center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY - corner),
+            radius: corner,
+            startAngle: Angle(degrees: 90),
+            endAngle: Angle(degrees: 180),
+            clockwise: false
+        )
+
+        // links hoch
+        p.addLine(to: CGPoint(x: bodyRect.minX, y: bodyRect.minY + corner))
+        p.addArc(
+            center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.minY + corner),
+            radius: corner,
+            startAngle: Angle(degrees: 180),
+            endAngle: Angle(degrees: 270),
+            clockwise: false
+        )
+
         p.closeSubpath()
         return p
     }
@@ -355,6 +438,7 @@ private struct RoundedTextField: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     NavigationStack {
         JournalDiaryView(onBack: {}, onOpenQuestionCatalog: {})
