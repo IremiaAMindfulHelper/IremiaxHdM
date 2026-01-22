@@ -4,10 +4,13 @@ import SwiftUI
 struct JournalDiaryView: View {
 
     let onBack: () -> Void
-    let onOpenQuestionCatalog: () -> Void   // ✅ NEW
+    let onOpenQuestionCatalog: () -> Void
 
     // ✅ Keyboard Focus
     @FocusState private var isKeyboardActive: Bool
+
+    // ✅ Tooltip State
+    @State private var showPencilTooltip: Bool = false
 
     // MARK: - State Variables
     @State private var expanded: [Bool] = Array(repeating: true, count: 7)
@@ -109,11 +112,21 @@ struct JournalDiaryView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    onOpenQuestionCatalog() // ✅ NAVIGATE
+                    showPencilTooltip = false
+                    onOpenQuestionCatalog()
                 } label: {
                     Image(systemName: "pencil")
                         .foregroundColor(.black)
                         .imageScale(.large)
+                }
+                // ✅ Tooltip kommt DIREKT vom Stift (Popover-Anker)
+                .popover(isPresented: $showPencilTooltip, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
+                    PencilTooltipCard(
+                        text: "Hier kannst du deine Fragen\nanpassen!",
+                        buttonTitle: "OK!",
+                        onClose: { showPencilTooltip = false }
+                    )
+                    .presentationCompactAdaptation(.popover) // iPhone bleibt Popover
                 }
             }
 
@@ -123,8 +136,52 @@ struct JournalDiaryView: View {
                 Button("Fertig") { isKeyboardActive = false }
             }
         }
-        // ✅ Tap outside closes keyboard
-        .onTapGesture { isKeyboardActive = false }
+        .onAppear {
+            // ✅ Tooltip beim Öffnen anzeigen
+            DispatchQueue.main.async {
+                showPencilTooltip = true
+            }
+        }
+        .onTapGesture {
+            isKeyboardActive = false
+        }
+    }
+}
+
+// MARK: - Tooltip Content (weiß wie Sprechblase)
+private struct PencilTooltipCard: View {
+    let text: String
+    let buttonTitle: String
+    let onClose: () -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Text(text)
+                .font(.system(size: 18, weight: .regular))
+                .foregroundColor(.black)
+                .multilineTextAlignment(.center)
+                .padding(.top, 18)
+                .padding(.horizontal, 18)
+
+            Button(action: onClose) {
+                Text(buttonTitle)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.black.opacity(0.08))
+                    .cornerRadius(14)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 18)
+            .padding(.bottom, 18)
+        }
+        .frame(width: 260)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white)
+        )
+        .padding(10)
     }
 }
 
