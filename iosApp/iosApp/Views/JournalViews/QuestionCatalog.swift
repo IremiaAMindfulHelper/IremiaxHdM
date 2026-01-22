@@ -3,6 +3,9 @@ import SwiftUI
 struct QuestionCatalog: View {
     let onBack: () -> Void
 
+    // ✅ Keyboard Focus
+    @FocusState private var isKeyboardActive: Bool
+
     @State private var questions: [String] = [
         "Were there any difficult moments for you today?",
         "What went well today?",
@@ -12,6 +15,9 @@ struct QuestionCatalog: View {
         "What are you grateful for today?",
         "Is there anything you would like to do differently tomorrow?"
     ]
+
+    // ✅ Auswahl-State (wie Activities)
+    @State private var selectedQuestions: Set<String> = []
 
     @State private var newQuestionText: String = ""
 
@@ -28,7 +34,7 @@ struct QuestionCatalog: View {
                 VStack(spacing: 14) {
                     ForEach(questions, id: \.self) { question in
                         Button {
-                            // UI-only (später Auswahl-Logik)
+                            toggleSelection(question)
                         } label: {
                             Text(question)
                                 .font(.body)
@@ -38,7 +44,20 @@ struct QuestionCatalog: View {
                                 .padding(.horizontal, 16)
                                 .background(
                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(Color(.secondarySystemBackground))
+                                        .fill(
+                                            selectedQuestions.contains(question)
+                                            ? Color.black.opacity(0.2)
+                                            : Color(.secondarySystemBackground)
+                                        )
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .stroke(
+                                            selectedQuestions.contains(question)
+                                            ? Color.black
+                                            : Color.clear,
+                                            lineWidth: 2
+                                        )
                                 )
                         }
                         .buttonStyle(.plain)
@@ -48,6 +67,7 @@ struct QuestionCatalog: View {
 
                 // Add new question
                 TextField("Neue Frage hinzufügen", text: $newQuestionText)
+                    .focused($isKeyboardActive)
                     .textFieldStyle(.plain)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
@@ -64,17 +84,39 @@ struct QuestionCatalog: View {
         .navigationTitle("Fragenkatalog")
         .navigationBarTitleDisplayMode(.inline)
 
-        // ✅ WICHTIG: System-Zurückpfeil ausblenden, sonst hast du 2 Pfeile
+        // ✅ keinen doppelten Zurückpfeil
         .navigationBarBackButtonHidden(true)
 
-        // ✅ Dein eigener Zurückpfeil
         .toolbar {
+            // Zurück
             ToolbarItem(placement: .topBarLeading) {
                 Button { onBack() } label: {
                     Image(systemName: "chevron.left")
                         .foregroundStyle(.primary)
                 }
             }
+
+            // Keyboard Done
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Fertig") {
+                    isKeyboardActive = false
+                }
+            }
+        }
+
+        // Tap outside closes keyboard
+        .onTapGesture {
+            isKeyboardActive = false
+        }
+    }
+
+    // MARK: - Helpers
+    private func toggleSelection(_ question: String) {
+        if selectedQuestions.contains(question) {
+            selectedQuestions.remove(question)
+        } else {
+            selectedQuestions.insert(question)
         }
     }
 }
