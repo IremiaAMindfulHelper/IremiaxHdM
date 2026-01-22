@@ -12,7 +12,10 @@ struct JournalEntryView: View {
     @State private var activityMode: ActivityMode = .symbols
     @State private var selectedActivities: Set<ActivitySymbol> = []
     @State private var freeTextActivity: String = ""
-    @State private var waterAmount: String = "0"
+
+    // ✅ Wasser jetzt in LITERN (z.B. 1 / 0.5 / 0.75)
+    @State private var waterLiters: String = "0"
+
     @State private var sleepHours: String = "0"
     @State private var notes: String = ""
 
@@ -21,15 +24,9 @@ struct JournalEntryView: View {
 
     private enum Field: Hashable {
         case freeTextActivity
-        case waterAmount
+        case waterLiters
         case sleepHours
         case notes
-    }
-
-    private var waterInLiters: String {
-        guard let ml = Double(waterAmount), ml > 0 else { return "0" }
-        let liters = ml / 1000.0
-        return String(format: "%.1f", liters)
     }
 
     enum ActivitySymbol: String, CaseIterable, Identifiable {
@@ -300,7 +297,7 @@ struct JournalEntryView: View {
                 if activityMode == .freetext {
                     ZStack(alignment: .topLeading) {
                         TextEditor(text: $freeTextActivity)
-                            .focused($focusedField, equals: .freeTextActivity) // ✅
+                            .focused($focusedField, equals: .freeTextActivity)
                             .frame(height: 200)
                             .scrollContentBackground(.hidden)
                             .padding(8)
@@ -331,8 +328,9 @@ struct JournalEntryView: View {
                         .padding(.top, 40)
 
                     HStack(spacing: 40) {
+                        // ✅ WATER (Liter statt ml)
                         VStack(spacing: 8) {
-                            Text("\(waterInLiters) Liter")
+                            Text("\(waterLiters) Liter")
                                 .font(.caption)
                                 .foregroundColor(.primary)
 
@@ -341,15 +339,16 @@ struct JournalEntryView: View {
                                 .foregroundColor(.primary)
 
                             HStack(spacing: 4) {
-                                TextField("ml", text: $waterAmount)
-                                    .keyboardType(.numberPad)
+                                TextField("Liter", text: $waterLiters)
+                                    .keyboardType(.decimalPad) // ✅ erlaubt 0.5 / 0.75
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 100)
                                     .multilineTextAlignment(.center)
-                                    .focused($focusedField, equals: .waterAmount) // ✅
+                                    .focused($focusedField, equals: .waterLiters)
                             }
                         }
 
+                        // ✅ SLEEP
                         VStack(spacing: 8) {
                             Text("\(sleepHours) Stunden")
                                 .font(.caption)
@@ -365,7 +364,7 @@ struct JournalEntryView: View {
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 100)
                                     .multilineTextAlignment(.center)
-                                    .focused($focusedField, equals: .sleepHours) // ✅
+                                    .focused($focusedField, equals: .sleepHours)
                             }
                         }
                     }
@@ -382,7 +381,7 @@ struct JournalEntryView: View {
                         .padding(.top, 24)
 
                     TextEditor(text: $notes)
-                        .focused($focusedField, equals: .notes) // ✅
+                        .focused($focusedField, equals: .notes)
                         .frame(height: 60)
                         .scrollContentBackground(.hidden)
                         .padding(8)
@@ -444,18 +443,14 @@ struct JournalEntryView: View {
         }
         .navigationTitle("Journal")
         .navigationBarHidden(true)
-
-        // ✅ Done Button in der Tastatur
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Fertig") {
-                    focusedField = nil // ✅ Tastatur zu
+                    focusedField = nil
                 }
             }
         }
-
-        // ✅ optional: Tap outside closes keyboard
         .onTapGesture {
             focusedField = nil
         }
