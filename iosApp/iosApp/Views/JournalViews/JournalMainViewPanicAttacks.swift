@@ -150,13 +150,11 @@ struct JournalMainViewPanicAttacks: View { // Anke
     }
 
     private func handleTap(on cell: DemoCell) {
-        // ✅ + -> JournalEntryView
-        if cell.mark == .plus {
+        if cell.mark == .plus || cell.mark == .filled {
             onCreateEntry()
             return
         }
 
-        // ✅ broken heart -> Popup (Sheet im Parent)
         if cell.mark == .brokenHeart {
             let header = makeHeaderText(year: currentYear, month: currentMonth, day: cell.day)
             onPlusButtonTapped(header)
@@ -181,12 +179,17 @@ struct JournalMainViewPanicAttacks: View { // Anke
     }
 
     private var demoCells: [DemoCell] {
-        let leading = [29, 30, 31].map { DemoCell(day: $0, isInDisplayedMonth: false, mark: .plus) }
+        let leading = [29, 30, 31].map {
+            DemoCell(day: $0, isInDisplayedMonth: false, mark: .plus)
+        }
 
         let monthDays: [DemoCell] = (1...31).map { d in
-            if d == 6 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .brokenHeart) }
-            if d == 7 { return DemoCell(day: d, isInDisplayedMonth: true, mark: .brokenHeart) }
-            if [16, 17, 18].contains(d) { return DemoCell(day: d, isInDisplayedMonth: true, mark: .filled) }
+            if d == 6 || d == 7 {
+                return DemoCell(day: d, isInDisplayedMonth: true, mark: .brokenHeart)
+            }
+            if [16, 17, 18].contains(d) {
+                return DemoCell(day: d, isInDisplayedMonth: true, mark: .filled)
+            }
             return DemoCell(day: d, isInDisplayedMonth: true, mark: .plus)
         }
 
@@ -234,7 +237,8 @@ private struct DayCell: View {
                     .fill(circleFill)
                     .frame(width: circleSize, height: circleSize)
 
-                if mark == .plus {
+                // ✅ Plus bei .plus UND .filled
+                if mark == .plus || mark == .filled {
                     Image(systemName: "plus")
                         .font(.system(size: plusSize, weight: .bold))
                         .foregroundStyle(.black.opacity(0.8))
@@ -255,10 +259,8 @@ private struct DayCell: View {
 
     private var circleFill: AnyShapeStyle {
         switch mark {
-        case .plus:
+        case .plus, .filled:
             return AnyShapeStyle(Color.black.opacity(0.25))
-        case .filled:
-            return AnyShapeStyle(Color.black.opacity(0.12))
         case .brokenHeart:
             return AnyShapeStyle(Color.black.opacity(0.06))
         case .none:
@@ -288,7 +290,7 @@ struct JournalMainViewPanicAttacks_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainViewPanicAttacks(
             rootMode: .constant(.panicAttacks),
-            onPlusButtonTapped: { _ in }, // ✅ FIX
+            onPlusButtonTapped: { _ in },
             onCreateEntry: { }
         )
     }
