@@ -102,6 +102,10 @@ struct JournalDiaryView: View {
         .navigationTitle("Tagebuch")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+
+        // ✅ TabBar ausblenden (damit unten keine Navbar/Homebar erscheint)
+        .toolbar(.hidden, for: .tabBar)
+
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button { onBack() } label: {
@@ -120,13 +124,19 @@ struct JournalDiaryView: View {
                         .imageScale(.large)
                 }
                 // ✅ Tooltip kommt DIREKT vom Stift (Popover-Anker)
-                .popover(isPresented: $showPencilTooltip, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
+                // ✅ Pfeil nach unten (zeigt auf den Stift) + etwas höher durch padding im Tooltip
+                .popover(
+                    isPresented: $showPencilTooltip,
+                    attachmentAnchor: .rect(.bounds),
+                    arrowEdge: .top
+                ) {
                     PencilTooltipCard(
                         text: "Hier kannst du deine Fragen\nanpassen!",
                         buttonTitle: "OK!",
                         onClose: { showPencilTooltip = false }
                     )
-                    .presentationCompactAdaptation(.popover) // iPhone bleibt Popover
+                    // iPhone: bleibt Popover (statt fullscreen sheet)
+                    .presentationCompactAdaptation(.popover)
                 }
             }
 
@@ -142,46 +152,75 @@ struct JournalDiaryView: View {
                 showPencilTooltip = true
             }
         }
-        .onTapGesture {
-            isKeyboardActive = false
-        }
+        // ✅ Tap outside closes keyboard
+        .onTapGesture { isKeyboardActive = false }
     }
 }
 
-// MARK: - Tooltip Content (weiß wie Sprechblase)
+// MARK: - Tooltip Content (weiß wie Sprechblase + weißes Dreieck)
 private struct PencilTooltipCard: View {
     let text: String
     let buttonTitle: String
     let onClose: () -> Void
 
     var body: some View {
-        VStack(spacing: 14) {
-            Text(text)
-                .font(.system(size: 18, weight: .regular))
-                .foregroundColor(.black)
-                .multilineTextAlignment(.center)
-                .padding(.top, 18)
-                .padding(.horizontal, 18)
+        VStack(spacing: 0) {
 
-            Button(action: onClose) {
-                Text(buttonTitle)
-                    .font(.system(size: 18, weight: .semibold))
+            // ✅ "Sprechblasen"-Body (weiß)
+            VStack(spacing: 14) {
+                Text(text)
+                    .font(.system(size: 18, weight: .regular))
                     .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Color.black.opacity(0.08))
-                    .cornerRadius(14)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 18)
+                    .padding(.horizontal, 18)
+
+                Button(action: onClose) {
+                    Text(buttonTitle)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.black.opacity(0.08))
+                        .cornerRadius(14)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 18)
             }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 18)
-            .padding(.bottom, 18)
-        }
-        .frame(width: 260)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .frame(width: 260)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white)
+            )
+            .shadow(color: .black.opacity(0.18), radius: 10, x: 0, y: 6)
+
+            // ✅ Weißes Dreieck (wie Figma), zeigt NACH OBEN zum Stift
+            Triangle()
                 .fill(Color.white)
-        )
+                .frame(width: 20, height: 12)
+                .shadow(color: .black.opacity(0.12), radius: 4, x: 0, y: 3)
+                .padding(.top, -2)
+        }
+        // ✅ "noch etwas höher": Popover-Inhalt leicht nach oben schieben
+        .padding(.top, -8)
         .padding(10)
+        .background(Color.clear)
+    }
+}
+
+// MARK: - Triangle Shape
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        // Spitze oben
+        p.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        // unten links
+        p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        // unten rechts
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        p.closeSubpath()
+        return p
     }
 }
 
