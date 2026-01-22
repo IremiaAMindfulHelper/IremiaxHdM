@@ -4,6 +4,7 @@ import SwiftUI
 struct JournalDiaryView: View {
 
     let onBack: () -> Void
+    let onOpenQuestionCatalog: () -> Void   // ✅ NEW
 
     // ✅ Keyboard Focus
     @FocusState private var isKeyboardActive: Bool
@@ -75,9 +76,7 @@ struct JournalDiaryView: View {
 
                 // MARK: Submit Button
                 VStack(spacing: 10) {
-                    Button {
-                        onBack()
-                    } label: {
+                    Button { onBack() } label: {
                         Text("Eintrag abschließen")
                             .font(.system(size: 18, weight: .regular))
                             .foregroundColor(.black)
@@ -107,9 +106,10 @@ struct JournalDiaryView: View {
                         .foregroundColor(.black)
                 }
             }
+
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    print("Edit Fragenkatalog") // TODO: Navigate to question catalog editor
+                    onOpenQuestionCatalog() // ✅ NAVIGATE
                 } label: {
                     Image(systemName: "pencil")
                         .foregroundColor(.black)
@@ -120,15 +120,11 @@ struct JournalDiaryView: View {
             // ✅ Done Button on Keyboard
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Fertig") {
-                    isKeyboardActive = false
-                }
+                Button("Fertig") { isKeyboardActive = false }
             }
         }
         // ✅ Tap outside closes keyboard
-        .onTapGesture {
-            isKeyboardActive = false
-        }
+        .onTapGesture { isKeyboardActive = false }
     }
 }
 
@@ -159,9 +155,7 @@ private struct MoodPickerRow: View {
 
             HStack(spacing: 10) {
                 ForEach(emojis, id: \.self) { emoji in
-                    Button {
-                        selection = emoji
-                    } label: {
+                    Button { selection = emoji } label: {
                         ZStack {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(selection == emoji ? Color.black.opacity(0.2) : Color(.systemGray6))
@@ -194,9 +188,7 @@ private struct CategoryCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
-                withAnimation {
-                    isExpanded.toggle()
-                }
+                withAnimation { isExpanded.toggle() }
             } label: {
                 HStack {
                     VStack(spacing: 2) {
@@ -267,7 +259,8 @@ private struct RoundedTextField: View {
     }
 }
 
-// MARK: - Preview
 #Preview {
-    JournalDiaryView(onBack: {})
+    NavigationStack {
+        JournalDiaryView(onBack: {}, onOpenQuestionCatalog: {})
+    }
 }

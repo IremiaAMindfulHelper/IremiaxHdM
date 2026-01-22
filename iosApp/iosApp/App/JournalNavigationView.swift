@@ -28,7 +28,7 @@ struct JournalNavigationView: View {
                 case .emotions:
                     JournalMainViewEmotions(
                         rootMode: $rootMode,
-                        onPlusButtonTapped: { header in     // ✅ FIX: nimmt 1 Argument
+                        onPlusButtonTapped: { header in
                             popupDateHeader = header
                             showJournalPopup = true
                         },
@@ -40,7 +40,7 @@ struct JournalNavigationView: View {
                 case .panicAttacks:
                     JournalMainViewPanicAttacks(
                         rootMode: $rootMode,
-                        onPlusButtonTapped: { header in     // ✅ FIX: nimmt 1 Argument
+                        onPlusButtonTapped: { header in
                             popupDateHeader = header
                             showJournalPopup = true
                         },
@@ -88,13 +88,19 @@ struct JournalNavigationView: View {
             )
 
         case .journalDiaryView:
-            JournalDiaryView(onBack: { safePop() })
+            JournalDiaryView(
+                onBack: { safePop() },
+                onOpenQuestionCatalog: { navigationPath.append(AppRoute.questionCatalog) } // ✅ NEW
+            )
 
         case .panicReflection:
             PanicReflexion(onBack: { safePop() })
 
         case .questionCatalog:
-            Text("Question Catalog")
+            QuestionCatalog(
+                onBack: { safePop() }
+            )
+
         }
     }
 }
