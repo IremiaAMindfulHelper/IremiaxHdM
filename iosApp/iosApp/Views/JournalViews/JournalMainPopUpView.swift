@@ -11,8 +11,9 @@ import SwiftUI
 struct JournalMainPopUpView: View {
 
     let onEintragBearbeiten: () -> Void
+    let onDismiss: () -> Void          // ✅ NEU: Sheet sauber schließen
     let dateHeader: String
-    
+
     @State private var dragOffset: CGFloat = 0
 
     // MARK: - Tuning
@@ -28,111 +29,112 @@ struct JournalMainPopUpView: View {
 
     var body: some View {
 
-            // Sheet
-            VStack(spacing: 0) {
+        // Sheet
+        VStack(spacing: 0) {
 
-                // Grabber
-                Capsule()
-                    .fill(Color.black.opacity(0.2))
-                    .frame(width: handleWidth, height: handleHeight)
-                    .padding(.top, 14)
-                    .padding(.bottom, 10)
+            // Grabber
+            Capsule()
+                .fill(Color.black.opacity(0.2))
+                .frame(width: handleWidth, height: handleHeight)
+                .padding(.top, 14)
+                .padding(.bottom, 10)
 
-                // Date Title
-                Text(dateHeader)
-                    .font(.system(size: 36, weight: .regular, design: .rounded))
-                    .foregroundStyle(.black.opacity(0.9))
-                    .padding(.top, 12)
-                    .padding(.bottom, 6)
+            // Date Title
+            Text(dateHeader)
+                .font(.system(size: 36, weight: .regular, design: .rounded))
+                .foregroundStyle(.black.opacity(0.9))
+                .padding(.top, 12)
+                .padding(.bottom, 6)
 
-                // Row: Icon + Labels
-                HStack(spacing: 18) {
+            // Row: Icon + Labels
+            HStack(spacing: 18) {
 
-                    // Left: Panic label
-                    HStack(spacing: 8) {
-                        BrokenHeartIcon(size: 20, isActive: true)
-                        Text("Panik")
-                            .font(.system(size: 18, weight: .regular, design: .rounded))
-                            .foregroundStyle(.black.opacity(0.85))
-                    }
+                // Left: Panic label
+                HStack(spacing: 8) {
+                    BrokenHeartIcon(size: 20, isActive: true)
+                    Text("Panik")
+                        .font(.system(size: 18, weight: .regular, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.85))
+                }
 
-                    Spacer()
+                Spacer()
 
-                    // Right: Mood chip
-                    HStack(spacing: 10) {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.green.opacity(0.95),
-                                        Color.blue.opacity(0.95)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+                // Right: Mood chip
+                HStack(spacing: 10) {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.green.opacity(0.95),
+                                    Color.blue.opacity(0.95)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
-                            .frame(width: 26, height: 26)
-
-                        Text("energiegeladen, fröhlich")
-                            .font(.system(size: 18, weight: .regular, design: .rounded))
-                            .foregroundStyle(.black.opacity(0.85))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-                    }
-                }
-                .padding(.horizontal, 26)
-                .padding(.top, 16)
-
-                // Button
-                Button {
-                    onEintragBearbeiten()
-                } label: {
-                    Text("Eintrag bearbeiten")
-                        .font(.system(size: 20, weight: .regular, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.95))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.black.opacity(0.85), lineWidth: 2)
                         )
+                        .frame(width: 26, height: 26)
+
+                    Text("energiegeladen, fröhlich")
+                        .font(.system(size: 18, weight: .regular, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.85))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                 }
-                .padding(.horizontal, 52)
-                .padding(.top, 26)
-                .padding(.bottom, 32)
             }
-            .frame(maxWidth: .infinity)
-            // Sheet nimmt ~40% des Screens ein
-            .frame(height: UIScreen.main.bounds.height * sheetHeightFactor)
-            .background(
-                UnevenRoundedRectangle(
-                    topLeadingRadius: sheetCornerRadius,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: sheetCornerRadius
-                )
-                .fill(Color.white)
+            .padding(.horizontal, 26)
+            .padding(.top, 16)
+
+            // Button
+            Button {
+                onEintragBearbeiten()
+            } label: {
+                Text("Eintrag bearbeiten")
+                    .font(.system(size: 20, weight: .regular, design: .rounded))
+                    .foregroundStyle(.black.opacity(0.95))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.black.opacity(0.85), lineWidth: 2)
+                    )
+            }
+            .padding(.horizontal, 52)
+            .padding(.top, 26)
+            .padding(.bottom, 32)
+        }
+        .frame(maxWidth: .infinity)
+        // Sheet nimmt ~40% des Screens ein
+        .frame(height: UIScreen.main.bounds.height * sheetHeightFactor)
+        .background(
+            UnevenRoundedRectangle(
+                topLeadingRadius: sheetCornerRadius,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: sheetCornerRadius
             )
-            .shadow(radius: 10)
-            .offset(y: max(0, dragOffset))
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        dragOffset = max(0, value.translation.height)
-                    }
-                    .onEnded { value in
-                        if dragOffset > 100 {
-                            onEintragBearbeiten()
-                        } else {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                                dragOffset = 0
-                            }
+            .fill(Color.white)
+        )
+        .shadow(radius: 10)
+        .offset(y: max(0, dragOffset))
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    dragOffset = max(0, value.translation.height)
+                }
+                .onEnded { value in
+                    if value.translation.height > dismissDragThreshold {
+                        // ✅ Drag down -> schließen (nicht "Eintrag bearbeiten")
+                        onDismiss()
+                    } else {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                            dragOffset = 0
                         }
                     }
-            )
-            .ignoresSafeArea(edges: .bottom)
-        }
+                }
+        )
+        .ignoresSafeArea(edges: .bottom)
     }
+}
 
 private struct BrokenHeartIcon: View {
     let size: CGFloat
@@ -155,6 +157,7 @@ struct JournalMainPopUpView_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainPopUpView(
             onEintragBearbeiten: {},
+            onDismiss: {},
             dateHeader: "Mittwoch, 20.01."
         )
     }

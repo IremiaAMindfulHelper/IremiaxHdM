@@ -1,30 +1,29 @@
 import SwiftUI
-import Shared
 
 struct JournalMainViewEmotions: View { // Anke
 
     @Binding var rootMode: JournalRootMode
 
-    /// farbiger Kreis -> Popup
-    let onPlusButtonTapped: () -> Void
-    
+    /// farbiger Kreis -> Popup (Sheet kommt im Parent)
+    let onPlusButtonTapped: (_ header: String) -> Void
+
+    /// + -> JournalEntryView
     let onCreateEntry: () -> Void
 
-    @State private var isPanic: Bool = false
-    @State private var showPopup: Bool = false
-    @State private var popupHeader: String = ""
-    @State private var selectedDay: Int = 0
+    // Kalender State (nur Swift)
     @State private var currentYear: Int = 2026
     @State private var currentMonth: Int = 1
-    
+
     private var isPanicBinding: Binding<Bool> {
-            Binding(
-                get: { rootMode == .panicAttacks },
-                set: { newValue in
+        Binding(
+            get: { rootMode == .panicAttacks },
+            set: { newValue in
+                withAnimation {
                     rootMode = newValue ? .panicAttacks : .emotions
                 }
-            )
-        }
+            }
+        )
+    }
 
     private let titleTopInset: CGFloat = 34
     private let gridCircleSize: CGFloat = 38
@@ -133,27 +132,7 @@ struct JournalMainViewEmotions: View { // Anke
                         circleSize: gridCircleSize,
                         plusSize: gridPlusSize,
                         dayFontSize: dayFontSize,
-                        onTap: {
-                            // KOTLIN
-                            let controller = JournalCalendarController()
-                            if controller.canSelectDate(
-                                year: Int32(currentYear),
-                                month: Int32(currentMonth),
-                                day: Int32(cell.day)
-                            ) {
-                                let header = controller.getHeaderText(
-                                    year: Int32(currentYear),
-                                    month: Int32(currentMonth),
-                                    day: Int32(cell.day)
-                                )
-                                selectedDay = cell.day
-                                popupHeader = header
-                                showPopup = true
-                            } else {
-                                print("Date is in Future")
-                            }
-                        }
-
+                        onTap: { handleTap(on: cell) }
                     )
                     .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
                 }
@@ -165,34 +144,39 @@ struct JournalMainViewEmotions: View { // Anke
             Spacer(minLength: 0)
         }
         .background(Color.white)
-        .overlay {
-            if showPopup {
-                ZStack {
-                    Color.black.opacity(0.5)
-                        .ignoresSafeArea()
-                        .onTapGesture {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                                showPopup = false
-                            }
-                        }
-                    
-                    VStack {
-                        Spacer()
-                        JournalMainPopUpView(
-                            onEintragBearbeiten: {
-                                withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                                    showPopup = false
-                                }
-                            },
-                            dateHeader: popupHeader
-                        )
-                    }
-                    .transition(.move(edge: .bottom))
-                    .animation(.spring(response: 0.35, dampingFraction: 0.9), value: showPopup)
-                }
-                .transition(.opacity)
-            }
+    }
+
+    private func handleTap(on cell: DemoCell) {
+        // ✅ + -> JournalEntryView
+        if cell.mark == .plus {
+            onCreateEntry()
+            return
         }
+
+        // ✅ farbig -> Popup
+        if cell.mark == .moodGradientA || cell.mark == .moodGradientB {
+            let header = makeHeaderText(year: currentYear, month: currentMonth, day: cell.day)
+            onPlusButtonTapped(header)
+        }
+    }
+
+    private func makeHeaderText(year: Int, month: Int, day: Int) -> String {
+        // Einfaches Format wie: "Mittwoch, 07.01."
+        var comps = DateComponents()
+        comps.year = year
+        comps.month = month
+        comps.day = day
+
+        let calendar = Calendar(identifier: .gregorian)
+        guard let date = calendar.date(from: comps) else {
+            return "Tag \(String(format: "%02d", day)).\(String(format: "%02d", month))."
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "de_DE")
+        formatter.dateFormat = "EEEE, dd.MM."
+        // "Mittwoch, 07.01."
+        return formatter.string(from: date).capitalized
     }
 
     private var demoCells: [DemoCell] {
@@ -314,7 +298,7 @@ struct JournalMainView_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainViewEmotions(
             rootMode: .constant(.emotions),
-            onPlusButtonTapped: { },
+            onPlusButtonTapped: { _ in },
             onCreateEntry: { }
         )
     }

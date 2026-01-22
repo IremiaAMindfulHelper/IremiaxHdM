@@ -4,11 +4,15 @@ struct JournalMainViewPanicAttacks: View { // Anke
 
     @Binding var rootMode: JournalRootMode
 
-    /// broken heart -> Popup
-    let onPlusButtonTapped: () -> Void
+    /// broken heart -> Popup (Sheet kommt im Parent)
+    let onPlusButtonTapped: (_ header: String) -> Void
 
     /// + -> JournalEntryView
     let onCreateEntry: () -> Void
+
+    // Kalender State (nur Swift)
+    @State private var currentYear: Int = 2026
+    @State private var currentMonth: Int = 1
 
     private var isPanicBinding: Binding<Bool> {
         Binding(
@@ -130,14 +134,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
                         plusSize: gridPlusSize,
                         dayFontSize: dayFontSize,
                         onTap: {
-                            // ✅ + -> JournalEntryView
-                            if cell.mark == .plus {
-                                onCreateEntry()
-                            }
-                            // ✅ broken heart -> Popup
-                            else if cell.mark == .brokenHeart {
-                                onPlusButtonTapped()
-                            }
+                            handleTap(on: cell)
                         }
                     )
                     .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
@@ -150,6 +147,37 @@ struct JournalMainViewPanicAttacks: View { // Anke
             Spacer(minLength: 0)
         }
         .background(Color.white)
+    }
+
+    private func handleTap(on cell: DemoCell) {
+        // ✅ + -> JournalEntryView
+        if cell.mark == .plus {
+            onCreateEntry()
+            return
+        }
+
+        // ✅ broken heart -> Popup (Sheet im Parent)
+        if cell.mark == .brokenHeart {
+            let header = makeHeaderText(year: currentYear, month: currentMonth, day: cell.day)
+            onPlusButtonTapped(header)
+        }
+    }
+
+    private func makeHeaderText(year: Int, month: Int, day: Int) -> String {
+        var comps = DateComponents()
+        comps.year = year
+        comps.month = month
+        comps.day = day
+
+        let calendar = Calendar(identifier: .gregorian)
+        guard let date = calendar.date(from: comps) else {
+            return "Tag \(String(format: "%02d", day)).\(String(format: "%02d", month))."
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "de_DE")
+        formatter.dateFormat = "EEEE, dd.MM."
+        return formatter.string(from: date).capitalized
     }
 
     private var demoCells: [DemoCell] {
@@ -260,7 +288,7 @@ struct JournalMainViewPanicAttacks_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainViewPanicAttacks(
             rootMode: .constant(.panicAttacks),
-            onPlusButtonTapped: { },
+            onPlusButtonTapped: { _ in }, // ✅ FIX
             onCreateEntry: { }
         )
     }
