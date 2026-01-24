@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct SoundPlayerMini: View {
-    @State private var isPlaying: Bool = false
+    let title: String // Neu hinzugefügt für den dynamischen Namen
+    @State private var isPlaying: Bool = true // Standardmäßig auf true, da er beim Klick startet
     let onClose: () -> Void
     
     var body: some View {
@@ -12,7 +13,7 @@ struct SoundPlayerMini: View {
                 .padding(8)
             
             HStack(spacing: 15) {
-                Text("Meeresrauschen")
+                Text(title) // Nutzt jetzt den übergebenen Titel
                     .font(.system(size: 16, weight: .medium))
                     .lineLimit(1)
                 
@@ -48,3 +49,4 @@ struct SoundPlayerMini: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+

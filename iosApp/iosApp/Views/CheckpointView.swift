@@ -149,7 +149,14 @@ struct CheckpointView: View {
         switch step.type {
         case .calculation: CalculationExerciseView(isShowing: $isShowing, currentStep: $currentStep)
         case .breathing: BreathingExerciseView(isShowing: $isShowing, currentStep: $currentStep)
-        case .mantra: MantraPlaceholderView(isShowing: $isShowing, currentStep: $currentStep)
+        case .mantra:
+            // Wir nehmen hier beispielhaft das erste Mantra aus deinen WellnessData
+            if let firstMantra = WellnessData.mantras.first {
+                MantraView(mantra: firstMantra, isShowing: $isShowing, currentStep: $currentStep)
+            } else {
+                // Fallback, falls die Liste leer sein sollte
+                Text("Kein Mantra verfügbar")
+            }
         case .memory:
             VStack {
                 Text("Memory View")
@@ -162,6 +169,6 @@ struct CheckpointView: View {
 // Preview für schnelles Testen
 struct CheckpointView_Previews: PreviewProvider {
     static var previews: some View {
-        CheckpointView(isShowing: .constant(true), currentStep: .constant(1))
+        CheckpointView(isShowing: .constant(true), currentStep: .constant(2))
     }
 }
