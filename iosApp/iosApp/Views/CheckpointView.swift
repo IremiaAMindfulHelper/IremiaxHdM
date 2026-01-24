@@ -2,132 +2,136 @@ import SwiftUI
 
 struct CheckpointView: View {
     @Binding var isShowing: Bool
-    @State var currentStep: Int = 0
+    @Binding var currentStep: Int
     @State private var showExercise = false
     
-    // Die Farbe aus deinem Design
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
-    
-    @State private var userOrder: [SOSStep] = sosSteps
     
     var body: some View {
         ZStack {
             Color.white.ignoresSafeArea()
             
             VStack(spacing: 30) {
-                
-                // 1. ANIMIERTE PROGRESSBAR (Lupen-Effekt)
                 HStack(spacing: 0) {
-                    ForEach(0..<userOrder.count, id: \.self) { index in
-                        let isActive = currentStep == index      // Aktuelle Übung (Groß & Weiß)
-                        let isCompleted = index < currentStep   // Erledigt (Blau & Klein)
+                    ForEach(0..<sosSteps.count, id: \.self) { index in
+                        let isActive = currentStep == index
+                        let isCompleted = index < currentStep
                         
+                        // 1. ÜBUNGS-ICON (DIE LUPE)
                         VStack(spacing: 8) {
                             ZStack {
                                 // Hintergrund-Kreis
                                 Circle()
-                                    // Nur fertige Übungen sind ausgefüllt, die aktuelle bleibt weiß
                                     .fill(isCompleted ? petrolColor : Color.white)
                                     .frame(width: isActive ? 58 : 35, height: isActive ? 58 : 35)
-                                    .shadow(color: .black.opacity(isActive ? 0.15 : 0), radius: 6)
+                                    .shadow(color: .black.opacity(isActive ? 0.15 : 0), radius: isActive ? 10 : 0)
                                 
-                                // Rand-Logik
+                                // Rand
                                 Circle()
-                                    .stroke(
-                                        isActive ? petrolColor : (isCompleted ? Color.clear : Color.gray.opacity(0.3)),
-                                        lineWidth: isActive ? 2.5 : 1
-                                    )
+                                    .stroke(isActive ? petrolColor : (isCompleted ? Color.clear : Color.gray.opacity(0.2)), lineWidth: isActive ? 2.5 : 1)
                                     .frame(width: isActive ? 58 : 35, height: isActive ? 58 : 35)
                                 
                                 // Icon
-                                Image(systemName: userOrder[index].icon)
-                                    .font(.system(size: isActive ? 26 : 16, weight: .medium))
-                                    // Icon ist weiß auf blauem Grund (fertig) oder petrol auf weißem Grund (aktiv)
-                                    .foregroundColor(isCompleted ? .white : (isActive ? petrolColor : .gray.opacity(0.5)))
+                                Image(systemName: sosSteps[index].icon)
+                                    .font(.system(size: isActive ? 24 : 14, weight: isActive ? .bold : .medium))
+                                    .foregroundColor(isCompleted ? .white : (isActive ? petrolColor : .gray))
                             }
                             .frame(width: 65, height: 65)
-                            // Langsamere Animation (0.8 Sekunden statt 0.4)
-                            .animation(.spring(response: 0.8, dampingFraction: 0.7), value: currentStep)
+                            // LUPEN-ANIMATION
+                            .animation(.spring(response: 0.9, dampingFraction: 0.7), value: currentStep)
                             
-                            // Text-Label unter der Lupe
-                            if isActive {
-                                Text(userOrder[index].name)
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(petrolColor)
-                                    .fixedSize()
-                                    .transition(.opacity.combined(with: .scale))
-                            } else {
-                                Text("")
-                                    .frame(height: 16)
+                            // Label unter dem Icon
+                            ZStack {
+                                if isActive {
+                                    Text(sosSteps[index].name)
+                                        .font(.caption.bold())
+                                        .foregroundColor(petrolColor)
+                                        .transition(.asymmetric(
+                                            insertion: .scale(scale: 0.8).combined(with: .opacity).animation(.spring().delay(0.5)),
+                                            removal: .opacity.animation(.easeInOut(duration: 0.2))
+                                        ))
+                                }
                             }
+                            .frame(height: 16)
                         }
                         .frame(maxWidth: .infinity)
                         
-                        // Verbindungslinie
-                        if index != userOrder.count - 1 {
-                            Rectangle()
-                                .frame(width: 25, height: 1.5)
-                                // Linie wird erst blau, wenn die Übung davor fertig ist
-                                .foregroundColor(index < currentStep ? petrolColor : Color.gray.opacity(0.2))
-                                .padding(.bottom, 24)
-                                .animation(.easeInOut(duration: 0.6), value: currentStep)
+                        // 2. VERBINDUNGSLINIE
+                        if index != sosSteps.count - 1 {
+                            ZStack(alignment: .leading) {
+                                // Hintergrund-Schiene
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.15))
+                                    .frame(width: 25, height: 2)
+                                
+                                // Vordergrund-Faden
+                                Rectangle()
+                                    .fill(petrolColor)
+                                    .frame(width: index < currentStep ? 25 : 0, height: 2)
+                                    .shadow(color: petrolColor.opacity(index < currentStep ? 0.5 : 0), radius: 3)
+                            }
+                            .padding(.bottom, 24)
+                            // LINIEN-ANIMATION
+                            .animation(
+                                .easeInOut(duration: 1.2)
+                                .delay(0.2),
+                                value: currentStep
+                            )
                         }
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 60)
+                .padding(.top, 60).padding(.horizontal)
                 
                 Spacer()
                 
-                // 2. HAUPT-CONTENT
-                VStack(spacing: 30) {
+                // MARK: - CONTENT BEREICH
+                VStack(spacing: 20) {
                     Image("Cloud")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 180, height: 150)
-                        .padding(.bottom, 10)
-
-                    VStack(spacing: 12) {
-                        Text("Du bist sicher.")
-                            .font(.system(size: 25, weight: .bold, design: .rounded))
-                            .kerning(1.5)
-                            .foregroundColor(Color(red: 0.1, green: 0.25, blue: 0.35))
-                        
-                        Text("Atme tief durch und nimm dir Zeit.")
+                        .frame(width: 160)
+                        // Sanftes Schweben der Wolke
+                        .offset(y: -5)
+                        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: UUID())
+                    
+                    VStack(spacing: 8) {
+                        Text("Gute Arbeit.")
+                            .font(.system(.title, design: .rounded))
+                            .bold()
+                        Text("Du hast den nächsten Schritt geschafft.\nGehen wir weiter.")
                             .font(.subheadline)
-                            .italic()
                             .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
                     }
                 }
                 
                 Spacer()
                 
-                // 3. BUTTONS
-                VStack(spacing: 20) {
+                // MARK: - BUTTON BEREICH
+                VStack(spacing: 16) {
                     Button(action: {
-                        withAnimation {
-                            showExercise = true
-                        }
+                        withAnimation { showExercise = true }
                     }) {
-                        Text("Weiter")
-                            .font(.headline.bold())
+                        Text("Nächste Übung")
+                            .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 60)
+                            .frame(height: 62)
                             .background(petrolColor)
-                            .cornerRadius(30)
+                            .cornerRadius(31)
                             .shadow(color: petrolColor.opacity(0.3), radius: 10, y: 5)
                     }
                     
                     Button(action: {
-                        withAnimation(.easeInOut(duration: 0.8)) { currentStep = 0 }
-                    }) {
-                        HStack {
-                            Image(systemName: "arrow.counterclockwise")
-                            Text("Übung wiederholen")
+                        // Zurücksetzen mit langsamer Rückwärts-Animation
+                        withAnimation(.spring(response: 1.0, dampingFraction: 0.8)) {
+                            currentStep = 0
                         }
-                        .foregroundColor(petrolColor)
-                        .font(.subheadline.weight(.medium))
+                    }) {
+                        Text("Wiederholen")
+                            .font(.subheadline.bold())
+                            .foregroundColor(petrolColor)
                     }
                 }
                 .padding(.horizontal, 40)
@@ -135,46 +139,29 @@ struct CheckpointView: View {
             }
         }
         .fullScreenCover(isPresented: $showExercise) {
-            let currentExercise = userOrder[currentStep]
-            
-            switch currentExercise.type {
-            case .calculation:
-                CalculationExerciseView(isShowing: $isShowing, currentStep: $currentStep)
-            case .breathing:
-                EmergencyPlanView(isShowing: $isShowing)
-            case .memory:
-                MemoryExerciseView(isShowing: $isShowing, currentStep: $currentStep)
-            case .mantra:
-                MantraPlaceholderView(isShowing: $isShowing, currentStep: $currentStep)
+            destinationView()
+        }
+    }
+    
+    @ViewBuilder
+    func destinationView() -> some View {
+        let step = sosSteps[min(currentStep, sosSteps.count - 1)]
+        switch step.type {
+        case .calculation: CalculationExerciseView(isShowing: $isShowing, currentStep: $currentStep)
+        case .breathing: BreathingExerciseView(isShowing: $isShowing, currentStep: $currentStep)
+        case .mantra: MantraPlaceholderView(isShowing: $isShowing, currentStep: $currentStep)
+        case .memory:
+            VStack {
+                Text("Memory View")
+                Button("Schließen") { showExercise = false }
             }
         }
     }
 }
 
-// Preview
+// Preview für schnelles Testen
 struct CheckpointView_Previews: PreviewProvider {
     static var previews: some View {
-        CheckpointView(isShowing: .constant(true))
+        CheckpointView(isShowing: .constant(true), currentStep: .constant(1))
     }
 }
-
-
-
-// Kleiner Platzhalter für Mantras, damit der Code kompiliert
-struct MantraPlaceholderView: View {
-    @Binding var isShowing: Bool
-    @Binding var currentStep: Int
-    var body: some View {
-        VStack {
-            Text("Mantra Übung kommt hier...")
-            Button("Fertig") {
-                if currentStep < sosSteps.count - 1 {
-                    currentStep += 1
-                } else {
-                    isShowing = false
-                }
-            }
-        }
-    }
-}
-

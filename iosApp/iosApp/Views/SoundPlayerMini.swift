@@ -2,11 +2,10 @@ import SwiftUI
 
 struct SoundPlayerMini: View {
     @State private var isPlaying: Bool = false
-    let onClose: () -> Void   // 👈 kommt vom Parent
+    let onClose: () -> Void
     
     var body: some View {
         HStack(spacing: 0) {
-            // Cover
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.gray.opacity(0.3))
                 .frame(width: 45, height: 45)
@@ -31,7 +30,7 @@ struct SoundPlayerMini: View {
                 
                 Button {
                     withAnimation(.spring()) {
-                        onClose()   // 👈 HIER schließt er sich wirklich
+                        onClose()
                     }
                 } label: {
                     Image(systemName: "xmark")

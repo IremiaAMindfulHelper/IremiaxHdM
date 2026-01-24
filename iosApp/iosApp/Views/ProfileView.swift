@@ -21,9 +21,6 @@ struct ProfileView: View {
                             .foregroundColor(.secondary)
                     }
                     .padding(.top)
-
-                    // Statistiken (Passend zu Wellness)
-
                     .padding(.horizontal)
 
                     }

@@ -38,12 +38,11 @@ struct MemoryExerciseView: View {
         .padding()
         // Öffnet den Checkpoint neu mit dem nächsten Index
         .fullScreenCover(isPresented: $backToCheckpoint) {
-            CheckpointView(isShowing: $isShowing, currentStep: currentStep)
+            CheckpointView(isShowing: $isShowing, currentStep: $currentStep)
         }
     }
 
     func goToNextStep() {
-        // Wir prüfen, ob noch Übungen in der Liste sind
         if currentStep < sosSteps.count - 1 {
             currentStep += 1
             backToCheckpoint = true
