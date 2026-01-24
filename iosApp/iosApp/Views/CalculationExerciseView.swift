@@ -147,11 +147,9 @@ struct CalculationExerciseView: View {
     }
 
     private func goToNextStep() {
+        
         withAnimation(.spring()) {
-            currentStep += 1
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            showCheckpoint = true
+            showCheckpoint = true 
         }
     }
 }

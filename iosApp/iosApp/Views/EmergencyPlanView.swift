@@ -17,7 +17,7 @@ struct EmergencyPlanView: View {
     let previewIcons = ["plus.forwardslash.minus", "wind", "leaf", "brain"]
     
     let phases = [
-        (title: "Atme ein", duration: 4.0),
+        (title: "Atme ein", duration: 1.0),
         (title: "Halte", duration: 1.0),
         (title: "Atme aus", duration: 1.0)
     ]
@@ -80,7 +80,7 @@ struct EmergencyPlanView: View {
                 
                 Spacer()
                 
-                // Slide to Cancel
+              
                 ZStack(alignment: .leading) {
                     Capsule()
                         .fill(petrolColor)

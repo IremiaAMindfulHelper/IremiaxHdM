@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - 1. DATENMODELL
+
 struct UbungItem: Identifiable {
     let id = UUID()
     let kategorie: String
@@ -9,7 +9,7 @@ struct UbungItem: Identifiable {
     let beschreibung: String
 }
 
-// MARK: - 2. HAUPT-APP STRUKTUR
+
 struct MyWellnessApp: View {
     @State private var selectedTab = 0
     @State private var showingEmergencyOverlay = false
@@ -41,7 +41,7 @@ struct MyWellnessApp: View {
             }
             .accentColor(Color(red: 0.2, green: 0.45, blue: 0.55))
 
-            // Automatisch erscheinender Mini Player
+           
             VStack {
                 Spacer()
                 if showSoundPlayer {
@@ -61,11 +61,11 @@ struct MyWellnessApp: View {
             VStack {
                 Spacer()
                 Button {
-                    // HIER: Das Overlay aktivieren und Animation starten
+                    
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                         showingEmergencyOverlay = true
                     }
-                    // Optional: Den Tab-Zustand zurücksetzen, damit kein leerer Tab aktiv bleibt
+                    
                     selectedTab = 0
                 } label: {
                     ZStack {
@@ -85,7 +85,7 @@ struct MyWellnessApp: View {
     }
 }
 
-// MARK: - 3. HOME VIEW
+
 struct HomeView: View {
     @State private var selectedFilter = "Alle"
     @Binding var showSoundPlayer: Bool
@@ -152,8 +152,7 @@ struct HomeView: View {
         Text(title).font(.title2).bold().padding(.top, 10)
     }
 }
-// MARK: - HILFSKOMPONENTEN (CARDS & ROWS)
-// MARK: - Exercise Card
+
 struct ExerciseCard: View {
     let exercise: Exercise
     var body: some View {
@@ -173,7 +172,7 @@ struct ExerciseCard: View {
     }
 }
 
-// MARK: - Mantra Row
+
 struct MantraRow: View {
     let mantra: Mantra
     var body: some View {
@@ -193,7 +192,7 @@ struct MantraRow: View {
     }
 }
 
-// MARK: - Sound Row
+
 struct SoundRow: View {
     let sound: Sound
     @Binding var currentSoundTitle: String
@@ -221,7 +220,7 @@ struct SoundRow: View {
     }
 }
 
-// MARK: - SONSTIGE VIEWS (UNVERÄNDERT)
+
 
 struct FilterBar: View {
     @Binding var selectedFilter: String

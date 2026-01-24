@@ -110,17 +110,12 @@ struct BreathingExerciseView: View {
     }
     
     // MARK: - Navigation
+    // MARK: - Navigation (In BreathingExerciseView)
     func goToNextStep() {
-        if currentStep < sosSteps.count - 1 {
-            // Index in der Hauptliste erhöhen
-            withAnimation(.spring()) {
-                currentStep += 1
-            }
-            // Diesen Screen schließen, um den aktualisierten Checkpoint zu zeigen
+        
+        withAnimation(.spring()) {
             dismiss()
-        } else {
-            // Alles fertig
-            isShowing = false
         }
+        
     }
 }
