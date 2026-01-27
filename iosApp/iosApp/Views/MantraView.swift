@@ -79,7 +79,7 @@ struct MantraView: View {
                 
                 // MARK: - ZENTRALER FOOTER (Überspringen-Logik)
                 ExerciseFooter {
-                    dismiss() // da letzte aufgabe , 
+                    goToNextStep() // 
                 }
             }
         }
