@@ -187,7 +187,7 @@ struct MemoryExerciseView: View {
         }
     }
 }
-
+// d
 struct MemoryExerciseView_Previews: PreviewProvider {
     static var previews: some View {
         MemoryExerciseView(isShowing: .constant(true), currentStep: .constant(3))
