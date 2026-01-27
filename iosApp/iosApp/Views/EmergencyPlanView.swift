@@ -14,6 +14,8 @@ struct EmergencyPlanView: View {
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
     
     let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    
+    // Die Icons aus den Schritten (sosSteps muss global oder in der Datei verfügbar sein)
     let previewIcons = ["plus.forwardslash.minus", "wind", "leaf", "brain"]
     
     let phases = [
@@ -27,27 +29,29 @@ struct EmergencyPlanView: View {
             Color.white.ignoresSafeArea()
             
             VStack(spacing: 30) {
-                // Obere Symbol-Kette (Vorschau)
+                // MARK: - ANGEPASSTE SYMBOL-KETTE (FORMAT WIE CHECKPOINT)
                 HStack(spacing: 0) {
                     ForEach(0..<previewIcons.count, id: \.self) { index in
                         VStack(spacing: 8) {
                             ZStack {
+                                // Der Kreis (Größe 45 wie im Checkpoint bei inaktiven Schritten)
                                 Circle()
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                                     .frame(width: 45, height: 45)
+                                
                                 Image(systemName: previewIcons[index])
-                                    .font(.system(size: 18))
+                                    .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.gray.opacity(0.6))
                             }
-                            Text("").frame(height: 16)
                         }
                         .frame(maxWidth: .infinity)
                         
+                        // Verbindungslinie (exakt wie im Checkpoint)
                         if index != previewIcons.count - 1 {
                             Rectangle()
-                                .frame(width: 20, height: 1)
-                                .foregroundColor(Color.gray.opacity(0.2))
-                                .padding(.bottom, 24)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(width: 25, height: 2)
+                                .padding(.bottom, 8) // Zentrierung zur Kugelhöhe
                         }
                     }
                 }
@@ -80,7 +84,7 @@ struct EmergencyPlanView: View {
                 
                 Spacer()
                 
-              
+                // Abbrechen Slider
                 ZStack(alignment: .leading) {
                     Capsule()
                         .fill(petrolColor)
@@ -119,11 +123,9 @@ struct EmergencyPlanView: View {
                 .padding(.bottom, 60)
             }
         }
-        // DIREKTER SPRUNG ZUR ALLERERSTEN ÜBUNG (Index 0)
         .fullScreenCover(isPresented: $startFirstExercise) {
-                    CalculationExerciseView(isShowing: $isShowing, currentStep: $internalStep)
-                }
-                
+            CalculationExerciseView(isShowing: $isShowing, currentStep: $internalStep)
+        }
     }
     
     func advanceBreathing() {

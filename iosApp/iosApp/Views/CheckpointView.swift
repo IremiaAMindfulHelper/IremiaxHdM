@@ -5,9 +5,8 @@ struct CheckpointView: View {
     @Binding var currentStep: Int
     @State private var showExercise = false
     
-    // Wir führen einen lokalen State ein, der anzeigt, dass wir
-    // gerade eine Übung erfolgreich beendet haben.
-    @State private var isTransitioningToNext = true
+    
+    @State private var animatedStep: Int = 0
     
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
     
@@ -19,30 +18,26 @@ struct CheckpointView: View {
                 // MARK: - PROGRESS BAR
                 HStack(spacing: 0) {
                     ForEach(0..<sosSteps.count, id: \.self) { index in
-                        // LOGIK-FIX:
-                        // Das Icon ist "Completed", wenn der Index kleiner als currentStep + 1 ist.
-                        // Die Lupe (isActive) springt sofort auf den NÄCHSTEN Index.
-                        let displayActiveIndex = currentStep + 1
-                        let isActive = displayActiveIndex == index
-                        let isCompleted = index <= currentStep
+                        
+                        let isActive = animatedStep == index
+                        let isCompleted = index < animatedStep
                         
                         VStack(spacing: 8) {
                             ZStack {
                                 Circle()
                                     .fill(isCompleted ? petrolColor : Color.white)
-                                    .frame(width: isActive ? 58 : 35, height: isActive ? 58 : 35)
+                                    .frame(width: isActive ? 60 : 40, height: isActive ? 60 : 40)
                                     .shadow(color: .black.opacity(isActive ? 0.15 : 0), radius: isActive ? 10 : 0)
                                 
                                 Circle()
                                     .stroke(isActive ? petrolColor : (isCompleted ? Color.clear : Color.gray.opacity(0.2)), lineWidth: isActive ? 2.5 : 1)
-                                    .frame(width: isActive ? 58 : 35, height: isActive ? 58 : 35)
+                                    .frame(width: isActive ? 60 : 40, height: isActive ? 60 : 40)
                                 
                                 Image(systemName: sosSteps[index].icon)
-                                    .font(.system(size: isActive ? 24 : 14, weight: isActive ? .bold : .medium))
+                                    .font(.system(size: isActive ? 28 : 18, weight: isActive ? .bold : .medium))
                                     .foregroundColor(isCompleted ? .white : (isActive ? petrolColor : .gray))
                             }
-                            .frame(width: 65, height: 65)
-                            .animation(.spring(response: 0.9, dampingFraction: 0.7), value: currentStep)
+                            .frame(width: 70, height: 70)
                             
                             ZStack {
                                 if isActive {
@@ -50,7 +45,7 @@ struct CheckpointView: View {
                                         .font(.caption.bold())
                                         .foregroundColor(petrolColor)
                                         .transition(.asymmetric(
-                                            insertion: .scale(scale: 0.8).combined(with: .opacity).animation(.spring().delay(0.5)),
+                                            insertion: .scale(scale: 0.8).combined(with: .opacity).animation(.spring().delay(0.2)),
                                             removal: .opacity.animation(.easeInOut(duration: 0.2))
                                         ))
                                 }
@@ -67,14 +62,14 @@ struct CheckpointView: View {
                                     .frame(width: 25, height: 2)
                                 Rectangle()
                                     .fill(petrolColor)
-                                    .frame(width: index <= currentStep ? 25 : 0, height: 2)
+                                    .frame(width: index < animatedStep ? 25 : 0, height: 2)
                             }
                             .padding(.bottom, 24)
-                            .animation(.easeInOut(duration: 1.2), value: currentStep)
                         }
                     }
                 }
                 .padding(.top, 60).padding(.horizontal)
+                .animation(.spring(response: 0.6, dampingFraction: 0.7), value: animatedStep)
                 
                 Spacer()
                 
@@ -102,8 +97,7 @@ struct CheckpointView: View {
                 // MARK: - BUTTONS
                 VStack(spacing: 16) {
                     Button(action: {
-                        // Da wir die Anzeige oben schon manipuliert haben,
-                        // müssen wir currentStep jetzt wirklich erhöhen, bevor die Übung startet.
+                        
                         currentStep += 1
                         showExercise = true
                     }) {
@@ -117,7 +111,6 @@ struct CheckpointView: View {
                     }
                     
                     Button(action: {
-                        // Wiederholen bedeutet: Wir bleiben im gleichen Step.
                         showExercise = true
                     }) {
                         Text("Wiederholen")
@@ -129,9 +122,18 @@ struct CheckpointView: View {
                 .padding(.bottom, 50)
             }
         }
+        .onAppear {
+            // Beim Erscheinen setzen wir animatedStep zuerst auf den ALTEN Schritt
+            animatedStep = currentStep
+            
+            // Nach einer kurzen Verzögerung triggern wir die Lupen-Animation zum NÄCHSTEN Schritt
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation {
+                    animatedStep = currentStep + 1
+                }
+            }
+        }
         .fullScreenCover(isPresented: $showExercise) {
-            // Logik-Check: Wenn wir auf "Nächste" geklickt haben, ist currentStep bereits erhöht.
-            // Wenn wir auf "Wiederholen" geklickt haben, ist er noch gleich.
             destinationView()
         }
     }

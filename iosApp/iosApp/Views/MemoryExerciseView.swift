@@ -59,7 +59,7 @@ struct MemoryExerciseView: View {
             Spacer()
             
             if allMatched {
-                Button("Fertig & Weiter") {
+                ExerciseFooter {
                     dismiss()
                 }
                 .font(.headline)

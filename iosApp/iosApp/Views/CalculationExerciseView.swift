@@ -73,7 +73,9 @@ struct CalculationExerciseView: View {
 
             Spacer()
             
-            Button("Überspringen") { goToNextStep() }.foregroundColor(.gray).padding(.bottom, 30)
+            ExerciseFooter {
+                goToNextStep()
+            }
         }
         .background(Color.white.ignoresSafeArea())
         .onAppear { startNewQuestion() }
