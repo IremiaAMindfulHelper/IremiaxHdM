@@ -3,7 +3,8 @@ import SwiftUI
 struct JournalEntryView: View {
 
     let onBack: () -> Void
-    let onOpenDiary: () -> Void
+    /// ✅ Datum weitergeben zum Tagebuch
+    let onOpenDiary: (_ date: Date) -> Void
     let onOpenPanicReflexion: () -> Void
 
     /// ✅ Datum kommt vom Kalender
@@ -15,13 +16,10 @@ struct JournalEntryView: View {
     @State private var selectedActivities: Set<ActivitySymbol> = []
     @State private var freeTextActivity: String = ""
 
-    // ✅ Standardwert im Feld: 0 (nicht als grauer Placeholder)
     @State private var waterLiters: String = "0"
     @State private var sleepHours: String = "0"
-
     @State private var notes: String = ""
 
-    // ✅ Keyboard focus
     @FocusState private var focusedField: Field?
 
     private enum Field: Hashable {
@@ -82,7 +80,7 @@ struct JournalEntryView: View {
         }
     }
 
-    /// ✅ formatiert jetzt entryDate
+    /// ✅ formatiert entryDate
     private var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd.MM.yy"
@@ -322,7 +320,7 @@ struct JournalEntryView: View {
                     .padding(.top, 16)
                 }
 
-                // MARK: - Health Tracker (✅ ohne "0 Liter/0 Stunden" über den Bildern)
+                // MARK: - Health Tracker
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Gesundheitstracker")
                         .font(.subheadline)
@@ -331,13 +329,11 @@ struct JournalEntryView: View {
                         .padding(.top, 40)
 
                     HStack(spacing: 40) {
-                        // ✅ WATER
                         VStack(spacing: 10) {
                             Image(systemName: "waterbottle")
                                 .font(.system(size: 40))
                                 .foregroundColor(.primary)
 
-                            // ✅ Kein Placeholder, Standardwert "0" steht im Feld
                             TextField("", text: $waterLiters)
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(.roundedBorder)
@@ -350,13 +346,11 @@ struct JournalEntryView: View {
                                 .foregroundColor(.secondary)
                         }
 
-                        // ✅ SLEEP
                         VStack(spacing: 10) {
                             Image(systemName: "bed.double")
                                 .font(.system(size: 40))
                                 .foregroundColor(.primary)
 
-                            // ✅ Kein Placeholder, Standardwert "0" steht im Feld
                             TextField("", text: $sleepHours)
                                 .keyboardType(.numberPad)
                                 .textFieldStyle(.roundedBorder)
@@ -396,7 +390,9 @@ struct JournalEntryView: View {
 
                 // MARK: - Navigation Buttons
                 HStack(spacing: 16) {
-                    Button(action: onOpenDiary) {
+
+                    // ✅ Datum an Tagebuch weitergeben
+                    Button(action: { onOpenDiary(entryDate) }) {
                         ZStack(alignment: .bottomTrailing) {
                             Text("Tagebuch")
                                 .font(.system(size: 16, weight: .medium))
@@ -447,23 +443,14 @@ struct JournalEntryView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Fertig") {
-                    focusedField = nil
-                }
+                Button("Fertig") { focusedField = nil }
             }
         }
-        .onTapGesture {
-            focusedField = nil
-        }
-        // ✅ Fokus-Logik:
-        // - Beim Reinklicken: wenn "0" drinsteht -> leer machen
-        // - Beim Rausklicken: wenn leer -> wieder "0" setzen
+        .onTapGesture { focusedField = nil }
         .onChange(of: focusedField) { newValue in
-            // Fokus rein
             if newValue == .waterLiters && waterLiters == "0" { waterLiters = "" }
             if newValue == .sleepHours && sleepHours == "0" { sleepHours = "" }
 
-            // Fokus raus
             if newValue != .waterLiters,
                waterLiters.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 waterLiters = "0"
@@ -481,7 +468,7 @@ struct JournalEntryView: View {
     NavigationView {
         JournalEntryView(
             onBack: {},
-            onOpenDiary: {},
+            onOpenDiary: { _ in },
             onOpenPanicReflexion: {},
             entryDate: Date()
         )

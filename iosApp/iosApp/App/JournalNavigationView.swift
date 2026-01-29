@@ -2,10 +2,11 @@ import SwiftUI
 
 enum AppRoute: Hashable {
     case journalEntry(date: Date)
-    case journalDiaryView
+    case journalDiaryView(date: Date)   // ✅ Datum mitgeben
     case panicReflection
     case questionCatalog
 }
+
 
 enum JournalRootMode: Hashable {
     case emotions
@@ -104,15 +105,18 @@ struct JournalNavigationView: View {
         case .journalEntry(let date):
             JournalEntryView(
                 onBack: { safePop() },
-                onOpenDiary: { navigationPath.append(AppRoute.journalDiaryView) },
+                onOpenDiary: { diaryDate in
+                    navigationPath.append(AppRoute.journalDiaryView(date: diaryDate))   // ✅ Date weiterreichen
+                },
                 onOpenPanicReflexion: { navigationPath.append(AppRoute.panicReflection) },
                 entryDate: date
             )
 
-        case .journalDiaryView:
+        case .journalDiaryView(let date):
             JournalDiaryView(
                 onBack: { safePop() },
-                onOpenQuestionCatalog: { navigationPath.append(AppRoute.questionCatalog) }
+                onOpenQuestionCatalog: { navigationPath.append(AppRoute.questionCatalog) },
+                entryDate: date // ✅ ins Tagebuch rein
             )
 
         case .panicReflection:

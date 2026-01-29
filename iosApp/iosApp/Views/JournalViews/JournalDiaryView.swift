@@ -6,6 +6,9 @@ struct JournalDiaryView: View {
     let onBack: () -> Void
     let onOpenQuestionCatalog: () -> Void
 
+    /// ✅ Datum aus EntryView
+    let entryDate: Date
+
     // ✅ Keyboard Focus
     @FocusState private var isKeyboardActive: Bool
 
@@ -34,6 +37,13 @@ struct JournalDiaryView: View {
     ]
 
     private let moodEmojis = ["😢", "🙁", "😐", "😊", "😄"]
+
+    private var formattedDiaryDate: String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.dateFormat = "E dd.MM.yy"   // z.B. "Di 06.01.26"
+        return f.string(from: entryDate)
+    }
 
     // MARK: - Body
     var body: some View {
@@ -100,7 +110,9 @@ struct JournalDiaryView: View {
                 }
             }
             .background(Color(red: 0.95, green: 0.95, blue: 0.95))
-            .navigationTitle("Tagebuch")
+
+            // ✅ Wir setzen den Titel über "principal" (stabil & hübsch)
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbar {
@@ -111,9 +123,21 @@ struct JournalDiaryView: View {
                     }
                 }
 
+                // ✅ Titel + Datum mittig (2 Zeilen)
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 2) {
+                        Text("Tagebuch")
+                            .font(.headline)
+                            .foregroundColor(.black)
+
+                        Text(formattedDiaryDate)
+                            .font(.caption)
+                            .foregroundColor(.black.opacity(0.6))
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        // Tooltip aus, dann navigieren
                         showPencilTooltip = false
                         onOpenQuestionCatalog()
                     } label: {
@@ -123,7 +147,6 @@ struct JournalDiaryView: View {
                     }
                 }
 
-                // ✅ Done Button on Keyboard
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Fertig") { isKeyboardActive = false }
@@ -131,7 +154,6 @@ struct JournalDiaryView: View {
             }
             .onTapGesture { isKeyboardActive = false }
             .onAppear {
-                // ✅ Tooltip beim Öffnen anzeigen
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
                         showPencilTooltip = true
@@ -139,9 +161,8 @@ struct JournalDiaryView: View {
                 }
             }
 
-            // ===== Tooltip Overlay (immer oben RECHTS zum Stift) =====
+            // ===== Tooltip Overlay =====
             if showPencilTooltip {
-                // leichter "Tap-Catcher", damit man außerhalb schließen kann
                 Color.black.opacity(0.001)
                     .ignoresSafeArea()
                     .onTapGesture {
@@ -155,7 +176,7 @@ struct JournalDiaryView: View {
                 TooltipSpeechBubble(
                     text: "Hier kannst du\ndeine Fragen\nanpassen!",
                     buttonTitle: "OK!",
-                    arrowX: 0.86, // ✅ Pfeil rechts (zeigt zum Stift)
+                    arrowX: 0.86,
                     onClose: {
                         withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
                             showPencilTooltip = false
@@ -163,10 +184,9 @@ struct JournalDiaryView: View {
                     }
                 )
                 .frame(width: 260)
-                // ✅ FIX: immer oben rechts, unter der NavBar
                 .position(
-                    x: UIScreen.main.bounds.width - 260/2 - 8,   // ➜ etwas weiter nach rechts
-                    y: 105                                      // ➜ ein Stück höher
+                    x: UIScreen.main.bounds.width - 260/2 - 8,
+                    y: 105
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
                 .zIndex(10)
@@ -179,18 +199,16 @@ struct JournalDiaryView: View {
 private struct TooltipSpeechBubble: View {
     let text: String
     let buttonTitle: String
-    let arrowX: CGFloat          // 0.0 ... 1.0 (links -> rechts)
+    let arrowX: CGFloat
     let onClose: () -> Void
 
     var body: some View {
         ZStack {
-            // 1) Shadow Layer (außen)
             BubbleShape(arrowX: arrowX)
                 .fill(Color.black.opacity(0.18))
                 .offset(y: 6)
                 .blur(radius: 0.8)
 
-            // 2) Border Layer (schwarzer Rand)
             BubbleShape(arrowX: arrowX)
                 .fill(Color.white)
                 .overlay(
@@ -198,7 +216,6 @@ private struct TooltipSpeechBubble: View {
                         .stroke(Color.black.opacity(0.9), lineWidth: 2)
                 )
 
-            // 3) Content
             VStack(spacing: 14) {
                 Text(text)
                     .font(.system(size: 18, weight: .regular))
@@ -225,16 +242,12 @@ private struct TooltipSpeechBubble: View {
     }
 }
 
-// MARK: - Bubble Shape (weißes Dreieck integriert)
 private struct BubbleShape: Shape {
     let arrowX: CGFloat
 
     func path(in rect: CGRect) -> Path {
-        // Bubble
         let corner: CGFloat = 18
         let strokePad: CGFloat = 2
-
-        // Arrow
         let arrowW: CGFloat = 26
         let arrowH: CGFloat = 14
 
@@ -252,17 +265,11 @@ private struct BubbleShape: Shape {
 
         var p = Path()
 
-        // Start oben links (unter dem Pfeilbereich)
         p.move(to: CGPoint(x: bodyRect.minX + corner, y: bodyRect.minY))
-
-        // oben bis Pfeil links
         p.addLine(to: CGPoint(x: arrowLeft, y: bodyRect.minY))
-
-        // Pfeil
         p.addLine(to: CGPoint(x: arrowMid, y: bodyRect.minY - arrowH))
         p.addLine(to: CGPoint(x: arrowRight, y: bodyRect.minY))
 
-        // oben rechts
         p.addLine(to: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY))
         p.addArc(
             center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY + corner),
@@ -272,7 +279,6 @@ private struct BubbleShape: Shape {
             clockwise: false
         )
 
-        // rechts runter
         p.addLine(to: CGPoint(x: bodyRect.maxX, y: bodyRect.maxY - corner))
         p.addArc(
             center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.maxY - corner),
@@ -282,7 +288,6 @@ private struct BubbleShape: Shape {
             clockwise: false
         )
 
-        // unten links
         p.addLine(to: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY))
         p.addArc(
             center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY - corner),
@@ -292,7 +297,6 @@ private struct BubbleShape: Shape {
             clockwise: false
         )
 
-        // links hoch
         p.addLine(to: CGPoint(x: bodyRect.minX, y: bodyRect.minY + corner))
         p.addArc(
             center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.minY + corner),
@@ -307,7 +311,6 @@ private struct BubbleShape: Shape {
     }
 }
 
-// MARK: - Diary Content
 private struct DiaryContent: View {
     @Binding var text: String
     @FocusState.Binding var isKeyboardActive: Bool
@@ -320,7 +323,6 @@ private struct DiaryContent: View {
     }
 }
 
-// MARK: - Mood Picker Row
 private struct MoodPickerRow: View {
     let title: String
     let emojis: [String]
@@ -355,7 +357,6 @@ private struct MoodPickerRow: View {
     }
 }
 
-// MARK: - Category Card
 private struct CategoryCard<Content: View>: View {
     let title: String
     let dateText: String?
@@ -417,7 +418,6 @@ private struct CategoryCard<Content: View>: View {
     }
 }
 
-// MARK: - Rounded Text Field
 private struct RoundedTextField: View {
     let placeholder: String
     @Binding var text: String
@@ -441,6 +441,10 @@ private struct RoundedTextField: View {
 // MARK: - Preview
 #Preview {
     NavigationStack {
-        JournalDiaryView(onBack: {}, onOpenQuestionCatalog: {})
+        JournalDiaryView(
+            onBack: {},
+            onOpenQuestionCatalog: {},
+            entryDate: Date()
+        )
     }
 }
