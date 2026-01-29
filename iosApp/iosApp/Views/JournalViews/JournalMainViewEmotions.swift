@@ -7,8 +7,8 @@ struct JournalMainViewEmotions: View { // Anke
     /// farbiger Kreis -> Popup (Sheet kommt im Parent)
     let onPlusButtonTapped: (_ header: String) -> Void
 
-    /// + -> JournalEntryView
-    let onCreateEntry: () -> Void
+    /// ✅ + -> JournalEntryView (mit Datum)
+    let onCreateEntry: (_ date: Date) -> Void
 
     // Kalender State (nur Swift)
     @State private var currentYear: Int = 2026
@@ -169,9 +169,11 @@ struct JournalMainViewEmotions: View { // Anke
         let year = cell.effectiveYear ?? currentYear
         let month = cell.effectiveMonth ?? currentMonth
 
-        // ✅ + -> JournalEntryView (nur Vergangenheit/Heute)
+        // ✅ + -> JournalEntryView (nur Vergangenheit/Heute) + Datum mitgeben
         if cell.mark == .plus {
-            onCreateEntry()
+            if let date = dateForCell(cell) {
+                onCreateEntry(date)
+            }
             return
         }
 
@@ -180,6 +182,12 @@ struct JournalMainViewEmotions: View { // Anke
             let header = makeHeaderText(year: year, month: month, day: cell.day)
             onPlusButtonTapped(header)
         }
+    }
+
+    private func dateForCell(_ cell: DemoCell) -> Date? {
+        let y = cell.effectiveYear ?? currentYear
+        let m = cell.effectiveMonth ?? currentMonth
+        return calendar.date(from: DateComponents(year: y, month: m, day: cell.day))
     }
 
     private func makeHeaderText(year: Int, month: Int, day: Int) -> String {
@@ -281,10 +289,8 @@ struct JournalMainViewEmotions: View { // Anke
 
             let mark: DemoMark
             if !allowed {
-                // Zukunft -> kein Plus
                 mark = .none
             } else if isDemoMonth {
-                // Demo nur im Januar 2026 UND nur für erlaubte Tage
                 if d == 6 { mark = .moodGradientA }
                 else if d == 7 { mark = .moodGradientB }
                 else if [16, 17, 18].contains(d) { mark = .filled }
@@ -363,7 +369,7 @@ private struct DemoCell: Identifiable {
     let effectiveYear: Int?
     let effectiveMonth: Int?
 
-    /// Neu: darf man hier eintragen/antippen?
+    /// darf man hier eintragen/antippen?
     let isTappable: Bool
 
     init(
@@ -475,7 +481,7 @@ struct JournalMainView_Previews: PreviewProvider {
         JournalMainViewEmotions(
             rootMode: .constant(.emotions),
             onPlusButtonTapped: { _ in },
-            onCreateEntry: { }
+            onCreateEntry: { _ in }
         )
     }
 }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum AppRoute: Hashable {
-    case journalEntry
+    case journalEntry(date: Date)   // ✅ Datum mit Route
     case journalDiaryView
     case panicReflection
     case questionCatalog
@@ -32,8 +32,8 @@ struct JournalNavigationView: View {
                             popupDateHeader = header
                             showJournalPopup = true
                         },
-                        onCreateEntry: {
-                            navigationPath.append(AppRoute.journalEntry)
+                        onCreateEntry: { date in
+                            navigationPath.append(AppRoute.journalEntry(date: date))
                         }
                     )
 
@@ -44,8 +44,8 @@ struct JournalNavigationView: View {
                             popupDateHeader = header
                             showJournalPopup = true
                         },
-                        onCreateEntry: {
-                            navigationPath.append(AppRoute.journalEntry)
+                        onCreateEntry: { date in
+                            navigationPath.append(AppRoute.journalEntry(date: date))
                         }
                     )
                 }
@@ -58,8 +58,10 @@ struct JournalNavigationView: View {
         .sheet(isPresented: $showJournalPopup) {
             JournalMainPopUpView(
                 onEintragBearbeiten: {
+                    // Wenn du hier auch ein Datum brauchst, müsste das Popup das Datum (Date) liefern.
+                    // Aktuell hast du nur einen String header -> deshalb lassen wir es wie vorher.
                     showJournalPopup = false
-                    navigationPath.append(AppRoute.journalEntry)
+                    // navigationPath.append(AppRoute.journalEntry(date: Date()))
                 },
                 onDismiss: {
                     showJournalPopup = false
@@ -80,27 +82,25 @@ struct JournalNavigationView: View {
     @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
-        case .journalEntry:
+        case .journalEntry(let date):
             JournalEntryView(
                 onBack: { safePop() },
                 onOpenDiary: { navigationPath.append(AppRoute.journalDiaryView) },
-                onOpenPanicReflexion: { navigationPath.append(AppRoute.panicReflection) }
+                onOpenPanicReflexion: { navigationPath.append(AppRoute.panicReflection) },
+                entryDate: date // ✅ Datum oben anzeigen
             )
 
         case .journalDiaryView:
             JournalDiaryView(
                 onBack: { safePop() },
-                onOpenQuestionCatalog: { navigationPath.append(AppRoute.questionCatalog) } // ✅ NEW
+                onOpenQuestionCatalog: { navigationPath.append(AppRoute.questionCatalog) }
             )
 
         case .panicReflection:
             PanicReflexion(onBack: { safePop() })
 
         case .questionCatalog:
-            QuestionCatalog(
-                onBack: { safePop() }
-            )
-
+            QuestionCatalog(onBack: { safePop() })
         }
     }
 }

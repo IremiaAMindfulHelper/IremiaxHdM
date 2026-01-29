@@ -7,8 +7,8 @@ struct JournalMainViewPanicAttacks: View { // Anke
     /// broken heart -> Popup (Sheet kommt im Parent)
     let onPlusButtonTapped: (_ header: String) -> Void
 
-    /// + -> JournalEntryView
-    let onCreateEntry: () -> Void
+    /// ✅ + / filled -> JournalEntryView (mit Datum)
+    let onCreateEntry: (_ date: Date) -> Void
 
     // Kalender State (nur Swift)
     @State private var currentYear: Int = 2026
@@ -74,7 +74,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
             .padding(.top, 14)
             .padding(.bottom, 4)
 
-            // Month header (echter Kalender)
+            // Month header
             HStack {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -170,13 +170,15 @@ struct JournalMainViewPanicAttacks: View { // Anke
         let year = cell.effectiveYear ?? currentYear
         let month = cell.effectiveMonth ?? currentMonth
 
-        // + / filled -> Entry erstellen (nur Vergangenheit/Heute)
+        // ✅ + / filled -> Entry erstellen (nur Vergangenheit/Heute) + Datum übergeben
         if cell.mark == .plus || cell.mark == .filled {
-            onCreateEntry()
+            if let date = calendar.date(from: DateComponents(year: year, month: month, day: cell.day)) {
+                onCreateEntry(date)
+            }
             return
         }
 
-        // broken heart -> Popup (nur Vergangenheit/Heute)
+        // ✅ broken heart -> Popup
         if cell.mark == .brokenHeart {
             let header = makeHeaderText(year: year, month: month, day: cell.day)
             onPlusButtonTapped(header)
@@ -266,7 +268,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
                     DemoCell(
                         day: d,
                         isInDisplayedMonth: false,
-                        mark: allowed ? .plus : .none, // Vergangenheit/Heute: plus, Zukunft: none
+                        mark: allowed ? .plus : .none,
                         monthOffset: -1,
                         effectiveYear: y,
                         effectiveMonth: m,
@@ -368,7 +370,7 @@ private struct DemoCell: Identifiable {
     let effectiveYear: Int?
     let effectiveMonth: Int?
 
-    /// darf man hier was erstellen/antippen?
+    /// darf man hier eintragen/antippen?
     let isTappable: Bool
 
     init(
@@ -470,7 +472,7 @@ struct JournalMainViewPanicAttacks_Previews: PreviewProvider {
         JournalMainViewPanicAttacks(
             rootMode: .constant(.panicAttacks),
             onPlusButtonTapped: { _ in },
-            onCreateEntry: { }
+            onCreateEntry: { _ in }
         )
     }
 }

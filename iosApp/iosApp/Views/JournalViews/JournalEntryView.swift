@@ -6,7 +6,9 @@ struct JournalEntryView: View {
     let onOpenDiary: () -> Void
     let onOpenPanicReflexion: () -> Void
 
-    @State private var currentDate = Date()
+    /// ✅ Datum kommt vom Kalender
+    let entryDate: Date
+
     @State private var ballPosition = CGPoint(x: 0, y: 0)
     @State private var isLocked = false
     @State private var activityMode: ActivityMode = .symbols
@@ -80,11 +82,12 @@ struct JournalEntryView: View {
         }
     }
 
+    /// ✅ formatiert jetzt entryDate
     private var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "E dd.MM.yy"
         formatter.locale = Locale(identifier: "de_DE")
-        return formatter.string(from: currentDate)
+        return formatter.string(from: entryDate)
     }
 
     private var lockButton: some View {
@@ -340,7 +343,7 @@ struct JournalEntryView: View {
 
                             HStack(spacing: 4) {
                                 TextField("Liter", text: $waterLiters)
-                                    .keyboardType(.decimalPad) // ✅ erlaubt 0.5 / 0.75
+                                    .keyboardType(.decimalPad)
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 100)
                                     .multilineTextAlignment(.center)
@@ -463,7 +466,8 @@ struct JournalEntryView: View {
         JournalEntryView(
             onBack: {},
             onOpenDiary: {},
-            onOpenPanicReflexion: {}
+            onOpenPanicReflexion: {},
+            entryDate: Date()
         )
     }
 }
