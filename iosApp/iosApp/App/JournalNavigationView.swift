@@ -2,8 +2,8 @@ import SwiftUI
 
 enum AppRoute: Hashable {
     case journalEntry(date: Date)
-    case journalDiaryView(date: Date)   // ✅ Datum mitgeben
-    case panicReflection
+    case journalDiaryView(date: Date)
+    case panicReflection(date: Date)   // ✅ Datum rein
     case questionCatalog
 }
 
@@ -106,9 +106,11 @@ struct JournalNavigationView: View {
             JournalEntryView(
                 onBack: { safePop() },
                 onOpenDiary: { diaryDate in
-                    navigationPath.append(AppRoute.journalDiaryView(date: diaryDate))   // ✅ Date weiterreichen
+                    navigationPath.append(AppRoute.journalDiaryView(date: diaryDate))
                 },
-                onOpenPanicReflexion: { navigationPath.append(AppRoute.panicReflection) },
+                onOpenPanicReflexion: { panicDate in
+                    navigationPath.append(AppRoute.panicReflection(date: panicDate))
+                },
                 entryDate: date
             )
 
@@ -116,16 +118,20 @@ struct JournalNavigationView: View {
             JournalDiaryView(
                 onBack: { safePop() },
                 onOpenQuestionCatalog: { navigationPath.append(AppRoute.questionCatalog) },
-                entryDate: date // ✅ ins Tagebuch rein
+                entryDate: date
             )
 
-        case .panicReflection:
-            PanicReflexion(onBack: { safePop() })
+        case .panicReflection(let date):
+            PanicReflexion(
+                onBack: { safePop() },
+                entryDate: date
+            )
 
         case .questionCatalog:
             QuestionCatalog(onBack: { safePop() })
         }
     }
+
 
     private func makePopupHeader(from date: Date) -> String {
         let formatter = DateFormatter()

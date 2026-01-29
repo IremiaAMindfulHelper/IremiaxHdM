@@ -3,9 +3,8 @@ import SwiftUI
 struct JournalEntryView: View {
 
     let onBack: () -> Void
-    /// ✅ Datum weitergeben zum Tagebuch
     let onOpenDiary: (_ date: Date) -> Void
-    let onOpenPanicReflexion: () -> Void
+    let onOpenPanicReflexion: (_ date: Date) -> Void
 
     /// ✅ Datum kommt vom Kalender
     let entryDate: Date
@@ -53,6 +52,14 @@ struct JournalEntryView: View {
     }
 
     // MARK: - Header
+
+    private var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E dd.MM.yy"
+        formatter.locale = Locale(identifier: "de_DE")
+        return formatter.string(from: entryDate)
+    }
+
     private var headerView: some View {
         VStack(spacing: 0) {
             HStack {
@@ -80,20 +87,12 @@ struct JournalEntryView: View {
         }
     }
 
-    /// ✅ formatiert entryDate
-    private var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E dd.MM.yy"
-        formatter.locale = Locale(identifier: "de_DE")
-        return formatter.string(from: entryDate)
-    }
-
     private var lockButton: some View {
-        Button(action: {
+        Button {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                 isLocked.toggle()
             }
-        }) {
+        } label: {
             Image(systemName: isLocked ? "lock.fill" : "lock.open")
                 .font(.title2)
                 .foregroundColor(.primary)
@@ -101,6 +100,7 @@ struct JournalEntryView: View {
     }
 
     // MARK: - Mood Coordinate System
+
     private var moodCoordinateSystem: some View {
         GeometryReader { geo in
             let centerX = geo.size.width / 2
@@ -134,27 +134,21 @@ struct JournalEntryView: View {
                 }
                 .position(x: centerX, y: geo.size.height - 25)
 
-                HStack(spacing: 4) {
-                    VStack(spacing: 2) {
-                        Text("😔")
-                            .font(.system(size: 16))
-                        Text("deprimiert")
-                            .font(.system(size: 12, weight: .medium))
-                            .multilineTextAlignment(.center)
-                            .offset(y: 6)
-                    }
+                VStack(spacing: 2) {
+                    Text("😔").font(.system(size: 16))
+                    Text("deprimiert")
+                        .font(.system(size: 12, weight: .medium))
+                        .multilineTextAlignment(.center)
+                        .offset(y: 6)
                 }
                 .position(x: 40, y: centerY)
 
-                HStack(spacing: 4) {
-                    VStack(spacing: 2) {
-                        Text("😃")
-                            .font(.system(size: 16))
-                        Text("fröhlich")
-                            .font(.system(size: 12, weight: .medium))
-                            .multilineTextAlignment(.center)
-                            .offset(y: 6)
-                    }
+                VStack(spacing: 2) {
+                    Text("😃").font(.system(size: 16))
+                    Text("fröhlich")
+                        .font(.system(size: 12, weight: .medium))
+                        .multilineTextAlignment(.center)
+                        .offset(y: 6)
                 }
                 .position(x: geo.size.width - 40, y: centerY)
 
@@ -162,279 +156,310 @@ struct JournalEntryView: View {
                     .frame(width: 30, height: 30)
                     .shadow(radius: 6, y: 2)
                     .overlay(
-                        isLocked ?
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.white)
-                        : nil
+                        Group {
+                            if isLocked {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.white)
+                            }
+                        }
                     )
                     .position(
                         x: centerX + ballPosition.x * maxDistanceX,
                         y: centerY - ballPosition.y * maxDistanceY
                     )
-                    .gesture(
-                        isLocked ? nil :
-                            DragGesture()
-                                .onChanged { value in
-                                    let deltaX = value.location.x - centerX
-                                    let deltaY = centerY - value.location.y
-
-                                    var normalizedX = deltaX / maxDistanceX
-                                    var normalizedY = deltaY / maxDistanceY
-
-                                    normalizedX = max(-1.0, min(1.0, normalizedX))
-                                    normalizedY = max(-1.0, min(1.0, normalizedY))
-
-                                    ballPosition = CGPoint(x: normalizedX, y: normalizedY)
-                                }
-                    )
+                    .gesture(isLocked ? nil : dragGesture(centerX: centerX, centerY: centerY, maxX: maxDistanceX, maxY: maxDistanceY))
                     .opacity(isLocked ? 0.7 : 1.0)
             }
         }
     }
 
-    // MARK: - Main View
+    private func dragGesture(centerX: CGFloat, centerY: CGFloat, maxX: CGFloat, maxY: CGFloat) -> some Gesture {
+        DragGesture().onChanged { value in
+            let deltaX = value.location.x - centerX
+            let deltaY = centerY - value.location.y
+
+            var normalizedX = deltaX / maxX
+            var normalizedY = deltaY / maxY
+
+            normalizedX = max(-1.0, min(1.0, normalizedX))
+            normalizedY = max(-1.0, min(1.0, normalizedY))
+
+            ballPosition = CGPoint(x: normalizedX, y: normalizedY)
+        }
+    }
+
+    // MARK: - Sections
+
+    private var selfCheckHeader: some View {
+        VStack(spacing: 0) {
+            Text("Selbstcheck")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 20)
+
+            HStack {
+                Text("Stimmung")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Spacer()
+                lockButton
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+
+            moodCoordinateSystem
+                .frame(height: 400)
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+        }
+    }
+
+    private var activitiesSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Aktivitäten")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 40)
+
+            Picker("Aktivitätsmodus", selection: $activityMode) {
+                ForEach(ActivityMode.allCases, id: \.self) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+
+            if activityMode == .symbols {
+                symbolsGrid
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+            } else {
+                freeTextEditor
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+            }
+        }
+    }
+
+    private var symbolsGrid: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible(), spacing: 16),
+            GridItem(.flexible(), spacing: 16),
+            GridItem(.flexible(), spacing: 16)
+        ], spacing: 16) {
+
+            ForEach(ActivitySymbol.allCases) { activity in
+                Button {
+                    if selectedActivities.contains(activity) {
+                        selectedActivities.remove(activity)
+                    } else {
+                        selectedActivities.insert(activity)
+                    }
+                } label: {
+                    VStack(spacing: 8) {
+                        Image(systemName: activity.rawValue)
+                            .font(.system(size: 24))
+                            .foregroundColor(.primary)
+                        Text(activity.label)
+                            .font(.caption)
+                            .foregroundColor(.primary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 80)
+                    .background(selectedActivities.contains(activity) ? Color.black.opacity(0.2) : Color(.systemGray6))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(selectedActivities.contains(activity) ? Color.black : Color.clear, lineWidth: 2)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
+            Button {
+                // TODO: Add new activity
+            } label: {
+                VStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 24))
+                        .foregroundColor(.primary)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 80)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.primary, lineWidth: 1)
+                        .opacity(0.3)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var freeTextEditor: some View {
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: $freeTextActivity)
+                .focused($focusedField, equals: .freeTextActivity)
+                .frame(height: 200)
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .background(Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+
+            if freeTextActivity.isEmpty {
+                Text("Was hast du heute gemacht?")
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+
+    private var healthSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Gesundheitstracker")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .padding(.horizontal, 20)
+                .padding(.top, 40)
+
+            HStack(spacing: 40) {
+                VStack(spacing: 10) {
+                    Image(systemName: "waterbottle")
+                        .font(.system(size: 40))
+                        .foregroundColor(.primary)
+
+                    TextField("", text: $waterLiters)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 100)
+                        .multilineTextAlignment(.center)
+                        .focused($focusedField, equals: .waterLiters)
+
+                    Text("Liter")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                VStack(spacing: 10) {
+                    Image(systemName: "bed.double")
+                        .font(.system(size: 40))
+                        .foregroundColor(.primary)
+
+                    TextField("", text: $sleepHours)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 100)
+                        .multilineTextAlignment(.center)
+                        .focused($focusedField, equals: .sleepHours)
+
+                    Text("Stunden")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 20)
+        }
+    }
+
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Notizen")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+
+            TextEditor(text: $notes)
+                .focused($focusedField, equals: .notes)
+                .frame(height: 60)
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .background(Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+                .padding(.horizontal, 20)
+        }
+    }
+
+    private var bottomNavButtons: some View {
+        HStack(spacing: 16) {
+            Button {
+                onOpenDiary(entryDate)
+            } label: {
+                ZStack(alignment: .bottomTrailing) {
+                    Text("Tagebuch")
+                        .font(.system(size: 16, weight: .medium))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Text("4/6")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+            }
+            .foregroundColor(.primary)
+
+            Button {
+                onOpenPanicReflexion(entryDate)
+            } label: {
+                ZStack(alignment: .bottomTrailing) {
+                    Text("Panik Reflexion")
+                        .font(.system(size: 16, weight: .medium))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Text("5/6")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+            }
+            .foregroundColor(.primary)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+    }
+
+    // MARK: - Body
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 headerView
-
-                Text("Selbstcheck")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 20)
-
-                HStack {
-                    Text("Stimmung")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    Spacer()
-                    lockButton
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-
-                moodCoordinateSystem
-                    .frame(height: 400)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-
-                // MARK: - Activities Section
-                HStack {
-                    Text("Aktivitäten")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 40)
-
-                Picker("Aktivitätsmodus", selection: $activityMode) {
-                    ForEach(ActivityMode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-
-                if activityMode == .symbols {
-                    LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 16),
-                        GridItem(.flexible(), spacing: 16),
-                        GridItem(.flexible(), spacing: 16)
-                    ], spacing: 16) {
-                        ForEach(ActivitySymbol.allCases) { activity in
-                            Button(action: {
-                                if selectedActivities.contains(activity) {
-                                    selectedActivities.remove(activity)
-                                } else {
-                                    selectedActivities.insert(activity)
-                                }
-                            }) {
-                                VStack(spacing: 8) {
-                                    Image(systemName: activity.rawValue)
-                                        .font(.system(size: 24))
-                                        .foregroundColor(.primary)
-                                    Text(activity.label)
-                                        .font(.caption)
-                                        .foregroundColor(.primary)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 80)
-                                .background(selectedActivities.contains(activity) ? Color.black.opacity(0.2) : Color(.systemGray6))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(selectedActivities.contains(activity) ? Color.black : Color.clear, lineWidth: 2)
-                                )
-                            }
-                        }
-
-                        Button(action: {
-                            // TODO: Add new activity functionality
-                        }) {
-                            VStack(spacing: 8) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.primary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 80)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.primary, lineWidth: 1)
-                                    .opacity(0.3)
-                            )
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                }
-
-                if activityMode == .freetext {
-                    ZStack(alignment: .topLeading) {
-                        TextEditor(text: $freeTextActivity)
-                            .focused($focusedField, equals: .freeTextActivity)
-                            .frame(height: 200)
-                            .scrollContentBackground(.hidden)
-                            .padding(8)
-                            .background(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.black, lineWidth: 1)
-                            )
-
-                        if freeTextActivity.isEmpty {
-                            Text("Was hast du heute gemacht?")
-                                .foregroundColor(.gray)
-                                .padding(.horizontal, 16)
-                                .padding(.top, 16)
-                                .allowsHitTesting(false)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                }
-
-                // MARK: - Health Tracker
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Gesundheitstracker")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 40)
-
-                    HStack(spacing: 40) {
-                        VStack(spacing: 10) {
-                            Image(systemName: "waterbottle")
-                                .font(.system(size: 40))
-                                .foregroundColor(.primary)
-
-                            TextField("", text: $waterLiters)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 100)
-                                .multilineTextAlignment(.center)
-                                .focused($focusedField, equals: .waterLiters)
-
-                            Text("Liter")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        VStack(spacing: 10) {
-                            Image(systemName: "bed.double")
-                                .font(.system(size: 40))
-                                .foregroundColor(.primary)
-
-                            TextField("", text: $sleepHours)
-                                .keyboardType(.numberPad)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 100)
-                                .multilineTextAlignment(.center)
-                                .focused($focusedField, equals: .sleepHours)
-
-                            Text("Stunden")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 20)
-                }
-
-                // MARK: - Notes
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Notizen")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-
-                    TextEditor(text: $notes)
-                        .focused($focusedField, equals: .notes)
-                        .frame(height: 60)
-                        .scrollContentBackground(.hidden)
-                        .padding(8)
-                        .background(Color.clear)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.black, lineWidth: 1)
-                        )
-                        .padding(.horizontal, 20)
-                }
-
-                // MARK: - Navigation Buttons
-                HStack(spacing: 16) {
-
-                    // ✅ Datum an Tagebuch weitergeben
-                    Button(action: { onOpenDiary(entryDate) }) {
-                        ZStack(alignment: .bottomTrailing) {
-                            Text("Tagebuch")
-                                .font(.system(size: 16, weight: .medium))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            Text("4/6")
-                                .font(.system(size: 11))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.clear)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.black, lineWidth: 1)
-                        )
-                    }
-                    .foregroundColor(.primary)
-
-                    Button(action: onOpenPanicReflexion) {
-                        ZStack(alignment: .bottomTrailing) {
-                            Text("Panik Reflexion")
-                                .font(.system(size: 16, weight: .medium))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            Text("5/6")
-                                .font(.system(size: 11))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.clear)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.black, lineWidth: 1)
-                        )
-                    }
-                    .foregroundColor(.primary)
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 24)
-
+                selfCheckHeader
+                activitiesSection
+                healthSection
+                notesSection
+                bottomNavButtons
                 Spacer(minLength: 100)
             }
         }
@@ -448,9 +473,11 @@ struct JournalEntryView: View {
         }
         .onTapGesture { focusedField = nil }
         .onChange(of: focusedField) { newValue in
+            // Fokus rein
             if newValue == .waterLiters && waterLiters == "0" { waterLiters = "" }
             if newValue == .sleepHours && sleepHours == "0" { sleepHours = "" }
 
+            // Fokus raus
             if newValue != .waterLiters,
                waterLiters.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 waterLiters = "0"
@@ -464,12 +491,13 @@ struct JournalEntryView: View {
 }
 
 // MARK: - Preview
+
 #Preview {
     NavigationView {
         JournalEntryView(
             onBack: {},
             onOpenDiary: { _ in },
-            onOpenPanicReflexion: {},
+            onOpenPanicReflexion: { _ in },
             entryDate: Date()
         )
     }

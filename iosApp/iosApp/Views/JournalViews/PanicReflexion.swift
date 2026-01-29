@@ -3,6 +3,10 @@ import SwiftUI
 struct PanicReflexion: View {
 
     let onBack: () -> Void
+
+    /// ✅ Datum aus JournalEntryView / Kalender
+    let entryDate: Date
+
     @Environment(\.dismiss) private var dismiss
 
     // ✅ Keyboard Focus
@@ -35,6 +39,13 @@ struct PanicReflexion: View {
         ("helplessness", "🧍", "helplessness")
     ]
 
+    private var formattedPanicDate: String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.dateFormat = "E. dd.MM.yy" // z.B. "Mi. 28.01.26"
+        return f.string(from: entryDate)
+    }
+
     // ✅ sichere Bindings für Array-Indizes
     private func expandedBinding(_ index: Int) -> Binding<Bool> {
         Binding(
@@ -52,7 +63,8 @@ struct PanicReflexion: View {
 
                 VStack(spacing: 12) {
 
-                    CategoryCard(title: "Category 1", dateText: "10.11.2025", isExpanded: expandedBinding(0)) {
+                    // ✅ DateText raus -> nil (Datum steht oben im Header)
+                    CategoryCard(title: "Category 1", dateText: nil, isExpanded: expandedBinding(0)) {
                         Category1Content(
                             location: $location1,
                             intensity: $intensity1,
@@ -61,7 +73,7 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Category 2", dateText: "10.11.2025", isExpanded: expandedBinding(1)) {
+                    CategoryCard(title: "Category 2", dateText: nil, isExpanded: expandedBinding(1)) {
                         Category2Content(
                             symptomOptions: symptomOptions,
                             selectedSymptoms: $selectedSymptoms,
@@ -72,7 +84,7 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Category 3", dateText: "10.11.2025", isExpanded: expandedBinding(2)) {
+                    CategoryCard(title: "Category 3", dateText: nil, isExpanded: expandedBinding(2)) {
                         Category3Content(
                             effectiveness: $skillEffectiveness,
                             nextTimeText: $nextTimeText,
@@ -80,7 +92,7 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Category 4", dateText: "10.11.2025", isExpanded: expandedBinding(3)) {
+                    CategoryCard(title: "Category 4", dateText: nil, isExpanded: expandedBinding(3)) {
                         Category4Content(
                             shortReflection: $shortReflection,
                             isKeyboardActive: $isKeyboardActive
@@ -90,11 +102,12 @@ struct PanicReflexion: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 10)
 
-                // Button wie Tagebuch (outlined, mittig, gleiche Breite)
+                // Button wie Tagebuch
                 VStack(spacing: 10) {
                     Button {
-                        // ✅ Standard: SwiftUI dismiss (Sheet/Navigation)
-                        dismiss()
+                        // ✅ Wenn du nur NavigationStack nutzt, kannst du auch onBack() nehmen.
+                        // dismiss() ist ok, falls es mal als Sheet kommt.
+                        onBack()
                     } label: {
                         Text("Eintrag abschließen")
                             .font(.system(size: 18, weight: .regular))
@@ -115,10 +128,10 @@ struct PanicReflexion: View {
             }
         }
         .background(Color(red: 0.95, green: 0.95, blue: 0.95))
-        .navigationTitle("Panik Reflexion")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
+            // ✅ Back links
             ToolbarItem(placement: .topBarLeading) {
                 Button { onBack() } label: {
                     Image(systemName: "chevron.left")
@@ -126,23 +139,29 @@ struct PanicReflexion: View {
                 }
             }
 
+            // ✅ Title + Date (wie Tagebuch)
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 2) {
+                    Text("Panik Reflexion")
+                        .font(.headline)
+                        .foregroundStyle(.black)
+                    Text(formattedPanicDate)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             // ✅ Done Button in Keyboard
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Fertig") {
-                    isKeyboardActive = false
-                }
+                Button("Fertig") { isKeyboardActive = false }
             }
         }
-        // ✅ Tap outside closes keyboard
-        .onTapGesture {
-            isKeyboardActive = false
-        }
+        .onTapGesture { isKeyboardActive = false }
     }
 }
 
 // MARK: - Category 1 Content
-
 private struct Category1Content: View {
     @Binding var location: String
     @Binding var intensity: Double
@@ -184,7 +203,6 @@ private struct Category1Content: View {
 }
 
 // MARK: - Category 2 Content
-
 private struct Category2Content: View {
     let symptomOptions: [String]
     @Binding var selectedSymptoms: Set<String>
@@ -249,7 +267,6 @@ private struct Category2Content: View {
 }
 
 // MARK: - Category 3 Content
-
 private struct Category3Content: View {
     @Binding var effectiveness: Double
     @Binding var nextTimeText: String
@@ -324,7 +341,6 @@ private struct Category3Content: View {
 }
 
 // MARK: - Category 4 Content
-
 private struct Category4Content: View {
     @Binding var shortReflection: String
     @FocusState.Binding var isKeyboardActive: Bool
@@ -342,7 +358,6 @@ private struct Category4Content: View {
 }
 
 // MARK: - Tagebuch Style Category Card
-
 private struct CategoryCard<Content: View>: View {
     let title: String
     let dateText: String?
@@ -354,9 +369,7 @@ private struct CategoryCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
-                withAnimation {
-                    isExpanded.toggle()
-                }
+                withAnimation { isExpanded.toggle() }
             } label: {
                 HStack {
                     VStack(spacing: 2) {
@@ -407,7 +420,6 @@ private struct CategoryCard<Content: View>: View {
 }
 
 // MARK: - Reusable UI Bits
-
 private struct SymptomRow: View {
     let title: String
     let isSelected: Bool
@@ -511,8 +523,6 @@ private struct LabeledField<Content: View>: View {
 private struct RoundedTextField: View {
     let placeholder: String
     @Binding var text: String
-
-    // ✅ optional Focus (damit alte Calls weiterhin gehen würden, aber wir nutzen es hier überall)
     var isKeyboardActive: FocusState<Bool>.Binding? = nil
 
     var body: some View {
@@ -538,6 +548,6 @@ private struct RoundedTextField: View {
 
 #Preview {
     NavigationStack {
-        PanicReflexion(onBack: {})
+        PanicReflexion(onBack: {}, entryDate: Date())
     }
 }
