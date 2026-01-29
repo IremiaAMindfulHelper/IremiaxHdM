@@ -6,6 +6,9 @@ struct CheckpointView: View {
     @State private var showExercise = false
     @State private var animatedStep: Int = 0
     
+    // State für eine kleine schwebende Animation der Wolke
+    @State private var isFloating = false
+    
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
     
     var body: some View {
@@ -61,11 +64,19 @@ struct CheckpointView: View {
                 
                 Spacer()
                 
-                // MARK: - CONTENT
+                // MARK: - CONTENT (Wolke in der Mitte)
                 VStack(spacing: 20) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(petrolColor)
+                    // Die Wölke ist hier wieder eingebaut
+                    Image("Cloud")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 160)
+                        .offset(y: isFloating ? -10 : 10)
+                        .onAppear {
+                            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                                isFloating = true
+                            }
+                        }
                     
                     VStack(spacing: 8) {
                         Text(currentStep < sosSteps.count - 1 ? "Gute Arbeit." : "Geschafft!")
@@ -73,6 +84,7 @@ struct CheckpointView: View {
                         
                         Text(currentStep < sosSteps.count - 1 ? "Du hast diesen Schritt geschafft.\nBereit für den nächsten?" : "Du hast alle SOS-Übungen erfolgreich abgeschlossen.")
                             .font(.subheadline).foregroundColor(.gray).multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
                     }
                 }
                 
@@ -124,12 +136,19 @@ struct CheckpointView: View {
     @ViewBuilder
     func destinationView() -> some View {
         let step = sosSteps[currentStep]
-        // WICHTIG: isStandalone: false, damit der Checkpoint im SOS Flow wiederkommt
         switch step.type {
         case .calculation: CalculationExerciseView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
         case .breathing: BreathingExerciseView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
         case .memory: MemoryExerciseView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
-        default: Text("Mantra View")
+        case .mantra: MantraView(mantra : WellnessData.mantras[0], isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
         }
+    }
+}
+
+// MARK: - PREVIEW
+struct CheckpointView_Previews: PreviewProvider {
+    static var previews: some View {
+        // Vorschau für den 2. Schritt (Index 1)
+        CheckpointView(isShowing: .constant(true), currentStep: .constant(1))
     }
 }

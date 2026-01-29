@@ -74,9 +74,7 @@ struct CalculationExerciseView: View {
 
             Spacer()
             
-            // Optionaler Footer (falls vorhanden)
-            Text("Rechne die Aufgabe im Kopf aus.")
-                .font(.footnote).foregroundColor(.gray).padding(.bottom, 20)
+            ExerciseFooter { goToNextStep() }
         }
         .background(Color.white.ignoresSafeArea())
         .onAppear { startNewQuestion() }
