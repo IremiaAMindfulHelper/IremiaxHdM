@@ -3,7 +3,7 @@ import SwiftUI
 struct BreathingExerciseView: View {
     @Binding var isShowing: Bool
     @Binding var currentStep: Int
-    var isStandalone: Bool = false // Logik-Weiche
+    var isStandalone: Bool = false
     
     @Environment(\.dismiss) var dismiss
     
@@ -11,6 +11,11 @@ struct BreathingExerciseView: View {
     @State private var timeLeft = 180
     @State private var cloudOffset: CGFloat = 0
     @State private var showCheckpoint = false
+    
+   
+    @State private var points = 0
+    @State private var hasCountedInhale = false
+    @State private var hasCountedExhale = false
     
     let totalTime = 180.0
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -26,12 +31,11 @@ struct BreathingExerciseView: View {
             .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // MARK: - HEADER
+                // HEADER
                 HStack(spacing: 20) {
                     Button(action: { isShowing = false }) {
                         Image(systemName: "xmark").font(.title2).foregroundColor(.gray)
                     }
-                    
                     GeometryReader { geo in
                         let progress = CGFloat((totalTime - Double(timeLeft)) / totalTime)
                         ZStack(alignment: .leading) {
@@ -40,43 +44,42 @@ struct BreathingExerciseView: View {
                         }
                     }
                     .frame(height: 8)
-                    
-                    Image(systemName: "phone.circle.fill")
-                        .font(.system(size: 30))
-                        .foregroundColor(petrolColor.opacity(0.6))
+                    Image(systemName: "phone.circle.fill").font(.system(size: 30)).foregroundColor(petrolColor.opacity(0.6))
                 }
                 .padding(.horizontal).padding(.top, 20)
                 
-                if !isIntroActive {
-                    Text(timeString(time: timeLeft))
-                        .font(.system(size: 16, weight: .bold, design: .monospaced))
-                        .foregroundColor(.gray).padding(.top, 20)
-                } else {
-                    Text(" ").font(.system(size: 16)).padding(.top, 20)
+                // TIMER & PUNKTE
+                HStack(alignment: .lastTextBaseline) {
+                    if !isIntroActive {
+                        HStack(alignment: .lastTextBaseline, spacing: 4) {
+                            Text(timeString(time: timeLeft)).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundColor(petrolColor)
+                            Text("Min").font(.system(size: 16)).foregroundColor(.gray)
+                        }
+                    }
+                    Spacer()
+                    HStack(alignment: .lastTextBaseline, spacing: 6) {
+                        Text("\(points)").font(.system(size: 24, weight: .bold, design: .rounded)).foregroundColor(petrolColor).contentTransition(.numericText())
+                        Text("Punkt\(points == 1 ? "" : "e")").font(.system(size: 16, weight: .medium)).foregroundColor(petrolColor)
+                    }
                 }
+                .padding(.horizontal, 25).padding(.top, 25)
                 
                 Spacer()
                 
-                // MARK: - CLOUD BEREICH
+                // CLOUD & TEXT
                 ZStack {
                     if !isIntroActive {
-                        Text("Einatmen")
-                            .font(.system(size: 28, weight: .light, design: .rounded))
-                            .foregroundColor(petrolColor).offset(y: -240)
-                            .opacity(cloudOffset < -50 ? 0 : 1)
+                        Text("Einatmen").font(.system(size: 28, weight: .light, design: .rounded)).foregroundColor(petrolColor).offset(y: -240).opacity(cloudOffset < -30 ? 0 : 1)
                     }
                     
                     if isIntroActive {
-                        Text("Bewege die Wolke passend zu deiner Atmung.")
-                            .font(.system(size: 22, weight: .medium, design: .rounded))
-                            .multilineTextAlignment(.center).padding(.horizontal, 40)
-                            .foregroundColor(petrolColor).offset(y: -140)
+                        Text("Bewege die Wolke passend zu deiner Atmung.").font(.system(size: 22, weight: .medium, design: .rounded)).multilineTextAlignment(.center).padding(.horizontal, 40).foregroundColor(petrolColor).offset(y: -140)
                     }
                     
                     Image("Cloud")
                         .resizable().scaledToFit()
-                        .frame(width: 160, height: 160)
-                        .scaleEffect(1.0 + (abs(cloudOffset) / 700))
+                        .frame(width: 180, height: 180)
+                        .scaleEffect(1.0 + (abs(cloudOffset) / 800))
                         .offset(y: cloudOffset)
                         .gesture(
                             DragGesture()
@@ -84,24 +87,41 @@ struct BreathingExerciseView: View {
                                     if !isIntroActive {
                                         let limit: CGFloat = 180
                                         self.cloudOffset = min(max(value.translation.height, -limit), limit)
+                                        
+                                        // EINATMEN (Nach oben ziehen)
+                                        if cloudOffset < -100 && !hasCountedInhale {
+                                            points += 1
+                                            hasCountedInhale = true
+                                            hasCountedExhale = false
+                                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                        }
+                                        
+                                        // AUSATMEN (Nach unten ziehen)
+                                        if cloudOffset > 100 && !hasCountedExhale {
+                                            points += 1
+                                            hasCountedExhale = true
+                                            hasCountedInhale = false
+                                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                        }
                                     }
                                 }
                                 .onEnded { _ in
+                                    // Wir behalten die Sperre für die aktuelle Richtung bei,
+                                    // setzen aber das Inhale/Exhale nicht zurück, damit man
+                                    // beim nächsten Mal wieder von vorne starten muss.
+                                    hasCountedInhale = false
+                                    hasCountedExhale = false
                                     withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) { self.cloudOffset = 0 }
                                 }
                         )
                     
                     if !isIntroActive {
-                        Text("Ausatmen")
-                            .font(.system(size: 28, weight: .light, design: .rounded))
-                            .foregroundColor(petrolColor).offset(y: 240)
-                            .opacity(cloudOffset > 50 ? 0 : 1)
+                        Text("Ausatmen").font(.system(size: 28, weight: .light, design: .rounded)).foregroundColor(petrolColor).offset(y: 240).opacity(cloudOffset > 30 ? 0 : 1)
                     }
                 }
                 
                 Spacer()
                 
-                // MARK: - FOOTER
                 ExerciseFooter { goToNextStep() }
             }
         }
@@ -123,9 +143,7 @@ struct BreathingExerciseView: View {
     }
     
     private func timeString(time: Int) -> String {
-        let minutes = time / 60
-        let seconds = time % 60
-        return String(format: "%d:%02d Min", minutes, seconds)
+        String(format: "%d:%02d", time / 60, time % 60)
     }
     
     private func goToNextStep() {
