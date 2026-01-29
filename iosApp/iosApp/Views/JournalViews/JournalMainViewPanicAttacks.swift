@@ -74,9 +74,13 @@ struct JournalMainViewPanicAttacks: View { // Anke
             .padding(.top, 14)
             .padding(.bottom, 4)
 
-            // Month header (nur UI)
+            // Month header (echter Kalender)
             HStack {
-                Button { } label: {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        goToPreviousMonth()
+                    }
+                } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.black.opacity(0.7))
@@ -85,13 +89,17 @@ struct JournalMainViewPanicAttacks: View { // Anke
 
                 Spacer()
 
-                Text("Januar\u{202F}26")
+                Text(monthTitle)
                     .font(.system(size: 26, weight: .regular, design: .rounded))
                     .foregroundStyle(.black.opacity(0.9))
 
                 Spacer()
 
-                Button { } label: {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        goToNextMonth()
+                    }
+                } label: {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.black.opacity(0.7))
@@ -122,7 +130,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
 
             // Days grid
             let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
-            let cells = demoCells
+            let cells = calendarCells
 
             LazyVGrid(columns: cols, spacing: gridSpacing) {
                 ForEach(cells) { cell in
@@ -133,11 +141,10 @@ struct JournalMainViewPanicAttacks: View { // Anke
                         circleSize: gridCircleSize,
                         plusSize: gridPlusSize,
                         dayFontSize: dayFontSize,
-                        onTap: {
-                            handleTap(on: cell)
-                        }
+                        onTap: { handleTap(on: cell) }
                     )
                     .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
+                    .allowsHitTesting(cell.isTappable)
                 }
             }
             .padding(.horizontal, 18)
@@ -150,13 +157,28 @@ struct JournalMainViewPanicAttacks: View { // Anke
     }
 
     private func handleTap(on cell: DemoCell) {
+        // Tap auf ausgegraute Zellen -> Monat wechseln
+        if !cell.isInDisplayedMonth, let offset = cell.monthOffset {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                shiftMonth(by: offset)
+            }
+        }
+
+        // Zukunft -> nicht antippbar
+        guard cell.isTappable else { return }
+
+        let year = cell.effectiveYear ?? currentYear
+        let month = cell.effectiveMonth ?? currentMonth
+
+        // + / filled -> Entry erstellen (nur Vergangenheit/Heute)
         if cell.mark == .plus || cell.mark == .filled {
             onCreateEntry()
             return
         }
 
+        // broken heart -> Popup (nur Vergangenheit/Heute)
         if cell.mark == .brokenHeart {
-            let header = makeHeaderText(year: currentYear, month: currentMonth, day: cell.day)
+            let header = makeHeaderText(year: year, month: month, day: cell.day)
             onPlusButtonTapped(header)
         }
     }
@@ -178,27 +200,159 @@ struct JournalMainViewPanicAttacks: View { // Anke
         return formatter.string(from: date).capitalized
     }
 
-    private var demoCells: [DemoCell] {
-        let leading = [29, 30, 31].map {
-            DemoCell(day: $0, isInDisplayedMonth: false, mark: .plus)
+    // MARK: - Kalender/Logik
+
+    private var calendar: Calendar {
+        var cal = Calendar(identifier: .gregorian)
+        cal.locale = Locale(identifier: "de_DE")
+        cal.firstWeekday = 2 // Montag
+        return cal
+    }
+
+    private var monthTitle: String {
+        let cal = calendar
+        let date = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.dateFormat = "LLLL yyyy"
+        return f.string(from: date).capitalized
+    }
+
+    /// Demo-Panik-Tage NUR für Januar 2026 (Broken Hearts bleiben, aber nicht in allen Monaten)
+    private var isDemoMonth: Bool {
+        currentYear == 2026 && currentMonth == 1
+    }
+
+    /// "Heute" (Start des Tages), damit Uhrzeit egal ist
+    private var todayStart: Date {
+        calendar.startOfDay(for: Date())
+    }
+
+    private func isPastOrToday(year: Int, month: Int, day: Int) -> Bool {
+        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else {
+            return false
+        }
+        let d = calendar.startOfDay(for: date)
+        return d <= todayStart
+    }
+
+    private var calendarCells: [DemoCell] {
+        let cal = calendar
+
+        let firstOfMonth = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1))!
+        let daysInMonth = cal.range(of: .day, in: .month, for: firstOfMonth)!.count
+
+        let weekday = cal.component(.weekday, from: firstOfMonth) // 1=So ... 7=Sa
+        let leading = (weekday - cal.firstWeekday + 7) % 7
+
+        let prevMonthDate = cal.date(byAdding: .month, value: -1, to: firstOfMonth)!
+        let daysInPrevMonth = cal.range(of: .day, in: .month, for: prevMonthDate)!.count
+
+        let nextMonthDate = cal.date(byAdding: .month, value: 1, to: firstOfMonth)!
+
+        var cells: [DemoCell] = []
+
+        // Leading Tage (Vormonat)
+        if leading > 0 {
+            let startDay = daysInPrevMonth - leading + 1
+            let prevYM = cal.dateComponents([.year, .month], from: prevMonthDate)
+
+            for d in startDay...daysInPrevMonth {
+                let y = prevYM.year ?? currentYear
+                let m = prevYM.month ?? currentMonth
+                let allowed = isPastOrToday(year: y, month: m, day: d)
+
+                cells.append(
+                    DemoCell(
+                        day: d,
+                        isInDisplayedMonth: false,
+                        mark: allowed ? .plus : .none, // Vergangenheit/Heute: plus, Zukunft: none
+                        monthOffset: -1,
+                        effectiveYear: y,
+                        effectiveMonth: m,
+                        isTappable: allowed
+                    )
+                )
+            }
         }
 
-        let monthDays: [DemoCell] = (1...31).map { d in
-            if d == 6 || d == 7 {
-                return DemoCell(day: d, isInDisplayedMonth: true, mark: .brokenHeart)
+        // Tage im aktuellen Monat
+        for d in 1...daysInMonth {
+            let allowed = isPastOrToday(year: currentYear, month: currentMonth, day: d)
+
+            let mark: DemoMark
+            if !allowed {
+                // Zukunft -> kein Plus, keine Herzen
+                mark = .none
+            } else if isDemoMonth {
+                // ✅ Demo nur im Januar 2026 (und nur für erlaubte Tage)
+                if d == 6 || d == 7 {
+                    mark = .brokenHeart
+                } else if [16, 17, 18].contains(d) {
+                    mark = .filled
+                } else {
+                    mark = .plus
+                }
+            } else {
+                // ✅ alle anderen Monate: nur Plus (keine Demo-Herzen)
+                mark = .plus
             }
-            if [16, 17, 18].contains(d) {
-                return DemoCell(day: d, isInDisplayedMonth: true, mark: .filled)
-            }
-            return DemoCell(day: d, isInDisplayedMonth: true, mark: .plus)
+
+            cells.append(
+                DemoCell(
+                    day: d,
+                    isInDisplayedMonth: true,
+                    mark: mark,
+                    monthOffset: 0,
+                    effectiveYear: currentYear,
+                    effectiveMonth: currentMonth,
+                    isTappable: allowed
+                )
+            )
         }
 
-        var all = leading + monthDays
-        while all.count < 42 {
-            let next = all.count - (leading.count + monthDays.count) + 1
-            all.append(DemoCell(day: next, isInDisplayedMonth: false, mark: .plus))
+        // Trailing Tage (Nächster Monat) -> auf 42 auffüllen
+        let nextYM = cal.dateComponents([.year, .month], from: nextMonthDate)
+        var nextDay = 1
+
+        while cells.count < 42 {
+            let y = nextYM.year ?? currentYear
+            let m = nextYM.month ?? currentMonth
+            let allowed = isPastOrToday(year: y, month: m, day: nextDay)
+
+            cells.append(
+                DemoCell(
+                    day: nextDay,
+                    isInDisplayedMonth: false,
+                    mark: allowed ? .plus : .none,
+                    monthOffset: 1,
+                    effectiveYear: y,
+                    effectiveMonth: m,
+                    isTappable: allowed
+                )
+            )
+
+            nextDay += 1
         }
-        return Array(all.prefix(42))
+
+        return cells
+    }
+
+    private func goToPreviousMonth() {
+        shiftMonth(by: -1)
+    }
+
+    private func goToNextMonth() {
+        shiftMonth(by: 1)
+    }
+
+    private func shiftMonth(by delta: Int) {
+        let cal = calendar
+        let base = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
+        let newDate = cal.date(byAdding: .month, value: delta, to: base) ?? base
+        let comps = cal.dateComponents([.year, .month], from: newDate)
+        currentYear = comps.year ?? currentYear
+        currentMonth = comps.month ?? currentMonth
     }
 }
 
@@ -209,6 +363,31 @@ private struct DemoCell: Identifiable {
     let day: Int
     let isInDisplayedMonth: Bool
     let mark: DemoMark
+
+    let monthOffset: Int?
+    let effectiveYear: Int?
+    let effectiveMonth: Int?
+
+    /// darf man hier was erstellen/antippen?
+    let isTappable: Bool
+
+    init(
+        day: Int,
+        isInDisplayedMonth: Bool,
+        mark: DemoMark,
+        monthOffset: Int? = nil,
+        effectiveYear: Int? = nil,
+        effectiveMonth: Int? = nil,
+        isTappable: Bool = true
+    ) {
+        self.day = day
+        self.isInDisplayedMonth = isInDisplayedMonth
+        self.mark = mark
+        self.monthOffset = monthOffset
+        self.effectiveYear = effectiveYear
+        self.effectiveMonth = effectiveMonth
+        self.isTappable = isTappable
+    }
 }
 
 private enum DemoMark: Equatable {
