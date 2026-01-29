@@ -15,6 +15,9 @@ struct JournalDiaryView: View {
     // ✅ Tooltip State
     @State private var showPencilTooltip: Bool = false
 
+    // ✅ Tooltip nur einmal pro View-Instanz anzeigen
+    @State private var didShowPencilTooltip: Bool = false
+
     // MARK: - State Variables
     @State private var expanded: [Bool] = Array(repeating: true, count: 7)
     @State private var answer1: String = ""
@@ -155,6 +158,10 @@ struct JournalDiaryView: View {
             }
             .onTapGesture { isKeyboardActive = false }
             .onAppear {
+                // ✅ Tooltip nur EINMAL pro Tagebuch-View-Instanz anzeigen
+                guard didShowPencilTooltip == false else { return }
+                didShowPencilTooltip = true
+
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
                         showPencilTooltip = true
