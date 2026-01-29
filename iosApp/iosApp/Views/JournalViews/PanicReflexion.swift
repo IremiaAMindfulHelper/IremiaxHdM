@@ -15,21 +15,21 @@ struct PanicReflexion: View {
     // UI (auf/zu)
     @State private var expanded: [Bool] = [true, true, true, true]
 
-    // Category 1 (UI-State)
+    // Section 1 (UI-State)
     @State private var location1: String = ""
     @State private var cause1: String = ""
     @State private var intensity1: Double = 5
 
-    // Category 2 (UI-State)
+    // Section 2 (UI-State)
     @State private var selectedSymptoms: Set<String> = []
     @State private var newSymptomText: String = ""
     @State private var selectedFeelings: Set<String> = []
 
-    // Category 3 (UI-State)
+    // Section 3 (UI-State)
     @State private var skillEffectiveness: Double = 5
     @State private var nextTimeText: String = ""
 
-    // Category 4
+    // Section 4
     @State private var shortReflection: String = ""
 
     private let symptomOptions = ["dizziness", "shortness of breath", "rapid heartbeat"]
@@ -63,8 +63,8 @@ struct PanicReflexion: View {
 
                 VStack(spacing: 12) {
 
-                    // ✅ DateText raus -> nil (Datum steht oben im Header)
-                    CategoryCard(title: "Category 1", dateText: nil, isExpanded: expandedBinding(0)) {
+                    // ✅ Titles wie High-Fidelity Prototyp
+                    CategoryCard(title: "Situation & Belastung", dateText: nil, isExpanded: expandedBinding(0)) {
                         Category1Content(
                             location: $location1,
                             intensity: $intensity1,
@@ -73,7 +73,7 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Category 2", dateText: nil, isExpanded: expandedBinding(1)) {
+                    CategoryCard(title: "Mein Erleben", dateText: nil, isExpanded: expandedBinding(1)) {
                         Category2Content(
                             symptomOptions: symptomOptions,
                             selectedSymptoms: $selectedSymptoms,
@@ -84,7 +84,7 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Category 3", dateText: nil, isExpanded: expandedBinding(2)) {
+                    CategoryCard(title: "Meine Unterstützung", dateText: nil, isExpanded: expandedBinding(2)) {
                         Category3Content(
                             effectiveness: $skillEffectiveness,
                             nextTimeText: $nextTimeText,
@@ -92,7 +92,7 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Category 4", dateText: nil, isExpanded: expandedBinding(3)) {
+                    CategoryCard(title: "Einordnen & Loslassen", dateText: nil, isExpanded: expandedBinding(3)) {
                         Category4Content(
                             shortReflection: $shortReflection,
                             isKeyboardActive: $isKeyboardActive
@@ -105,8 +105,8 @@ struct PanicReflexion: View {
                 // Button wie Tagebuch
                 VStack(spacing: 10) {
                     Button {
-                        // ✅ Wenn du nur NavigationStack nutzt, kannst du auch onBack() nehmen.
-                        // dismiss() ist ok, falls es mal als Sheet kommt.
+                        // ✅ Wenn du nur NavigationStack nutzt: onBack() reicht.
+                        // dismiss() wäre für Sheet ok – lassen wir hier bewusst bei onBack(), damit es konsistent ist.
                         onBack()
                     } label: {
                         Text("Eintrag abschließen")
@@ -161,7 +161,7 @@ struct PanicReflexion: View {
     }
 }
 
-// MARK: - Category 1 Content
+// MARK: - Section 1 Content (Situation & Belastung)
 private struct Category1Content: View {
     @Binding var location: String
     @Binding var intensity: Double
@@ -202,7 +202,7 @@ private struct Category1Content: View {
     }
 }
 
-// MARK: - Category 2 Content
+// MARK: - Section 2 Content (Mein Erleben)
 private struct Category2Content: View {
     let symptomOptions: [String]
     @Binding var selectedSymptoms: Set<String>
@@ -266,7 +266,7 @@ private struct Category2Content: View {
     }
 }
 
-// MARK: - Category 3 Content
+// MARK: - Section 3 Content (Meine Unterstützung)
 private struct Category3Content: View {
     @Binding var effectiveness: Double
     @Binding var nextTimeText: String
@@ -340,7 +340,7 @@ private struct Category3Content: View {
     }
 }
 
-// MARK: - Category 4 Content
+// MARK: - Section 4 Content (Einordnen & Loslassen)
 private struct Category4Content: View {
     @Binding var shortReflection: String
     @FocusState.Binding var isKeyboardActive: Bool
