@@ -13,7 +13,7 @@ struct CheckpointView: View {
             Color.white.ignoresSafeArea()
             
             VStack(spacing: 30) {
-                // MARK: - PROGRESS BAR
+                // MARK: - PROGRESS BAR (SOS Flow Icons)
                 HStack(spacing: 0) {
                     ForEach(0..<sosSteps.count, id: \.self) { index in
                         let isActive = animatedStep == index
@@ -41,25 +41,16 @@ struct CheckpointView: View {
                                     Text(sosSteps[index].name)
                                         .font(.caption.bold())
                                         .foregroundColor(petrolColor)
-                                        .transition(.asymmetric(
-                                            insertion: .scale(scale: 0.8).combined(with: .opacity).animation(.spring().delay(0.2)),
-                                            removal: .opacity.animation(.easeInOut(duration: 0.2))
-                                        ))
                                 }
                             }
                             .frame(height: 16)
                         }
                         .frame(maxWidth: .infinity)
                         
-                        // Verbindungslinie
                         if index != sosSteps.count - 1 {
                             ZStack(alignment: .leading) {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.15))
-                                    .frame(width: 25, height: 2)
-                                Rectangle()
-                                    .fill(petrolColor)
-                                    .frame(width: index < animatedStep ? 25 : 0, height: 2)
+                                Rectangle().fill(Color.gray.opacity(0.15)).frame(width: 25, height: 2)
+                                Rectangle().fill(petrolColor).frame(width: index < animatedStep ? 25 : 0, height: 2)
                             }
                             .padding(.bottom, 24)
                         }
@@ -72,21 +63,16 @@ struct CheckpointView: View {
                 
                 // MARK: - CONTENT
                 VStack(spacing: 20) {
-                    Image("Cloud") // Stelle sicher, dass dieses Asset existiert
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 160)
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(petrolColor)
                     
                     VStack(spacing: 8) {
                         Text(currentStep < sosSteps.count - 1 ? "Gute Arbeit." : "Geschafft!")
-                            .font(.system(.title, design: .rounded))
-                            .bold()
+                            .font(.system(.title, design: .rounded)).bold()
                         
-                        Text(currentStep < sosSteps.count - 1 ? "Du hast diesen Schritt geschafft.\nBereit für den nächsten?" : "Du hast alle Übungen erfolgreich\nabgeschlossen.")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+                        Text(currentStep < sosSteps.count - 1 ? "Du hast diesen Schritt geschafft.\nBereit für den nächsten?" : "Du hast alle SOS-Übungen erfolgreich abgeschlossen.")
+                            .font(.subheadline).foregroundColor(.gray).multilineTextAlignment(.center)
                     }
                 }
                 
@@ -95,59 +81,38 @@ struct CheckpointView: View {
                 // MARK: - BUTTONS
                 VStack(spacing: 16) {
                     if currentStep < sosSteps.count - 1 {
-                        // NORMALER FLOW: Nächste Übung
                         Button(action: {
                             currentStep += 1
                             showExercise = true
                         }) {
                             Text("Nächste Übung")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 62)
-                                .background(petrolColor)
-                                .cornerRadius(31)
+                                .font(.headline).foregroundColor(.white)
+                                .frame(maxWidth: .infinity).frame(height: 62)
+                                .background(petrolColor).cornerRadius(31)
                         }
                     } else {
-                        // ENDE DES FLOWS: Zurück zum Home
                         Button(action: {
-                            withAnimation {
-                                isShowing = false // Schließt alle Overlays
-                            }
+                            withAnimation { isShowing = false }
                         }) {
                             Text("Übungen beenden")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 62)
-                                .background(Color.green) // Grün für Erfolg
-                                .cornerRadius(31)
+                                .font(.headline).foregroundColor(.white)
+                                .frame(maxWidth: .infinity).frame(height: 62)
+                                .background(Color.green).cornerRadius(31)
                         }
                     }
                     
-                    Button(action: {
-                        showExercise = true
-                    }) {
-                        Text("Wiederholen")
-                            .font(.subheadline.bold())
-                            .foregroundColor(petrolColor)
+                    Button(action: { showExercise = true }) {
+                        Text("Wiederholen").font(.subheadline.bold()).foregroundColor(petrolColor)
                     }
                 }
-                .padding(.horizontal, 40)
-                .padding(.bottom, 50)
+                .padding(.horizontal, 40).padding(.bottom, 50)
             }
         }
         .onAppear {
             animatedStep = currentStep
-            
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 withAnimation {
-                    // Verhindert Index-Fehler am Ende der Liste
-                    if currentStep < sosSteps.count - 1 {
-                        animatedStep = currentStep + 1
-                    } else {
-                        animatedStep = currentStep
-                    }
+                    if currentStep < sosSteps.count - 1 { animatedStep = currentStep + 1 }
                 }
             }
         }
@@ -159,22 +124,12 @@ struct CheckpointView: View {
     @ViewBuilder
     func destinationView() -> some View {
         let step = sosSteps[currentStep]
+        // WICHTIG: isStandalone: false, damit der Checkpoint im SOS Flow wiederkommt
         switch step.type {
-        case .calculation: CalculationExerciseView(isShowing: $isShowing, currentStep: $currentStep)
-        case .breathing: BreathingExerciseView(isShowing: $isShowing, currentStep: $currentStep)
-        case .mantra:
-            if let mantra = WellnessData.mantras.first {
-                MantraView(mantra: mantra, isShowing: $isShowing, currentStep: $currentStep)
-            }
-        case .memory: MemoryExerciseView(isShowing: $isShowing, currentStep: $currentStep)
+        case .calculation: CalculationExerciseView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
+        case .breathing: BreathingExerciseView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
+        case .memory: MemoryExerciseView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
+        default: Text("Mantra View")
         }
-    }
-}
-
-// MARK: - PREVIEW
-struct CheckpointView_Previews: PreviewProvider {
-    static var previews: some View {
-        // Beispiel-Vorschau für den letzten Schritt (Index 2 bei 3 Übungen)
-        CheckpointView(isShowing: .constant(true), currentStep: .constant(2))
     }
 }

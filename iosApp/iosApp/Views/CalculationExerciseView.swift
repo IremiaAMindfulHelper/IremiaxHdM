@@ -3,6 +3,8 @@ import SwiftUI
 struct CalculationExerciseView: View {
     @Binding var isShowing: Bool
     @Binding var currentStep: Int
+    var isStandalone: Bool = false // Steuert, ob der Checkpoint erscheint
+    
     @Environment(\.dismiss) var dismiss
 
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
@@ -17,9 +19,7 @@ struct CalculationExerciseView: View {
     @State private var selectedAnswer: Int? = nil
     @State private var isLocked: Bool = false
     @State private var eliminatedOptions: Set<Int> = []
-    
     @State private var wrongFlashAnswer: Int? = nil
-    
     @State private var showCheckpoint = false
 
     enum Op: CaseIterable {
@@ -30,7 +30,7 @@ struct CalculationExerciseView: View {
 
     var body: some View {
         VStack(spacing: 30) {
-            // Header
+            // MARK: - HEADER
             HStack(spacing: 20) {
                 Button(action: { isShowing = false }) {
                     Image(systemName: "xmark").font(.title2).foregroundColor(.gray)
@@ -48,12 +48,14 @@ struct CalculationExerciseView: View {
             }
             .padding(.horizontal).padding(.top, 20)
 
+            // MARK: - QUESTION
             VStack(spacing: 10) {
                 Text("\(a) \(op.symbol) \(b)").font(.system(size: 70, weight: .medium, design: .rounded))
                 Text("\(questionIndex + 1) / \(totalQuestions)").foregroundColor(.gray)
             }
             .padding(.top, 30).padding(.bottom, 60)
 
+            // MARK: - ANSWERS
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
                 ForEach(answerOptions, id: \.self) { option in
                     Button { handleTap(option) } label: {
@@ -63,7 +65,6 @@ struct CalculationExerciseView: View {
                             .frame(maxWidth: .infinity).frame(height: 140)
                             .background(buttonColor(for: option))
                             .cornerRadius(20)
-                            // Sanfte Animation für den Farbumschlag zu Grau
                             .animation(.easeInOut(duration: 0.3), value: eliminatedOptions)
                     }
                     .disabled(isLocked || eliminatedOptions.contains(option))
@@ -73,12 +74,13 @@ struct CalculationExerciseView: View {
 
             Spacer()
             
-            ExerciseFooter {
-                goToNextStep()
-            }
+            // Optionaler Footer (falls vorhanden)
+            Text("Rechne die Aufgabe im Kopf aus.")
+                .font(.footnote).foregroundColor(.gray).padding(.bottom, 20)
         }
         .background(Color.white.ignoresSafeArea())
         .onAppear { startNewQuestion() }
+        // Weiche für das Ende
         .fullScreenCover(isPresented: $showCheckpoint) {
             CheckpointView(isShowing: $isShowing, currentStep: $currentStep)
         }
@@ -95,16 +97,13 @@ struct CalculationExerciseView: View {
                     questionIndex += 1
                     startNewQuestion()
                 } else {
-                    goToNextStep()
+                    goToNextStep() // Logik-Weiche
                 }
             }
         } else {
-            // Falsche Antwort Logik
             withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
                 wrongFlashAnswer = option
             }
-            
-            // Nach 0.4 Sekunden: Rot-Leuchten beenden und in die "Eliminiert"-Liste schieben
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 withAnimation {
                     wrongFlashAnswer = nil
@@ -114,23 +113,18 @@ struct CalculationExerciseView: View {
         }
     }
 
+    private func goToNextStep() {
+        if isStandalone {
+            withAnimation { isShowing = false } // Einfach schließen
+        } else {
+            withAnimation(.spring()) { showCheckpoint = true } // Checkpoint zeigen
+        }
+    }
+
     private func buttonColor(for option: Int) -> Color {
-        // 1. Wenn die Antwort gerade als falsch markiert wurde (Leuchten)
-        if wrongFlashAnswer == option {
-            return .red
-        }
-        
-        // 2. Wenn die Antwort bereits eliminiert wurde (Grau)
-        if eliminatedOptions.contains(option) {
-            return Color.gray.opacity(0.3)
-        }
-        
-        // 3. Wenn die richtige Antwort ausgewählt wurde (Grün)
-        if selectedAnswer == option && option == correctAnswer {
-            return .green
-        }
-        
-        // Standardfarbe
+        if wrongFlashAnswer == option { return .red }
+        if eliminatedOptions.contains(option) { return Color.gray.opacity(0.3) }
+        if selectedAnswer == option && option == correctAnswer { return .green }
         return petrolColor
     }
 
@@ -147,18 +141,4 @@ struct CalculationExerciseView: View {
         while options.count < 4 { options.insert(correctAnswer + Int.random(in: -5...5)) }
         answerOptions = Array(options).shuffled()
     }
-
-    private func goToNextStep() {
-        
-        withAnimation(.spring()) {
-            showCheckpoint = true 
-        }
-    }
 }
-struct CalculationExerciseView_Previews: PreviewProvider {
-    static var previews: some View {
-        CalculationExerciseView(isShowing: .constant(true), currentStep: .constant(0))
-    }
-}
-
-

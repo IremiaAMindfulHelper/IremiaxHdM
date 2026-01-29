@@ -39,10 +39,10 @@ struct Sound: WellnessContent {
 // MARK: - Datenquelle (Dummy Data)
 struct WellnessData {
     static let exercises = [
-        Exercise(kategorie: "Grounding", titel: "Atemübung", dauer: "10 Min", beschreibung: "Beruhige deinen Atem.", imageName: "Atemuebung"),
+        Exercise(kategorie: "Grounding", titel: "Atemführung", dauer: "3 Min", beschreibung: "Beruhige deinen Atem.", imageName: "Atemfuehrung"),
         Exercise(kategorie: "Denken", titel: "Mathe Quiz", dauer: "10 Min", beschreibung: "Fokus durch Kopfrechnen.", imageName: "Mathequiz"),
-        Exercise(kategorie: "Ablenkung", titel: "Ballon-Pop", dauer: "10 Min", beschreibung: "Lass so viele Ballons wie möglich platzen.", imageName: "Ballonpop"),
-        Exercise(kategorie: "Meditation", titel: "Körperreise", dauer: "10 Min", beschreibung: "Spüre in dich hinein.", imageName: "Koerperreise")
+        Exercise(kategorie: "Denken", titel: "Memory", dauer: "-", beschreibung: "Finde die passenden Paare.", imageName: "Memory"),
+        Exercise(kategorie: "Meditation", titel: "Mantra", dauer: "-", beschreibung: "Spüre in dich hinein.", imageName: "Mantra")
         
     ]
     
