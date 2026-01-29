@@ -4,13 +4,12 @@ struct JournalMainViewEmotions: View { // Anke
 
     @Binding var rootMode: JournalRootMode
 
-    /// ✅ farbiger Kreis -> Popup (Date kommt im Parent)
-    let onPlusButtonTapped: (_ date: Date) -> Void
+    /// ✅ farbiger Kreis -> Popup (Date + Mark kommt im Parent)
+    let onPlusButtonTapped: (_ date: Date, _ mark: DemoMark) -> Void
 
     /// ✅ + -> JournalEntryView
     let onCreateEntry: (_ date: Date) -> Void
 
-    // Kalender State
     @State private var currentYear: Int = 2026
     @State private var currentMonth: Int = 1
 
@@ -18,9 +17,7 @@ struct JournalMainViewEmotions: View { // Anke
         Binding(
             get: { rootMode == .panicAttacks },
             set: { newValue in
-                withAnimation {
-                    rootMode = newValue ? .panicAttacks : .emotions
-                }
+                withAnimation { rootMode = newValue ? .panicAttacks : .emotions }
             }
         )
     }
@@ -35,7 +32,6 @@ struct JournalMainViewEmotions: View { // Anke
     var body: some View {
         VStack(spacing: 0) {
 
-            // Header
             VStack(spacing: 0) {
                 Text("Journal")
                     .font(.system(size: 40, weight: .regular, design: .rounded))
@@ -45,7 +41,6 @@ struct JournalMainViewEmotions: View { // Anke
             }
             .safeAreaPadding(.top, titleTopInset)
 
-            // Mode Switch
             HStack(spacing: 16) {
                 VStack(spacing: 6) {
                     Image(systemName: "circle.fill")
@@ -72,7 +67,6 @@ struct JournalMainViewEmotions: View { // Anke
             .padding(.top, 14)
             .padding(.bottom, 4)
 
-            // Month header
             HStack {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: -1) }
@@ -103,7 +97,6 @@ struct JournalMainViewEmotions: View { // Anke
             .padding(.horizontal, 18)
             .padding(.top, 14)
 
-            // Weekday row
             let labels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
             HStack(spacing: 0) {
                 ForEach(labels, id: \.self) { d in
@@ -122,7 +115,6 @@ struct JournalMainViewEmotions: View { // Anke
             .padding(.horizontal, 18)
             .padding(.top, 12)
 
-            // Days grid
             let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
             let cells = calendarCells
 
@@ -151,14 +143,11 @@ struct JournalMainViewEmotions: View { // Anke
     }
 
     private func handleTap(on cell: DemoCell) {
-        // Monat wechseln bei Nebenmonatszellen
         if !cell.isInDisplayedMonth, let offset = cell.monthOffset {
             withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: offset) }
         }
 
-        // Zukunft -> nix
         guard cell.isTappable else { return }
-
         guard let date = dateForCell(cell) else { return }
 
         if cell.mark == .plus {
@@ -167,7 +156,7 @@ struct JournalMainViewEmotions: View { // Anke
         }
 
         if cell.mark == .moodGradientA || cell.mark == .moodGradientB {
-            onPlusButtonTapped(date)
+            onPlusButtonTapped(date, cell.mark) // ✅ Mark mitgeben
         }
     }
 
@@ -176,8 +165,6 @@ struct JournalMainViewEmotions: View { // Anke
         let m = cell.effectiveMonth ?? currentMonth
         return calendar.date(from: DateComponents(year: y, month: m, day: cell.day))
     }
-
-    // MARK: - Kalender/Logik
 
     private var calendar: Calendar {
         var cal = Calendar(identifier: .gregorian)
@@ -195,7 +182,6 @@ struct JournalMainViewEmotions: View { // Anke
     }
 
     private var isDemoMonth: Bool { currentYear == 2026 && currentMonth == 1 }
-
     private var todayStart: Date { calendar.startOfDay(for: Date()) }
 
     private func isPastOrToday(year: Int, month: Int, day: Int) -> Bool {
@@ -218,7 +204,6 @@ struct JournalMainViewEmotions: View { // Anke
 
         var cells: [DemoCell] = []
 
-        // Leading
         if leading > 0 {
             let startDay = daysInPrevMonth - leading + 1
             let prevYM = cal.dateComponents([.year, .month], from: prevMonthDate)
@@ -242,7 +227,6 @@ struct JournalMainViewEmotions: View { // Anke
             }
         }
 
-        // Current month
         for d in 1...daysInMonth {
             let allowed = isPastOrToday(year: currentYear, month: currentMonth, day: d)
 
@@ -252,7 +236,7 @@ struct JournalMainViewEmotions: View { // Anke
             } else if isDemoMonth {
                 if d == 6 { mark = .moodGradientA }
                 else if d == 7 { mark = .moodGradientB }
-                else { mark = .plus } // ✅ keine bunten Kugeln in anderen Monaten
+                else { mark = .plus }
             } else {
                 mark = .plus
             }
@@ -270,7 +254,6 @@ struct JournalMainViewEmotions: View { // Anke
             )
         }
 
-        // Trailing
         let nextYM = cal.dateComponents([.year, .month], from: nextMonthDate)
         var nextDay = 1
 
@@ -305,7 +288,7 @@ struct JournalMainViewEmotions: View { // Anke
     }
 }
 
-// MARK: - Helpers (lokal)
+// MARK: - Helpers
 
 private struct DemoCell: Identifiable {
     let id = UUID()
@@ -318,7 +301,7 @@ private struct DemoCell: Identifiable {
     let isTappable: Bool
 }
 
-private enum DemoMark: Equatable {
+enum DemoMark: Equatable {
     case plus
     case moodGradientA
     case moodGradientB
@@ -404,7 +387,7 @@ struct JournalMainViewEmotions_Previews: PreviewProvider {
     static var previews: some View {
         JournalMainViewEmotions(
             rootMode: .constant(.emotions),
-            onPlusButtonTapped: { _ in },
+            onPlusButtonTapped: { _, _ in },
             onCreateEntry: { _ in }
         )
     }

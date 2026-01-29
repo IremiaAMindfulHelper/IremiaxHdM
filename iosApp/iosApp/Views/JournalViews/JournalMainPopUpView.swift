@@ -1,55 +1,41 @@
-//
-//  JournalMainPopUpView.swift
-//  iosApp
-//
-//  Created by Anke Raab on 09.01.26.
-//  Anke
-//
-
 import SwiftUI
 
 struct JournalMainPopUpView: View {
 
     let onEintragBearbeiten: () -> Void
-    let onDismiss: () -> Void          // ✅ NEU: Sheet sauber schließen
+    let onDismiss: () -> Void
     let dateHeader: String
+
+    // ✅ rechts (Mood-Chip) dynamisch
+    let chipText: String
+    let chipGradient: LinearGradient
 
     @State private var dragOffset: CGFloat = 0
 
-    // MARK: - Tuning
     private let sheetCornerRadius: CGFloat = 26
     private let handleWidth: CGFloat = 56
     private let handleHeight: CGFloat = 6
-
-    // 40% der Screenhöhe
     private let sheetHeightFactor: CGFloat = 0.4
-
-    // ab dieser Drag-Höhe schließen wir das Popup
     private let dismissDragThreshold: CGFloat = 120
 
     var body: some View {
-
-        // Sheet
         VStack(spacing: 0) {
 
-            // Grabber
             Capsule()
                 .fill(Color.black.opacity(0.2))
                 .frame(width: handleWidth, height: handleHeight)
                 .padding(.top, 14)
                 .padding(.bottom, 10)
 
-            // Date Title
             Text(dateHeader)
                 .font(.system(size: 36, weight: .regular, design: .rounded))
                 .foregroundStyle(.black.opacity(0.9))
                 .padding(.top, 12)
                 .padding(.bottom, 6)
 
-            // Row: Icon + Labels
             HStack(spacing: 18) {
 
-                // Left: Panic label
+                // ✅ LINKS: immer BrokenHeart + Panik
                 HStack(spacing: 8) {
                     BrokenHeartIcon(size: 20, isActive: true)
                     Text("Panik")
@@ -59,22 +45,13 @@ struct JournalMainPopUpView: View {
 
                 Spacer()
 
-                // Right: Mood chip
+                // ✅ RECHTS: Mood Chip (Gradient + Text)
                 HStack(spacing: 10) {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.green.opacity(0.95),
-                                    Color.blue.opacity(0.95)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(chipGradient)
                         .frame(width: 26, height: 26)
 
-                    Text("energiegeladen, fröhlich")
+                    Text(chipText)
                         .font(.system(size: 18, weight: .regular, design: .rounded))
                         .foregroundStyle(.black.opacity(0.85))
                         .lineLimit(1)
@@ -84,10 +61,7 @@ struct JournalMainPopUpView: View {
             .padding(.horizontal, 26)
             .padding(.top, 16)
 
-            // Button
-            Button {
-                onEintragBearbeiten()
-            } label: {
+            Button { onEintragBearbeiten() } label: {
                 Text("Eintrag bearbeiten")
                     .font(.system(size: 20, weight: .regular, design: .rounded))
                     .foregroundStyle(.black.opacity(0.95))
@@ -103,7 +77,6 @@ struct JournalMainPopUpView: View {
             .padding(.bottom, 32)
         }
         .frame(maxWidth: .infinity)
-        // Sheet nimmt ~40% des Screens ein
         .frame(height: UIScreen.main.bounds.height * sheetHeightFactor)
         .background(
             UnevenRoundedRectangle(
@@ -123,7 +96,6 @@ struct JournalMainPopUpView: View {
                 }
                 .onEnded { value in
                     if value.translation.height > dismissDragThreshold {
-                        // ✅ Drag down -> schließen (nicht "Eintrag bearbeiten")
                         onDismiss()
                     } else {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
@@ -150,15 +122,5 @@ private struct BrokenHeartIcon: View {
                 .font(.system(size: size * 0.55, weight: .bold))
                 .foregroundStyle(.black.opacity(isActive ? 0.85 : 0.35))
         }
-    }
-}
-
-struct JournalMainPopUpView_Previews: PreviewProvider {
-    static var previews: some View {
-        JournalMainPopUpView(
-            onEintragBearbeiten: {},
-            onDismiss: {},
-            dateHeader: "Mittwoch, 20.01."
-        )
     }
 }

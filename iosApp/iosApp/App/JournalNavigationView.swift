@@ -12,13 +12,26 @@ enum JournalRootMode: Hashable {
     case panicAttacks
 }
 
+// ✅ Welche “Art” Popup wird angezeigt?
+enum JournalPopupKind: Hashable {
+    case moodA   // rot/blau
+    case moodB   // grün/blau
+    case panic   // broken heart
+}
+
+// ✅ Identifiable Item für sheet(item:)
+struct JournalPopupItem: Identifiable, Hashable {
+    let id = UUID()
+    let date: Date
+    let kind: JournalPopupKind
+}
+
 struct JournalNavigationView: View {
     @State private var navigationPath = NavigationPath()
     @State private var rootMode: JournalRootMode = .emotions
 
-    // ✅ Popup State: Datum + Bool (kein falscher Default-Header mehr)
-    @State private var showJournalPopup = false
-    @State private var popupDate: Date = Date()
+    // ✅ stabiler Popup-State
+    @State private var popupItem: JournalPopupItem? = nil
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -29,10 +42,10 @@ struct JournalNavigationView: View {
                 case .emotions:
                     JournalMainViewEmotions(
                         rootMode: $rootMode,
-                        onPlusButtonTapped: { date in
-                            // ✅ Reihenfolge wichtig: erst Datum setzen, dann Sheet öffnen
-                            popupDate = date
-                            showJournalPopup = true
+                        onPlusButtonTapped: { date, mark in
+                            // mark kommt aus Emotions-View (.moodGradientA / .moodGradientB)
+                            let kind: JournalPopupKind = (mark == .moodGradientA) ? .moodA : .moodB
+                            popupItem = JournalPopupItem(date: date, kind: kind)
                         },
                         onCreateEntry: { date in
                             navigationPath.append(AppRoute.journalEntry(date: date))
@@ -43,8 +56,7 @@ struct JournalNavigationView: View {
                     JournalMainViewPanicAttacks(
                         rootMode: $rootMode,
                         onPlusButtonTapped: { date in
-                            popupDate = date
-                            showJournalPopup = true
+                            popupItem = JournalPopupItem(date: date, kind: .panic)
                         },
                         onCreateEntry: { date in
                             navigationPath.append(AppRoute.journalEntry(date: date))
@@ -57,21 +69,28 @@ struct JournalNavigationView: View {
             }
         }
         // ✅ Popup als Sheet
-        .sheet(isPresented: $showJournalPopup) {
+        .sheet(item: $popupItem) { item in
+            let header = makePopupHeader(from: item.date)
+            let style = popupStyle(for: item.kind)
+
             JournalMainPopUpView(
                 onEintragBearbeiten: {
-                    showJournalPopup = false
-                    navigationPath.append(AppRoute.journalEntry(date: popupDate))
+                    let date = item.date
+                    popupItem = nil
+                    navigationPath.append(AppRoute.journalEntry(date: date))
                 },
                 onDismiss: {
-                    showJournalPopup = false
+                    popupItem = nil
                 },
-                dateHeader: makePopupHeader(from: popupDate)
+                dateHeader: header,
+                chipText: style.chipText,
+                chipGradient: style.gradient
             )
             .presentationDetents([.fraction(0.4)])
             .presentationDragIndicator(.hidden)
             .presentationBackground(Color.white)
         }
+
     }
 
     private func safePop() {
@@ -82,6 +101,7 @@ struct JournalNavigationView: View {
     @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
+
         case .journalEntry(let date):
             JournalEntryView(
                 onBack: { safePop() },
@@ -109,5 +129,39 @@ struct JournalNavigationView: View {
         formatter.locale = Locale(identifier: "de_DE")
         formatter.dateFormat = "EEEE, dd.MM."
         return formatter.string(from: date).capitalized
+    }
+
+    private func popupStyle(for kind: JournalPopupKind) -> (chipText: String, gradient: LinearGradient) {
+        switch kind {
+        case .moodA:
+            return (
+                chipText: "deprimiert, fröhlich",
+                gradient: LinearGradient(
+                    colors: [Color.red.opacity(0.95), Color.blue.opacity(0.95)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+
+        case .moodB:
+            return (
+                chipText: "energiegeladen, fröhlich",
+                gradient: LinearGradient(
+                    colors: [Color.green.opacity(0.95), Color.blue.opacity(0.95)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+
+        case .panic:
+            return (
+                chipText: "Panik-Eintrag",
+                gradient: LinearGradient(
+                    colors: [Color.black.opacity(0.2), Color.black.opacity(0.05)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+        }
     }
 }

@@ -32,6 +32,7 @@ struct JournalMainViewPanicAttacks: View {
     var body: some View {
         VStack(spacing: 0) {
 
+            // Header
             VStack(spacing: 0) {
                 Text("Journal")
                     .font(.system(size: 40, weight: .regular, design: .rounded))
@@ -41,6 +42,7 @@ struct JournalMainViewPanicAttacks: View {
             }
             .safeAreaPadding(.top, titleTopInset)
 
+            // Mode Switch
             HStack(spacing: 16) {
                 VStack(spacing: 6) {
                     Image(systemName: "circle.fill")
@@ -67,6 +69,7 @@ struct JournalMainViewPanicAttacks: View {
             .padding(.top, 14)
             .padding(.bottom, 4)
 
+            // Month header
             HStack {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: -1) }
@@ -97,6 +100,7 @@ struct JournalMainViewPanicAttacks: View {
             .padding(.horizontal, 18)
             .padding(.top, 14)
 
+            // Weekday row
             let labels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
             HStack(spacing: 0) {
                 ForEach(labels, id: \.self) { d in
@@ -115,6 +119,7 @@ struct JournalMainViewPanicAttacks: View {
             .padding(.horizontal, 18)
             .padding(.top, 12)
 
+            // Days grid
             let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
             let cells = calendarCells
 
@@ -142,34 +147,40 @@ struct JournalMainViewPanicAttacks: View {
         .background(Color.white)
     }
 
-    private func handleTap(on cell: DemoCell) {
+    private func handleTap(on cell: PanicCell) {
+        // Nebenmonat -> Monat wechseln
         if !cell.isInDisplayedMonth, let offset = cell.monthOffset {
             withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: offset) }
         }
 
+        // Zukunft -> nix
         guard cell.isTappable else { return }
         guard let date = dateForCell(cell) else { return }
 
+        // + / filled => Entry
         if cell.mark == .plus || cell.mark == .filled {
             onCreateEntry(date)
             return
         }
 
+        // brokenHeart => Popup
         if cell.mark == .brokenHeart {
             onPlusButtonTapped(date)
         }
     }
 
-    private func dateForCell(_ cell: DemoCell) -> Date? {
+    private func dateForCell(_ cell: PanicCell) -> Date? {
         let y = cell.effectiveYear ?? currentYear
         let m = cell.effectiveMonth ?? currentMonth
         return calendar.date(from: DateComponents(year: y, month: m, day: cell.day))
     }
 
+    // MARK: - Kalender/Logik
+
     private var calendar: Calendar {
         var cal = Calendar(identifier: .gregorian)
         cal.locale = Locale(identifier: "de_DE")
-        cal.firstWeekday = 2
+        cal.firstWeekday = 2 // Montag
         return cal
     }
 
@@ -181,7 +192,10 @@ struct JournalMainViewPanicAttacks: View {
         return f.string(from: date).capitalized
     }
 
+    /// Demo nur Januar 2026
     private var isDemoMonth: Bool { currentYear == 2026 && currentMonth == 1 }
+
+    /// Heute (Start of day)
     private var todayStart: Date { calendar.startOfDay(for: Date()) }
 
     private func isPastOrToday(year: Int, month: Int, day: Int) -> Bool {
@@ -189,21 +203,22 @@ struct JournalMainViewPanicAttacks: View {
         return calendar.startOfDay(for: date) <= todayStart
     }
 
-    private var calendarCells: [DemoCell] {
+    private var calendarCells: [PanicCell] {
         let cal = calendar
 
         let firstOfMonth = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1))!
         let daysInMonth = cal.range(of: .day, in: .month, for: firstOfMonth)!.count
 
-        let weekday = cal.component(.weekday, from: firstOfMonth)
+        let weekday = cal.component(.weekday, from: firstOfMonth) // 1=So ... 7=Sa
         let leading = (weekday - cal.firstWeekday + 7) % 7
 
         let prevMonthDate = cal.date(byAdding: .month, value: -1, to: firstOfMonth)!
         let daysInPrevMonth = cal.range(of: .day, in: .month, for: prevMonthDate)!.count
         let nextMonthDate = cal.date(byAdding: .month, value: 1, to: firstOfMonth)!
 
-        var cells: [DemoCell] = []
+        var cells: [PanicCell] = []
 
+        // Leading (Vormonat)
         if leading > 0 {
             let startDay = daysInPrevMonth - leading + 1
             let prevYM = cal.dateComponents([.year, .month], from: prevMonthDate)
@@ -214,7 +229,7 @@ struct JournalMainViewPanicAttacks: View {
                 let allowed = isPastOrToday(year: y, month: m, day: d)
 
                 cells.append(
-                    DemoCell(
+                    PanicCell(
                         day: d,
                         isInDisplayedMonth: false,
                         mark: allowed ? .plus : .none,
@@ -227,22 +242,27 @@ struct JournalMainViewPanicAttacks: View {
             }
         }
 
+        // Aktueller Monat
         for d in 1...daysInMonth {
             let allowed = isPastOrToday(year: currentYear, month: currentMonth, day: d)
 
-            let mark: DemoMark
+            let mark: PanicMark
             if !allowed {
                 mark = .none
             } else if isDemoMonth {
-                if d == 6 || d == 7 { mark = .brokenHeart }
-                else if [16,17,18].contains(d) { mark = .filled }
-                else { mark = .plus }
+                if d == 6 || d == 7 {
+                    mark = .brokenHeart
+                } else if [16, 17, 18].contains(d) {
+                    mark = .filled
+                } else {
+                    mark = .plus
+                }
             } else {
                 mark = .plus
             }
 
             cells.append(
-                DemoCell(
+                PanicCell(
                     day: d,
                     isInDisplayedMonth: true,
                     mark: mark,
@@ -254,6 +274,7 @@ struct JournalMainViewPanicAttacks: View {
             )
         }
 
+        // Trailing (Nächster Monat) bis 42 Zellen
         let nextYM = cal.dateComponents([.year, .month], from: nextMonthDate)
         var nextDay = 1
 
@@ -263,7 +284,7 @@ struct JournalMainViewPanicAttacks: View {
             let allowed = isPastOrToday(year: y, month: m, day: nextDay)
 
             cells.append(
-                DemoCell(
+                PanicCell(
                     day: nextDay,
                     isInDisplayedMonth: false,
                     mark: allowed ? .plus : .none,
@@ -290,18 +311,18 @@ struct JournalMainViewPanicAttacks: View {
 
 // MARK: - Helpers (lokal)
 
-private struct DemoCell: Identifiable {
+private struct PanicCell: Identifiable {
     let id = UUID()
     let day: Int
     let isInDisplayedMonth: Bool
-    let mark: DemoMark
+    let mark: PanicMark
     let monthOffset: Int?
     let effectiveYear: Int?
     let effectiveMonth: Int?
     let isTappable: Bool
 }
 
-private enum DemoMark: Equatable {
+private enum PanicMark: Equatable {
     case plus
     case filled
     case brokenHeart
@@ -310,7 +331,7 @@ private enum DemoMark: Equatable {
 
 private struct PanicDayCell: View {
     let day: Int
-    let mark: DemoMark
+    let mark: PanicMark
     let isInDisplayedMonth: Bool
 
     let circleSize: CGFloat
