@@ -6,14 +6,15 @@ struct QuestionCatalog: View {
     // ✅ Keyboard Focus
     @FocusState private var isKeyboardActive: Bool
 
+    // ✅ Alle Fragen auf Deutsch
     @State private var questions: [String] = [
-        "Were there any difficult moments for you today?",
-        "What went well today?",
-        "What thoughts or worries do I want to let go of today?",
-        "What will help you improve the situation?",
-        "How has your mood changed throughout the day?",
-        "What are you grateful for today?",
-        "Is there anything you would like to do differently tomorrow?"
+        "Gab es heute schwierige Momente für dich?",
+        "Was ist heute gut gelaufen?",
+        "Welche Gedanken oder Sorgen möchtest du heute loslassen?",
+        "Was kann dir helfen, die Situation zu verbessern?",
+        "Wie hat sich deine Stimmung im Laufe des Tages verändert?",
+        "Wofür bist du heute dankbar?",
+        "Gibt es etwas, das du morgen anders machen möchtest?"
     ]
 
     // ✅ Auswahl-State (wie Activities)
@@ -26,7 +27,7 @@ struct QuestionCatalog: View {
             VStack(spacing: 18) {
 
                 // Subtitle
-                Text("Wähle Fragen aus")
+                Text("Fragen auswählen")
                     .font(.headline)
                     .padding(.top, 12)
 
@@ -65,7 +66,7 @@ struct QuestionCatalog: View {
                 }
                 .padding(.horizontal, 16)
 
-                // Add new question
+                // Neue Frage hinzufügen
                 TextField("Neue Frage hinzufügen", text: $newQuestionText)
                     .focused($isKeyboardActive)
                     .textFieldStyle(.plain)

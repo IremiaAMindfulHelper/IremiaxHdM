@@ -21,19 +21,19 @@ struct JournalDiaryView: View {
     @State private var answer2: String = ""
     @State private var answer3: String = ""
     @State private var answer4: String = ""
-    @State private var answer5: [String] = Array(repeating: "", count: 4) // Morning, Midday, Evening, Night
+    @State private var answer5: [String] = Array(repeating: "", count: 4) // Morgen, Mittag, Abend, Nacht
     @State private var answer6: String = ""
     @State private var answer7: String = ""
 
-    // MARK: - Data
+    // MARK: - Data (✅ alles auf Deutsch)
     private let diaryQuestions = [
-        "Were there any difficult moments for you today?",
-        "What went well?",
-        "What worries do you want to let go of today?",
-        "How can you improve the situation?",
-        "How has your mood changed throughout the day?",
-        "What are you grateful for today?",
-        "Is there anything you would like to do differently tomorrow?"
+        "Gab es heute schwierige Momente für dich?",
+        "Was ist gut gelaufen?",
+        "Welche Sorgen möchtest du heute loslassen?",
+        "Wie kannst du die Situation verbessern?",
+        "Wie hat sich deine Stimmung im Laufe des Tages verändert?",
+        "Wofür bist du heute dankbar?",
+        "Gibt es etwas, das du morgen anders machen möchtest?"
     ]
 
     private let moodEmojis = ["😢", "🙁", "😐", "😊", "😄"]
@@ -52,6 +52,7 @@ struct JournalDiaryView: View {
             ScrollView {
                 VStack(spacing: 14) {
                     VStack(spacing: 12) {
+
                         CategoryCard(title: diaryQuestions[0], dateText: nil, isExpanded: $expanded[0]) {
                             DiaryContent(text: $answer1, isKeyboardActive: $isKeyboardActive)
                         }
@@ -70,10 +71,10 @@ struct JournalDiaryView: View {
 
                         CategoryCard(title: diaryQuestions[4], dateText: nil, isExpanded: $expanded[4]) {
                             VStack(alignment: .leading, spacing: 14) {
-                                MoodPickerRow(title: "Morning ☀️", emojis: moodEmojis, selection: $answer5[0])
-                                MoodPickerRow(title: "Midday 🌤", emojis: moodEmojis, selection: $answer5[1])
-                                MoodPickerRow(title: "Evening 🌆", emojis: moodEmojis, selection: $answer5[2])
-                                MoodPickerRow(title: "Night 🌙", emojis: moodEmojis, selection: $answer5[3])
+                                MoodPickerRow(title: "Morgen ☀️", emojis: moodEmojis, selection: $answer5[0])
+                                MoodPickerRow(title: "Mittag 🌤", emojis: moodEmojis, selection: $answer5[1])
+                                MoodPickerRow(title: "Abend 🌆", emojis: moodEmojis, selection: $answer5[2])
+                                MoodPickerRow(title: "Nacht 🌙", emojis: moodEmojis, selection: $answer5[3])
                             }
                         }
 

@@ -32,11 +32,12 @@ struct PanicReflexion: View {
     // Section 4
     @State private var shortReflection: String = ""
 
-    private let symptomOptions = ["dizziness", "shortness of breath", "rapid heartbeat"]
+    // ✅ Alles auf Deutsch
+    private let symptomOptions = ["Schwindel", "Kurzatmigkeit", "Herzrasen"]
     private let feelingOptions: [(key: String, emoji: String, label: String)] = [
-        ("anger", "😠", "anger"),
-        ("panic fear", "😨", "panic fear"),
-        ("helplessness", "🧍", "helplessness")
+        ("wut", "😠", "Wut"),
+        ("panikAngst", "😨", "Panik/Angst"),
+        ("hilflosigkeit", "🧍", "Hilflosigkeit")
     ]
 
     private var formattedPanicDate: String {
@@ -105,8 +106,6 @@ struct PanicReflexion: View {
                 // Button wie Tagebuch
                 VStack(spacing: 10) {
                     Button {
-                        // ✅ Wenn du nur NavigationStack nutzt: onBack() reicht.
-                        // dismiss() wäre für Sheet ok – lassen wir hier bewusst bei onBack(), damit es konsistent ist.
                         onBack()
                     } label: {
                         Text("Eintrag abschließen")
@@ -142,7 +141,7 @@ struct PanicReflexion: View {
             // ✅ Title + Date (wie Tagebuch)
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 2) {
-                    Text("Panik Reflexion")
+                    Text("Panik-Reflexion")
                         .font(.headline)
                         .foregroundStyle(.black)
                     Text(formattedPanicDate)
@@ -171,12 +170,12 @@ private struct Category1Content: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            LabeledField(title: "Location") {
+            LabeledField(title: "Ort") {
                 RoundedTextField(placeholder: "…", text: $location, isKeyboardActive: $isKeyboardActive)
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Intensity")
+                Text("Intensität")
                     .font(.subheadline)
                     .foregroundColor(.black)
 
@@ -194,7 +193,7 @@ private struct Category1Content: View {
                 }
             }
 
-            LabeledField(title: "Cause") {
+            LabeledField(title: "Auslöser") {
                 RoundedTextField(placeholder: "…", text: $cause, isKeyboardActive: $isKeyboardActive)
             }
         }
@@ -217,7 +216,7 @@ private struct Category2Content: View {
         VStack(alignment: .leading, spacing: 16) {
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Symptoms")
+                Text("Symptome")
                     .font(.subheadline)
                     .foregroundColor(.black)
 
@@ -236,11 +235,11 @@ private struct Category2Content: View {
                     }
                 }
 
-                RoundedTextField(placeholder: "add symptom", text: $newSymptomText, isKeyboardActive: $isKeyboardActive)
+                RoundedTextField(placeholder: "Symptom hinzufügen", text: $newSymptomText, isKeyboardActive: $isKeyboardActive)
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Feelings")
+                Text("Gefühle")
                     .font(.subheadline)
                     .foregroundColor(.black)
 
@@ -276,7 +275,7 @@ private struct Category3Content: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
 
-            Text("Which skills did you use and how well did they work?")
+            Text("Welche Strategien hast du genutzt – und wie gut haben sie geholfen?")
                 .font(.subheadline)
                 .foregroundColor(.black)
                 .fixedSize(horizontal: false, vertical: true)
@@ -296,7 +295,7 @@ private struct Category3Content: View {
                     }
                     .buttonStyle(.plain)
 
-                    Text("Breathing Exercise")
+                    Text("Atemübung")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .frame(width: 86, alignment: .leading)
@@ -328,7 +327,7 @@ private struct Category3Content: View {
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("What would you do next time in a similar situation?")
+                Text("Was würdest du beim nächsten Mal in einer ähnlichen Situation tun?")
                     .font(.subheadline)
                     .foregroundColor(.black)
                     .fixedSize(horizontal: false, vertical: true)
@@ -347,7 +346,7 @@ private struct Category4Content: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Short Reflexion")
+            Text("Kurze Reflexion")
                 .font(.subheadline)
                 .foregroundColor(.black)
 
@@ -497,9 +496,10 @@ private struct FeelingPlusButton: View {
                         .foregroundStyle(.primary.opacity(0.8))
                 }
 
-                Text(" ")
+                Text("Hinzufügen")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
         }
         .buttonStyle(.plain)
