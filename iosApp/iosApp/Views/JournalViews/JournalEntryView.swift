@@ -15,10 +15,10 @@ struct JournalEntryView: View {
     @State private var selectedActivities: Set<ActivitySymbol> = []
     @State private var freeTextActivity: String = ""
 
-    // ✅ Wasser jetzt in LITERN (z.B. 1 / 0.5 / 0.75)
+    // ✅ Standardwert im Feld: 0 (nicht als grauer Placeholder)
     @State private var waterLiters: String = "0"
-
     @State private var sleepHours: String = "0"
+
     @State private var notes: String = ""
 
     // ✅ Keyboard focus
@@ -322,7 +322,7 @@ struct JournalEntryView: View {
                     .padding(.top, 16)
                 }
 
-                // MARK: - Health Tracker
+                // MARK: - Health Tracker (✅ ohne "0 Liter/0 Stunden" über den Bildern)
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Gesundheitstracker")
                         .font(.subheadline)
@@ -331,44 +331,42 @@ struct JournalEntryView: View {
                         .padding(.top, 40)
 
                     HStack(spacing: 40) {
-                        // ✅ WATER (Liter statt ml)
-                        VStack(spacing: 8) {
-                            Text("\(waterLiters) Liter")
-                                .font(.caption)
-                                .foregroundColor(.primary)
-
+                        // ✅ WATER
+                        VStack(spacing: 10) {
                             Image(systemName: "waterbottle")
                                 .font(.system(size: 40))
                                 .foregroundColor(.primary)
 
-                            HStack(spacing: 4) {
-                                TextField("Liter", text: $waterLiters)
-                                    .keyboardType(.decimalPad)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 100)
-                                    .multilineTextAlignment(.center)
-                                    .focused($focusedField, equals: .waterLiters)
-                            }
+                            // ✅ Kein Placeholder, Standardwert "0" steht im Feld
+                            TextField("", text: $waterLiters)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 100)
+                                .multilineTextAlignment(.center)
+                                .focused($focusedField, equals: .waterLiters)
+
+                            Text("Liter")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
 
                         // ✅ SLEEP
-                        VStack(spacing: 8) {
-                            Text("\(sleepHours) Stunden")
-                                .font(.caption)
-                                .foregroundColor(.primary)
-
+                        VStack(spacing: 10) {
                             Image(systemName: "bed.double")
                                 .font(.system(size: 40))
                                 .foregroundColor(.primary)
 
-                            HStack(spacing: 4) {
-                                TextField("h", text: $sleepHours)
-                                    .keyboardType(.numberPad)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 100)
-                                    .multilineTextAlignment(.center)
-                                    .focused($focusedField, equals: .sleepHours)
-                            }
+                            // ✅ Kein Placeholder, Standardwert "0" steht im Feld
+                            TextField("", text: $sleepHours)
+                                .keyboardType(.numberPad)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 100)
+                                .multilineTextAlignment(.center)
+                                .focused($focusedField, equals: .sleepHours)
+
+                            Text("Stunden")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -456,6 +454,24 @@ struct JournalEntryView: View {
         }
         .onTapGesture {
             focusedField = nil
+        }
+        // ✅ Fokus-Logik:
+        // - Beim Reinklicken: wenn "0" drinsteht -> leer machen
+        // - Beim Rausklicken: wenn leer -> wieder "0" setzen
+        .onChange(of: focusedField) { newValue in
+            // Fokus rein
+            if newValue == .waterLiters && waterLiters == "0" { waterLiters = "" }
+            if newValue == .sleepHours && sleepHours == "0" { sleepHours = "" }
+
+            // Fokus raus
+            if newValue != .waterLiters,
+               waterLiters.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                waterLiters = "0"
+            }
+            if newValue != .sleepHours,
+               sleepHours.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                sleepHours = "0"
+            }
         }
     }
 }

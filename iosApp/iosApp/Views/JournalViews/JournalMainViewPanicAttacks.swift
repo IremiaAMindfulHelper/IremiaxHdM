@@ -1,16 +1,15 @@
 import SwiftUI
 
-struct JournalMainViewPanicAttacks: View { // Anke
+struct JournalMainViewPanicAttacks: View {
 
     @Binding var rootMode: JournalRootMode
 
-    /// broken heart -> Popup (Sheet kommt im Parent)
-    let onPlusButtonTapped: (_ header: String) -> Void
+    /// ✅ broken heart -> Popup (Date kommt im Parent)
+    let onPlusButtonTapped: (_ date: Date) -> Void
 
     /// ✅ + / filled -> JournalEntryView (mit Datum)
     let onCreateEntry: (_ date: Date) -> Void
 
-    // Kalender State (nur Swift)
     @State private var currentYear: Int = 2026
     @State private var currentMonth: Int = 1
 
@@ -18,9 +17,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
         Binding(
             get: { rootMode == .panicAttacks },
             set: { isOn in
-                withAnimation {
-                    rootMode = isOn ? .panicAttacks : .emotions
-                }
+                withAnimation { rootMode = isOn ? .panicAttacks : .emotions }
             }
         )
     }
@@ -35,20 +32,16 @@ struct JournalMainViewPanicAttacks: View { // Anke
     var body: some View {
         VStack(spacing: 0) {
 
-            // Header
             VStack(spacing: 0) {
                 Text("Journal")
                     .font(.system(size: 40, weight: .regular, design: .rounded))
                     .padding(.top, 18)
                     .padding(.bottom, 14)
-
                 Divider()
             }
             .safeAreaPadding(.top, titleTopInset)
 
-            // Mode Switch
             HStack(spacing: 16) {
-
                 VStack(spacing: 6) {
                     Image(systemName: "circle.fill")
                         .font(.system(size: 28))
@@ -74,12 +67,9 @@ struct JournalMainViewPanicAttacks: View { // Anke
             .padding(.top, 14)
             .padding(.bottom, 4)
 
-            // Month header
             HStack {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        goToPreviousMonth()
-                    }
+                    withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: -1) }
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 17, weight: .semibold))
@@ -96,9 +86,7 @@ struct JournalMainViewPanicAttacks: View { // Anke
                 Spacer()
 
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        goToNextMonth()
-                    }
+                    withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: 1) }
                 } label: {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 17, weight: .semibold))
@@ -109,7 +97,6 @@ struct JournalMainViewPanicAttacks: View { // Anke
             .padding(.horizontal, 18)
             .padding(.top, 14)
 
-            // Weekday row
             let labels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
             HStack(spacing: 0) {
                 ForEach(labels, id: \.self) { d in
@@ -128,13 +115,12 @@ struct JournalMainViewPanicAttacks: View { // Anke
             .padding(.horizontal, 18)
             .padding(.top, 12)
 
-            // Days grid
             let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
             let cells = calendarCells
 
             LazyVGrid(columns: cols, spacing: gridSpacing) {
                 ForEach(cells) { cell in
-                    DayCell(
+                    PanicDayCell(
                         day: cell.day,
                         mark: cell.mark,
                         isInDisplayedMonth: cell.isInDisplayedMonth,
@@ -157,85 +143,50 @@ struct JournalMainViewPanicAttacks: View { // Anke
     }
 
     private func handleTap(on cell: DemoCell) {
-        // Tap auf ausgegraute Zellen -> Monat wechseln
         if !cell.isInDisplayedMonth, let offset = cell.monthOffset {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                shiftMonth(by: offset)
-            }
+            withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: offset) }
         }
 
-        // Zukunft -> nicht antippbar
         guard cell.isTappable else { return }
+        guard let date = dateForCell(cell) else { return }
 
-        let year = cell.effectiveYear ?? currentYear
-        let month = cell.effectiveMonth ?? currentMonth
-
-        // ✅ + / filled -> Entry erstellen (nur Vergangenheit/Heute) + Datum übergeben
         if cell.mark == .plus || cell.mark == .filled {
-            if let date = calendar.date(from: DateComponents(year: year, month: month, day: cell.day)) {
-                onCreateEntry(date)
-            }
+            onCreateEntry(date)
             return
         }
 
-        // ✅ broken heart -> Popup
         if cell.mark == .brokenHeart {
-            let header = makeHeaderText(year: year, month: month, day: cell.day)
-            onPlusButtonTapped(header)
+            onPlusButtonTapped(date)
         }
     }
 
-    private func makeHeaderText(year: Int, month: Int, day: Int) -> String {
-        var comps = DateComponents()
-        comps.year = year
-        comps.month = month
-        comps.day = day
-
-        let calendar = Calendar(identifier: .gregorian)
-        guard let date = calendar.date(from: comps) else {
-            return "Tag \(String(format: "%02d", day)).\(String(format: "%02d", month))."
-        }
-
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "de_DE")
-        formatter.dateFormat = "EEEE, dd.MM."
-        return formatter.string(from: date).capitalized
+    private func dateForCell(_ cell: DemoCell) -> Date? {
+        let y = cell.effectiveYear ?? currentYear
+        let m = cell.effectiveMonth ?? currentMonth
+        return calendar.date(from: DateComponents(year: y, month: m, day: cell.day))
     }
-
-    // MARK: - Kalender/Logik
 
     private var calendar: Calendar {
         var cal = Calendar(identifier: .gregorian)
         cal.locale = Locale(identifier: "de_DE")
-        cal.firstWeekday = 2 // Montag
+        cal.firstWeekday = 2
         return cal
     }
 
     private var monthTitle: String {
-        let cal = calendar
-        let date = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
+        let date = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
         let f = DateFormatter()
         f.locale = Locale(identifier: "de_DE")
         f.dateFormat = "LLLL yyyy"
         return f.string(from: date).capitalized
     }
 
-    /// Demo-Panik-Tage NUR für Januar 2026 (Broken Hearts bleiben, aber nicht in allen Monaten)
-    private var isDemoMonth: Bool {
-        currentYear == 2026 && currentMonth == 1
-    }
-
-    /// "Heute" (Start des Tages), damit Uhrzeit egal ist
-    private var todayStart: Date {
-        calendar.startOfDay(for: Date())
-    }
+    private var isDemoMonth: Bool { currentYear == 2026 && currentMonth == 1 }
+    private var todayStart: Date { calendar.startOfDay(for: Date()) }
 
     private func isPastOrToday(year: Int, month: Int, day: Int) -> Bool {
-        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else {
-            return false
-        }
-        let d = calendar.startOfDay(for: date)
-        return d <= todayStart
+        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return false }
+        return calendar.startOfDay(for: date) <= todayStart
     }
 
     private var calendarCells: [DemoCell] {
@@ -244,17 +195,15 @@ struct JournalMainViewPanicAttacks: View { // Anke
         let firstOfMonth = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1))!
         let daysInMonth = cal.range(of: .day, in: .month, for: firstOfMonth)!.count
 
-        let weekday = cal.component(.weekday, from: firstOfMonth) // 1=So ... 7=Sa
+        let weekday = cal.component(.weekday, from: firstOfMonth)
         let leading = (weekday - cal.firstWeekday + 7) % 7
 
         let prevMonthDate = cal.date(byAdding: .month, value: -1, to: firstOfMonth)!
         let daysInPrevMonth = cal.range(of: .day, in: .month, for: prevMonthDate)!.count
-
         let nextMonthDate = cal.date(byAdding: .month, value: 1, to: firstOfMonth)!
 
         var cells: [DemoCell] = []
 
-        // Leading Tage (Vormonat)
         if leading > 0 {
             let startDay = daysInPrevMonth - leading + 1
             let prevYM = cal.dateComponents([.year, .month], from: prevMonthDate)
@@ -278,25 +227,17 @@ struct JournalMainViewPanicAttacks: View { // Anke
             }
         }
 
-        // Tage im aktuellen Monat
         for d in 1...daysInMonth {
             let allowed = isPastOrToday(year: currentYear, month: currentMonth, day: d)
 
             let mark: DemoMark
             if !allowed {
-                // Zukunft -> kein Plus, keine Herzen
                 mark = .none
             } else if isDemoMonth {
-                // ✅ Demo nur im Januar 2026 (und nur für erlaubte Tage)
-                if d == 6 || d == 7 {
-                    mark = .brokenHeart
-                } else if [16, 17, 18].contains(d) {
-                    mark = .filled
-                } else {
-                    mark = .plus
-                }
+                if d == 6 || d == 7 { mark = .brokenHeart }
+                else if [16,17,18].contains(d) { mark = .filled }
+                else { mark = .plus }
             } else {
-                // ✅ alle anderen Monate: nur Plus (keine Demo-Herzen)
                 mark = .plus
             }
 
@@ -313,7 +254,6 @@ struct JournalMainViewPanicAttacks: View { // Anke
             )
         }
 
-        // Trailing Tage (Nächster Monat) -> auf 42 auffüllen
         let nextYM = cal.dateComponents([.year, .month], from: nextMonthDate)
         var nextDay = 1
 
@@ -333,63 +273,32 @@ struct JournalMainViewPanicAttacks: View { // Anke
                     isTappable: allowed
                 )
             )
-
             nextDay += 1
         }
 
         return cells
     }
 
-    private func goToPreviousMonth() {
-        shiftMonth(by: -1)
-    }
-
-    private func goToNextMonth() {
-        shiftMonth(by: 1)
-    }
-
     private func shiftMonth(by delta: Int) {
-        let cal = calendar
-        let base = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
-        let newDate = cal.date(byAdding: .month, value: delta, to: base) ?? base
-        let comps = cal.dateComponents([.year, .month], from: newDate)
+        let base = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
+        let newDate = calendar.date(byAdding: .month, value: delta, to: base) ?? base
+        let comps = calendar.dateComponents([.year, .month], from: newDate)
         currentYear = comps.year ?? currentYear
         currentMonth = comps.month ?? currentMonth
     }
 }
 
-// MARK: - Helpers
+// MARK: - Helpers (lokal)
 
 private struct DemoCell: Identifiable {
     let id = UUID()
     let day: Int
     let isInDisplayedMonth: Bool
     let mark: DemoMark
-
     let monthOffset: Int?
     let effectiveYear: Int?
     let effectiveMonth: Int?
-
-    /// darf man hier eintragen/antippen?
     let isTappable: Bool
-
-    init(
-        day: Int,
-        isInDisplayedMonth: Bool,
-        mark: DemoMark,
-        monthOffset: Int? = nil,
-        effectiveYear: Int? = nil,
-        effectiveMonth: Int? = nil,
-        isTappable: Bool = true
-    ) {
-        self.day = day
-        self.isInDisplayedMonth = isInDisplayedMonth
-        self.mark = mark
-        self.monthOffset = monthOffset
-        self.effectiveYear = effectiveYear
-        self.effectiveMonth = effectiveMonth
-        self.isTappable = isTappable
-    }
 }
 
 private enum DemoMark: Equatable {
@@ -399,9 +308,7 @@ private enum DemoMark: Equatable {
     case none
 }
 
-// MARK: - DayCell
-
-private struct DayCell: View {
+private struct PanicDayCell: View {
     let day: Int
     let mark: DemoMark
     let isInDisplayedMonth: Bool
@@ -418,7 +325,6 @@ private struct DayCell: View {
                     .fill(circleFill)
                     .frame(width: circleSize, height: circleSize)
 
-                // ✅ Plus bei .plus UND .filled
                 if mark == .plus || mark == .filled {
                     Image(systemName: "plus")
                         .font(.system(size: plusSize, weight: .bold))
@@ -442,9 +348,7 @@ private struct DayCell: View {
         switch mark {
         case .plus, .filled:
             return AnyShapeStyle(Color.black.opacity(0.25))
-        case .brokenHeart:
-            return AnyShapeStyle(Color.black.opacity(0.06))
-        case .none:
+        case .brokenHeart, .none:
             return AnyShapeStyle(Color.black.opacity(0.06))
         }
     }

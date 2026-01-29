@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum AppRoute: Hashable {
-    case journalEntry(date: Date)   // ✅ Datum mit Route
+    case journalEntry(date: Date)
     case journalDiaryView
     case panicReflection
     case questionCatalog
@@ -16,20 +16,22 @@ struct JournalNavigationView: View {
     @State private var navigationPath = NavigationPath()
     @State private var rootMode: JournalRootMode = .emotions
 
-    // ✅ Popup State
+    // ✅ Popup State: Datum + Bool (kein falscher Default-Header mehr)
     @State private var showJournalPopup = false
-    @State private var popupDateHeader: String = "Mittwoch, 20.01."
+    @State private var popupDate: Date = Date()
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
 
             Group {
                 switch rootMode {
+
                 case .emotions:
                     JournalMainViewEmotions(
                         rootMode: $rootMode,
-                        onPlusButtonTapped: { header in
-                            popupDateHeader = header
+                        onPlusButtonTapped: { date in
+                            // ✅ Reihenfolge wichtig: erst Datum setzen, dann Sheet öffnen
+                            popupDate = date
                             showJournalPopup = true
                         },
                         onCreateEntry: { date in
@@ -40,8 +42,8 @@ struct JournalNavigationView: View {
                 case .panicAttacks:
                     JournalMainViewPanicAttacks(
                         rootMode: $rootMode,
-                        onPlusButtonTapped: { header in
-                            popupDateHeader = header
+                        onPlusButtonTapped: { date in
+                            popupDate = date
                             showJournalPopup = true
                         },
                         onCreateEntry: { date in
@@ -54,19 +56,17 @@ struct JournalNavigationView: View {
                 destinationView(for: route)
             }
         }
-        // ✅ Popup als Sheet => TabBar ist weg
+        // ✅ Popup als Sheet
         .sheet(isPresented: $showJournalPopup) {
             JournalMainPopUpView(
                 onEintragBearbeiten: {
-                    // Wenn du hier auch ein Datum brauchst, müsste das Popup das Datum (Date) liefern.
-                    // Aktuell hast du nur einen String header -> deshalb lassen wir es wie vorher.
                     showJournalPopup = false
-                    // navigationPath.append(AppRoute.journalEntry(date: Date()))
+                    navigationPath.append(AppRoute.journalEntry(date: popupDate))
                 },
                 onDismiss: {
                     showJournalPopup = false
                 },
-                dateHeader: popupDateHeader
+                dateHeader: makePopupHeader(from: popupDate)
             )
             .presentationDetents([.fraction(0.4)])
             .presentationDragIndicator(.hidden)
@@ -87,7 +87,7 @@ struct JournalNavigationView: View {
                 onBack: { safePop() },
                 onOpenDiary: { navigationPath.append(AppRoute.journalDiaryView) },
                 onOpenPanicReflexion: { navigationPath.append(AppRoute.panicReflection) },
-                entryDate: date // ✅ Datum oben anzeigen
+                entryDate: date
             )
 
         case .journalDiaryView:
@@ -102,5 +102,12 @@ struct JournalNavigationView: View {
         case .questionCatalog:
             QuestionCatalog(onBack: { safePop() })
         }
+    }
+
+    private func makePopupHeader(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "de_DE")
+        formatter.dateFormat = "EEEE, dd.MM."
+        return formatter.string(from: date).capitalized
     }
 }
