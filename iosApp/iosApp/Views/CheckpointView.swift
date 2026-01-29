@@ -4,8 +4,6 @@ struct CheckpointView: View {
     @Binding var isShowing: Bool
     @Binding var currentStep: Int
     @State private var showExercise = false
-    
-    
     @State private var animatedStep: Int = 0
     
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
@@ -18,7 +16,6 @@ struct CheckpointView: View {
                 // MARK: - PROGRESS BAR
                 HStack(spacing: 0) {
                     ForEach(0..<sosSteps.count, id: \.self) { index in
-                        
                         let isActive = animatedStep == index
                         let isCompleted = index < animatedStep
                         
@@ -75,16 +72,17 @@ struct CheckpointView: View {
                 
                 // MARK: - CONTENT
                 VStack(spacing: 20) {
-                    Image("Cloud")
+                    Image("Cloud") // Stelle sicher, dass dieses Asset existiert
                         .resizable()
                         .scaledToFit()
                         .frame(width: 160)
                     
                     VStack(spacing: 8) {
-                        Text("Gute Arbeit.")
+                        Text(currentStep < sosSteps.count - 1 ? "Gute Arbeit." : "Geschafft!")
                             .font(.system(.title, design: .rounded))
                             .bold()
-                        Text("Du hast diesen Schritt geschafft.\nBereit für den nächsten?")
+                        
+                        Text(currentStep < sosSteps.count - 1 ? "Du hast diesen Schritt geschafft.\nBereit für den nächsten?" : "Du hast alle Übungen erfolgreich\nabgeschlossen.")
                             .font(.subheadline)
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
@@ -96,18 +94,35 @@ struct CheckpointView: View {
                 
                 // MARK: - BUTTONS
                 VStack(spacing: 16) {
-                    Button(action: {
-                        
-                        currentStep += 1
-                        showExercise = true
-                    }) {
-                        Text("Nächste Übung")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 62)
-                            .background(petrolColor)
-                            .cornerRadius(31)
+                    if currentStep < sosSteps.count - 1 {
+                        // NORMALER FLOW: Nächste Übung
+                        Button(action: {
+                            currentStep += 1
+                            showExercise = true
+                        }) {
+                            Text("Nächste Übung")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 62)
+                                .background(petrolColor)
+                                .cornerRadius(31)
+                        }
+                    } else {
+                        // ENDE DES FLOWS: Zurück zum Home
+                        Button(action: {
+                            withAnimation {
+                                isShowing = false // Schließt alle Overlays
+                            }
+                        }) {
+                            Text("Übungen beenden")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 62)
+                                .background(Color.green) // Grün für Erfolg
+                                .cornerRadius(31)
+                        }
                     }
                     
                     Button(action: {
@@ -123,13 +138,16 @@ struct CheckpointView: View {
             }
         }
         .onAppear {
-            // Beim Erscheinen setzen wir animatedStep zuerst auf den ALTEN Schritt
             animatedStep = currentStep
             
-            // Nach einer kurzen Verzögerung triggern wir die Lupen-Animation zum NÄCHSTEN Schritt
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 withAnimation {
-                    animatedStep = currentStep + 1
+                    // Verhindert Index-Fehler am Ende der Liste
+                    if currentStep < sosSteps.count - 1 {
+                        animatedStep = currentStep + 1
+                    } else {
+                        animatedStep = currentStep
+                    }
                 }
             }
         }
@@ -152,9 +170,11 @@ struct CheckpointView: View {
         }
     }
 }
+
 // MARK: - PREVIEW
 struct CheckpointView_Previews: PreviewProvider {
     static var previews: some View {
+        // Beispiel-Vorschau für den letzten Schritt (Index 2 bei 3 Übungen)
         CheckpointView(isShowing: .constant(true), currentStep: .constant(2))
     }
 }
