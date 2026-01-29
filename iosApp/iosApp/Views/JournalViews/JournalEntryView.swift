@@ -51,41 +51,16 @@ struct JournalEntryView: View {
         case freetext = "Freitext"
     }
 
-    // MARK: - Header
+    // MARK: - Datum
 
     private var formattedDate: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "E dd.MM.yy"
         formatter.locale = Locale(identifier: "de_DE")
+        formatter.dateFormat = "E dd.MM.yy"   // z.B. "Mi 14.01.26"
         return formatter.string(from: entryDate)
     }
 
-    private var headerView: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                        .font(.title3)
-                        .foregroundColor(.primary)
-                }
-                .frame(width: 40, alignment: .leading)
-
-                Spacer()
-
-                Text(formattedDate)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Spacer()
-
-                Color.clear.frame(width: 40)
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
-
-            Divider()
-        }
-    }
+    // MARK: - Lock Button
 
     private var lockButton: some View {
         Button {
@@ -243,7 +218,6 @@ struct JournalEntryView: View {
                     .padding(.top, 16)
             } else {
                 freeTextEditor
-                    .padding(.horizontal, 20)
                     .padding(.top, 16)
             }
         }
@@ -327,6 +301,7 @@ struct JournalEntryView: View {
                     .allowsHitTesting(false)
             }
         }
+        .padding(.horizontal, 20)
     }
 
     private var healthSection: some View {
@@ -401,14 +376,11 @@ struct JournalEntryView: View {
 
     private var bottomNavButtons: some View {
         HStack(spacing: 16) {
-            Button {
-                onOpenDiary(entryDate)
-            } label: {
+            Button { onOpenDiary(entryDate) } label: {
                 ZStack(alignment: .bottomTrailing) {
                     Text("Tagebuch")
                         .font(.system(size: 16, weight: .medium))
                         .frame(maxWidth: .infinity, alignment: .leading)
-
                     Text("4/6")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
@@ -423,14 +395,11 @@ struct JournalEntryView: View {
             }
             .foregroundColor(.primary)
 
-            Button {
-                onOpenPanicReflexion(entryDate)
-            } label: {
+            Button { onOpenPanicReflexion(entryDate) } label: {
                 ZStack(alignment: .bottomTrailing) {
                     Text("Panik Reflexion")
                         .font(.system(size: 16, weight: .medium))
                         .frame(maxWidth: .infinity, alignment: .leading)
-
                     Text("5/6")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
@@ -454,7 +423,6 @@ struct JournalEntryView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                headerView
                 selfCheckHeader
                 activitiesSection
                 healthSection
@@ -463,9 +431,34 @@ struct JournalEntryView: View {
                 Spacer(minLength: 100)
             }
         }
-        .navigationTitle("Journal")
-        .navigationBarHidden(true)
+        .background(Color.white) // ✅ wie WhatsApp oben weiß
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+
+            // ✅ Back links
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.black)
+                }
+            }
+
+            // ✅ Titel + Datum mittig (2 Zeilen) – wie Tagebuch
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 2) {
+                    Text("Tagescheck")
+                        .font(.headline)
+                        .foregroundColor(.black)
+
+                    Text(formattedDate)
+                        .font(.caption)
+                        .foregroundColor(.black.opacity(0.6))
+                }
+            }
+
+            // ✅ Keyboard Done
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Fertig") { focusedField = nil }
@@ -491,9 +484,8 @@ struct JournalEntryView: View {
 }
 
 // MARK: - Preview
-
 #Preview {
-    NavigationView {
+    NavigationStack {
         JournalEntryView(
             onBack: {},
             onOpenDiary: { _ in },
