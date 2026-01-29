@@ -16,7 +16,7 @@ enum JournalRootMode: Hashable {
 enum JournalPopupKind: Hashable {
     case moodA   // rot/blau
     case moodB   // grün/blau
-    case panic   // broken heart
+    case panic   // broken heart (soll aber gleichen Chip wie Emotionen kriegen)
 }
 
 // ✅ Identifiable Item für sheet(item:)
@@ -71,7 +71,7 @@ struct JournalNavigationView: View {
         // ✅ Popup als Sheet
         .sheet(item: $popupItem) { item in
             let header = makePopupHeader(from: item.date)
-            let style = popupStyle(for: item.kind)
+            let style = popupStyle(for: item.kind, date: item.date)
 
             JournalMainPopUpView(
                 onEintragBearbeiten: {
@@ -90,7 +90,6 @@ struct JournalNavigationView: View {
             .presentationDragIndicator(.hidden)
             .presentationBackground(Color.white)
         }
-
     }
 
     private func safePop() {
@@ -131,37 +130,51 @@ struct JournalNavigationView: View {
         return formatter.string(from: date).capitalized
     }
 
-    private func popupStyle(for kind: JournalPopupKind) -> (chipText: String, gradient: LinearGradient) {
-        switch kind {
-        case .moodA:
-            return (
-                chipText: "deprimiert, fröhlich",
-                gradient: LinearGradient(
+    // ✅ Panic soll exakt den gleichen Chip-Style bekommen wie Emotionen (Demo: 6 -> moodA, 7 -> moodB)
+    private func popupStyle(
+        for kind: JournalPopupKind,
+        date: Date
+    ) -> (chipText: String, gradient: LinearGradient) {
+
+        func moodA() -> (String, LinearGradient) {
+            (
+                "deprimiert, fröhlich",
+                LinearGradient(
                     colors: [Color.red.opacity(0.95), Color.blue.opacity(0.95)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
+        }
 
-        case .moodB:
-            return (
-                chipText: "energiegeladen, fröhlich",
-                gradient: LinearGradient(
+        func moodB() -> (String, LinearGradient) {
+            (
+                "energiegeladen, fröhlich",
+                LinearGradient(
                     colors: [Color.green.opacity(0.95), Color.blue.opacity(0.95)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
+        }
+
+        switch kind {
+        case .moodA:
+            return moodA()
+
+        case .moodB:
+            return moodB()
 
         case .panic:
-            return (
-                chipText: "Panik-Eintrag",
-                gradient: LinearGradient(
-                    colors: [Color.black.opacity(0.2), Color.black.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
+            // ✅ gleiche Darstellung wie Emotionen (für Demo anhand Tag)
+            let cal = Calendar(identifier: .gregorian)
+            let day = cal.component(.day, from: date)
+
+            if day == 6 { return moodA() }
+            if day == 7 { return moodB() }
+
+            // Default: nimm moodB (oder moodA – wie du willst)
+            return moodB()
         }
     }
 }
