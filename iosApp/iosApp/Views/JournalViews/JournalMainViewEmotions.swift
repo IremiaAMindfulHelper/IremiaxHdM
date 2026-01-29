@@ -73,7 +73,7 @@ struct JournalMainViewEmotions: View { // Anke
             .padding(.top, 14)
             .padding(.bottom, 4)
 
-            // Month header (echter Kalender)
+            // Month header
             HStack {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -143,6 +143,7 @@ struct JournalMainViewEmotions: View { // Anke
                         onTap: { handleTap(on: cell) }
                     )
                     .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
+                    .allowsHitTesting(cell.isTappable)
                 }
             }
             .padding(.horizontal, 18)
@@ -155,23 +156,26 @@ struct JournalMainViewEmotions: View { // Anke
     }
 
     private func handleTap(on cell: DemoCell) {
-        // Tap auf ausgegraute Zellen -> in den Monat springen
+        // Tap auf ausgegraute Zellen -> Monat wechseln
         if !cell.isInDisplayedMonth, let offset = cell.monthOffset {
             withAnimation(.easeInOut(duration: 0.2)) {
                 shiftMonth(by: offset)
             }
         }
 
+        // Wenn Zukunft: nichts tun
+        guard cell.isTappable else { return }
+
         let year = cell.effectiveYear ?? currentYear
         let month = cell.effectiveMonth ?? currentMonth
 
-        // ✅ + -> JournalEntryView
+        // ✅ + -> JournalEntryView (nur Vergangenheit/Heute)
         if cell.mark == .plus {
             onCreateEntry()
             return
         }
 
-        // ✅ farbig -> Popup
+        // ✅ farbig -> Popup (nur Vergangenheit/Heute)
         if cell.mark == .moodGradientA || cell.mark == .moodGradientB {
             let header = makeHeaderText(year: year, month: month, day: cell.day)
             onPlusButtonTapped(header)
@@ -195,7 +199,7 @@ struct JournalMainViewEmotions: View { // Anke
         return formatter.string(from: date).capitalized
     }
 
-    // MARK: - Echter Kalender
+    // MARK: - Kalender/Logik
 
     private var calendar: Calendar {
         var cal = Calendar(identifier: .gregorian)
@@ -213,9 +217,22 @@ struct JournalMainViewEmotions: View { // Anke
         return f.string(from: date).capitalized
     }
 
-    /// Demo-Daten NUR für Januar 2026 (damit die Kugeln nicht überall auftauchen)
+    /// Demo-Daten NUR für Januar 2026 (bunte Kugeln nur dort)
     private var isDemoMonth: Bool {
         currentYear == 2026 && currentMonth == 1
+    }
+
+    /// "Heute" (Start des Tages), damit Uhrzeit egal ist
+    private var todayStart: Date {
+        calendar.startOfDay(for: Date())
+    }
+
+    private func isPastOrToday(year: Int, month: Int, day: Int) -> Bool {
+        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else {
+            return false
+        }
+        let d = calendar.startOfDay(for: date)
+        return d <= todayStart
     }
 
     private var calendarCells: [DemoCell] {
@@ -237,16 +254,22 @@ struct JournalMainViewEmotions: View { // Anke
         // Leading Tage (Vormonat)
         if leading > 0 {
             let startDay = daysInPrevMonth - leading + 1
+            let prevYM = cal.dateComponents([.year, .month], from: prevMonthDate)
+
             for d in startDay...daysInPrevMonth {
-                let prevYM = cal.dateComponents([.year, .month], from: prevMonthDate)
+                let y = prevYM.year ?? currentYear
+                let m = prevYM.month ?? currentMonth
+                let allowed = isPastOrToday(year: y, month: m, day: d)
+
                 cells.append(
                     DemoCell(
                         day: d,
                         isInDisplayedMonth: false,
-                        mark: .plus,
+                        mark: allowed ? .plus : .none,
                         monthOffset: -1,
-                        effectiveYear: prevYM.year,
-                        effectiveMonth: prevYM.month
+                        effectiveYear: y,
+                        effectiveMonth: m,
+                        isTappable: allowed
                     )
                 )
             }
@@ -254,16 +277,19 @@ struct JournalMainViewEmotions: View { // Anke
 
         // Tage im aktuellen Monat
         for d in 1...daysInMonth {
-            let mark: DemoMark
+            let allowed = isPastOrToday(year: currentYear, month: currentMonth, day: d)
 
-            if isDemoMonth {
-                // ✅ Demo nur im Januar 2026
+            let mark: DemoMark
+            if !allowed {
+                // Zukunft -> kein Plus
+                mark = .none
+            } else if isDemoMonth {
+                // Demo nur im Januar 2026 UND nur für erlaubte Tage
                 if d == 6 { mark = .moodGradientA }
                 else if d == 7 { mark = .moodGradientB }
                 else if [16, 17, 18].contains(d) { mark = .filled }
                 else { mark = .plus }
             } else {
-                // ✅ alle anderen Monate: KEINE bunten Kugeln
                 mark = .plus
             }
 
@@ -274,25 +300,33 @@ struct JournalMainViewEmotions: View { // Anke
                     mark: mark,
                     monthOffset: 0,
                     effectiveYear: currentYear,
-                    effectiveMonth: currentMonth
+                    effectiveMonth: currentMonth,
+                    isTappable: allowed
                 )
             )
         }
 
         // Trailing Tage (Nächster Monat) -> auf 42 auffüllen
+        let nextYM = cal.dateComponents([.year, .month], from: nextMonthDate)
         var nextDay = 1
+
         while cells.count < 42 {
-            let nextYM = cal.dateComponents([.year, .month], from: nextMonthDate)
+            let y = nextYM.year ?? currentYear
+            let m = nextYM.month ?? currentMonth
+            let allowed = isPastOrToday(year: y, month: m, day: nextDay)
+
             cells.append(
                 DemoCell(
                     day: nextDay,
                     isInDisplayedMonth: false,
-                    mark: .plus,
+                    mark: allowed ? .plus : .none,
                     monthOffset: 1,
-                    effectiveYear: nextYM.year,
-                    effectiveMonth: nextYM.month
+                    effectiveYear: y,
+                    effectiveMonth: m,
+                    isTappable: allowed
                 )
             )
+
             nextDay += 1
         }
 
@@ -325,18 +359,29 @@ private struct DemoCell: Identifiable {
     let isInDisplayedMonth: Bool
     let mark: DemoMark
 
-    // Tap auf ausgegraute Tage -> Monat wechseln
     let monthOffset: Int?
     let effectiveYear: Int?
     let effectiveMonth: Int?
 
-    init(day: Int, isInDisplayedMonth: Bool, mark: DemoMark, monthOffset: Int? = nil, effectiveYear: Int? = nil, effectiveMonth: Int? = nil) {
+    /// Neu: darf man hier eintragen/antippen?
+    let isTappable: Bool
+
+    init(
+        day: Int,
+        isInDisplayedMonth: Bool,
+        mark: DemoMark,
+        monthOffset: Int? = nil,
+        effectiveYear: Int? = nil,
+        effectiveMonth: Int? = nil,
+        isTappable: Bool = true
+    ) {
         self.day = day
         self.isInDisplayedMonth = isInDisplayedMonth
         self.mark = mark
         self.monthOffset = monthOffset
         self.effectiveYear = effectiveYear
         self.effectiveMonth = effectiveMonth
+        self.isTappable = isTappable
     }
 }
 
