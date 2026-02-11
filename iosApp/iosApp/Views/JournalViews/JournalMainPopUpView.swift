@@ -6,10 +6,11 @@ struct JournalMainPopUpView: View {
     let onDismiss: () -> Void
     let dateHeader: String
 
-    // ✅ rechts (Mood-Chip) dynamisch
+    // Text und Gradient für den Mood-Chip auf der rechten Seite.
     let chipText: String
     let chipGradient: LinearGradient
 
+    // Aktueller Drag-Offset für das Sheet.
     @State private var dragOffset: CGFloat = 0
 
     private let sheetCornerRadius: CGFloat = 26
@@ -21,12 +22,14 @@ struct JournalMainPopUpView: View {
     var body: some View {
         VStack(spacing: 0) {
 
+            // Oberer Drag-Handle-Indikator.
             Capsule()
                 .fill(Color.black.opacity(0.2))
                 .frame(width: handleWidth, height: handleHeight)
                 .padding(.top, 14)
                 .padding(.bottom, 10)
 
+            // Großes Datums-Label.
             Text(dateHeader)
                 .font(.system(size: 36, weight: .regular, design: .rounded))
                 .foregroundStyle(.black.opacity(0.9))
@@ -35,7 +38,7 @@ struct JournalMainPopUpView: View {
 
             HStack(spacing: 18) {
 
-                // ✅ LINKS: immer BrokenHeart + Panik
+                // Linke Seite: Panik-Status mit Icon.
                 HStack(spacing: 8) {
                     BrokenHeartIcon(size: 20, isActive: true)
                     Text("Panik")
@@ -45,7 +48,7 @@ struct JournalMainPopUpView: View {
 
                 Spacer()
 
-                // ✅ RECHTS: Mood Chip (Gradient + Text)
+                // Rechte Seite: Mood-Chip mit Farbverlauf.
                 HStack(spacing: 10) {
                     Circle()
                         .fill(chipGradient)
@@ -61,6 +64,7 @@ struct JournalMainPopUpView: View {
             .padding(.horizontal, 26)
             .padding(.top, 16)
 
+            // Button zum Bearbeiten des Eintrags.
             Button { onEintragBearbeiten() } label: {
                 Text("Eintrag bearbeiten")
                     .font(.system(size: 20, weight: .regular, design: .rounded))
