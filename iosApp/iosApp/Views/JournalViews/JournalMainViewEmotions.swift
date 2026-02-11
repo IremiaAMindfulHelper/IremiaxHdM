@@ -1,18 +1,18 @@
 import SwiftUI
 
-struct JournalMainViewEmotions: View { // Anke
-
+struct JournalMainViewEmotions: View {
     @Binding var rootMode: JournalRootMode
 
-    /// ✅ farbiger Kreis -> Popup (Date + Mark kommt im Parent)
+    // Öffnet das Popup für einen bestehenden Tag (Datum + Mark werden vom Parent geliefert).
     let onPlusButtonTapped: (_ date: Date, _ mark: DemoMark) -> Void
 
-    /// ✅ + -> JournalEntryView
+    // Öffnet die Erstellung eines neuen Eintrags für ein Datum.
     let onCreateEntry: (_ date: Date) -> Void
 
     @State private var currentYear: Int = 2026
     @State private var currentMonth: Int = 1
 
+    // Bindet den Toggle an den Root-Mode (Stimmung <-> Panik).
     private var isPanicBinding: Binding<Bool> {
         Binding(
             get: { rootMode == .panicAttacks },
@@ -31,7 +31,6 @@ struct JournalMainViewEmotions: View { // Anke
 
     var body: some View {
         VStack(spacing: 0) {
-
             VStack(spacing: 0) {
                 Text("Journal")
                     .font(.system(size: 40, weight: .regular, design: .rounded))
@@ -142,6 +141,7 @@ struct JournalMainViewEmotions: View { // Anke
         .background(Color.white)
     }
 
+    // Reagiert auf Tap: Monat wechseln, Eintrag erstellen oder Popup öffnen.
     private func handleTap(on cell: DemoCell) {
         if !cell.isInDisplayedMonth, let offset = cell.monthOffset {
             withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: offset) }
@@ -156,16 +156,18 @@ struct JournalMainViewEmotions: View { // Anke
         }
 
         if cell.mark == .moodGradientA || cell.mark == .moodGradientB {
-            onPlusButtonTapped(date, cell.mark) // ✅ Mark mitgeben
+            onPlusButtonTapped(date, cell.mark)
         }
     }
 
+    // Berechnet das Datum für eine Zelle anhand ihres effektiven Jahres/Monats.
     private func dateForCell(_ cell: DemoCell) -> Date? {
         let y = cell.effectiveYear ?? currentYear
         let m = cell.effectiveMonth ?? currentMonth
         return calendar.date(from: DateComponents(year: y, month: m, day: cell.day))
     }
 
+    // Konfiguriert den Kalender für deutsche Locale und Wochenstart Montag.
     private var calendar: Calendar {
         var cal = Calendar(identifier: .gregorian)
         cal.locale = Locale(identifier: "de_DE")
@@ -173,6 +175,7 @@ struct JournalMainViewEmotions: View { // Anke
         return cal
     }
 
+    // Baut den Monats-Titel aus aktuellem Jahr/Monat.
     private var monthTitle: String {
         let date = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
         let f = DateFormatter()
@@ -184,11 +187,13 @@ struct JournalMainViewEmotions: View { // Anke
     private var isDemoMonth: Bool { currentYear == 2026 && currentMonth == 1 }
     private var todayStart: Date { calendar.startOfDay(for: Date()) }
 
+    // Erlaubt Interaktionen nur für Tage bis einschließlich heute.
     private func isPastOrToday(year: Int, month: Int, day: Int) -> Bool {
         guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return false }
         return calendar.startOfDay(for: date) <= todayStart
     }
 
+    // Erzeugt die 42 Kalenderzellen (Vormonat, aktueller Monat, Folgemonat).
     private var calendarCells: [DemoCell] {
         let cal = calendar
 
@@ -279,6 +284,7 @@ struct JournalMainViewEmotions: View { // Anke
         return cells
     }
 
+    // Verschiebt den angezeigten Monat um delta Monate.
     private func shiftMonth(by delta: Int) {
         let base = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
         let newDate = calendar.date(byAdding: .month, value: delta, to: base) ?? base
@@ -287,8 +293,6 @@ struct JournalMainViewEmotions: View { // Anke
         currentMonth = comps.month ?? currentMonth
     }
 }
-
-// MARK: - Helpers
 
 private struct DemoCell: Identifiable {
     let id = UUID()
