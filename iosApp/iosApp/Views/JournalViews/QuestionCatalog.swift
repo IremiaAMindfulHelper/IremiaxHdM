@@ -3,10 +3,10 @@ import SwiftUI
 struct QuestionCatalog: View {
     let onBack: () -> Void
 
-    // ✅ Keyboard Focus
+    // Steuert den Fokus der Texteingabe.
     @FocusState private var isKeyboardActive: Bool
 
-    // ✅ Alle Fragen auf Deutsch
+    // Datenquelle der verfügbaren Fragen.
     @State private var questions: [String] = [
         "Gab es heute schwierige Momente für dich?",
         "Was ist heute gut gelaufen?",
@@ -17,108 +17,124 @@ struct QuestionCatalog: View {
         "Gibt es etwas, das du morgen anders machen möchtest?"
     ]
 
-    // ✅ Auswahl-State (wie Activities)
+    // Speichert die aktuell ausgewählten Fragen.
     @State private var selectedQuestions: Set<String> = []
 
+    // Eingabetext für eine neue Frage.
     @State private var newQuestionText: String = ""
 
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-
-                // Subtitle
-                Text("Fragen auswählen")
-                    .font(.headline)
-                    .padding(.top, 12)
-
-                // Questions list
-                VStack(spacing: 14) {
-                    ForEach(questions, id: \.self) { question in
-                        Button {
-                            toggleSelection(question)
-                        } label: {
-                            Text(question)
-                                .font(.body)
-                                .foregroundStyle(.primary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, 14)
-                                .padding(.horizontal, 16)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(
-                                            selectedQuestions.contains(question)
-                                            ? Color.black.opacity(0.2)
-                                            : Color(.secondarySystemBackground)
-                                        )
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .stroke(
-                                            selectedQuestions.contains(question)
-                                            ? Color.black
-                                            : Color.clear,
-                                            lineWidth: 2
-                                        )
-                                )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 16)
-
-                // Neue Frage hinzufügen
-                TextField("Neue Frage hinzufügen", text: $newQuestionText)
-                    .focused($isKeyboardActive)
-                    .textFieldStyle(.plain)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.secondary.opacity(0.5), lineWidth: 1.5)
-                    )
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
+                headerSection
+                questionsSection
+                addQuestionSection
             }
         }
         .background(Color(.systemBackground))
         .navigationTitle("Fragenkatalog")
         .navigationBarTitleDisplayMode(.inline)
-
-        // ✅ keinen doppelten Zurückpfeil
         .navigationBarBackButtonHidden(true)
+        .toolbar { toolbarContent }
+        .onTapGesture { isKeyboardActive = false }
+    }
 
-        .toolbar {
-            // Zurück
-            ToolbarItem(placement: .topBarLeading) {
-                Button { onBack() } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundStyle(.primary)
-                }
-            }
+    // Überschrift der Ansicht.
+    private var headerSection: some View {
+        Text("Fragen auswählen")
+            .font(.headline)
+            .padding(.top, 12)
+    }
 
-            // Keyboard Done
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Fertig") {
-                    isKeyboardActive = false
+    // Liste aller Fragen mit Auswahl-Logik.
+    private var questionsSection: some View {
+        VStack(spacing: 14) {
+            ForEach(questions, id: \.self) { question in
+                QuestionRow(
+                    title: question,
+                    isSelected: selectedQuestions.contains(question)
+                ) {
+                    toggleSelection(question)
                 }
             }
         }
+        .padding(.horizontal, 16)
+    }
 
-        // Tap outside closes keyboard
-        .onTapGesture {
-            isKeyboardActive = false
+    // Eingabebereich zum Hinzufügen einer neuen Frage.
+    private var addQuestionSection: some View {
+        TextField("Neue Frage hinzufügen", text: $newQuestionText)
+            .focused($isKeyboardActive)
+            .textFieldStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.secondary.opacity(0.5), lineWidth: 1.5)
+            )
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
+    }
+
+    // Toolbar mit Zurück-Button und Keyboard-Aktion.
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { onBack() } label: {
+                Image(systemName: "chevron.left")
+                    .foregroundStyle(.primary)
+            }
+        }
+
+        ToolbarItemGroup(placement: .keyboard) {
+            Spacer()
+            Button("Fertig") {
+                isKeyboardActive = false
+            }
         }
     }
 
-    // MARK: - Helpers
+    // Schaltet den Auswahlstatus einer Frage um.
     private func toggleSelection(_ question: String) {
         if selectedQuestions.contains(question) {
             selectedQuestions.remove(question)
         } else {
             selectedQuestions.insert(question)
         }
+    }
+}
+
+private struct QuestionRow: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.body)
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 14)
+                .padding(.horizontal, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(
+                            isSelected
+                            ? Color.black.opacity(0.2)
+                            : Color(.secondarySystemBackground)
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            isSelected ? Color.black : Color.clear,
+                            lineWidth: 2
+                        )
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
 
