@@ -1,72 +1,45 @@
 import SwiftUI
 
 struct PanicReflexion: View {
-
     let onBack: () -> Void
-
-    /// ✅ Datum aus JournalEntryView / Kalender
     let entryDate: Date
 
     @Environment(\.dismiss) private var dismiss
 
-    // ✅ Keyboard Focus
+    // Steuert, ob ein Textfeld fokussiert ist (Keyboard an/aus).
     @FocusState private var isKeyboardActive: Bool
 
-    // UI (auf/zu)
+    // Steuert, welche Sektionen aufgeklappt sind.
     @State private var expanded: [Bool] = [true, true, true, true]
 
-    // Section 1 (UI-State)
+    // Eingaben für Situation und Belastung.
     @State private var location1: String = ""
     @State private var cause1: String = ""
     @State private var intensity1: Double = 5
 
-    // Section 2 (UI-State)
+    // Eingaben für Symptome und Gefühle.
     @State private var selectedSymptoms: Set<String> = []
     @State private var newSymptomText: String = ""
     @State private var selectedFeelings: Set<String> = []
-
-    // ✅ Wichtig: @State damit neue Symptome als Buttons entstehen
     @State private var symptomOptions: [String] = ["Schwindel", "Kurzatmigkeit", "Herzrasen"]
 
-    // Section 3 (UI-State)
+    // Eingaben zur Unterstützung.
     @State private var skillEffectiveness: Double = 5
     @State private var nextTimeText: String = ""
 
-    // Section 4
+    // Freitext zum Einordnen.
     @State private var shortReflection: String = ""
 
-    // ✅ Alles auf Deutsch
     private let feelingOptions: [(key: String, emoji: String, label: String)] = [
         ("wut", "😠", "Wut"),
         ("panikAngst", "😨", "Panik/Angst"),
         ("hilflosigkeit", "🧍", "Hilflosigkeit")
     ]
 
-    private var formattedPanicDate: String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "de_DE")
-        f.dateFormat = "E. dd.MM.yy" // z.B. "Mi. 28.01.26"
-        return f.string(from: entryDate)
-    }
-
-    // ✅ sichere Bindings für Array-Indizes
-    private func expandedBinding(_ index: Int) -> Binding<Bool> {
-        Binding(
-            get: { expanded.indices.contains(index) ? expanded[index] : false },
-            set: { newValue in
-                guard expanded.indices.contains(index) else { return }
-                expanded[index] = newValue
-            }
-        )
-    }
-
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
-
                 VStack(spacing: 12) {
-
-                    // ✅ Titles wie High-Fidelity Prototyp
                     CategoryCard(title: "Situation & Belastung", dateText: nil, isExpanded: expandedBinding(0)) {
                         Category1Content(
                             location: $location1,
@@ -78,7 +51,7 @@ struct PanicReflexion: View {
 
                     CategoryCard(title: "Mein Erleben", dateText: nil, isExpanded: expandedBinding(1)) {
                         Category2Content(
-                            symptomOptions: $symptomOptions,              // ✅ Binding!
+                            symptomOptions: $symptomOptions,
                             selectedSymptoms: $selectedSymptoms,
                             newSymptomText: $newSymptomText,
                             feelingOptions: feelingOptions,
@@ -105,23 +78,18 @@ struct PanicReflexion: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 10)
 
-                // Button wie Tagebuch
-                VStack(spacing: 10) {
-                    Button {
-                        onBack()
-                    } label: {
-                        Text("Eintrag abschließen")
-                            .font(.system(size: 18, weight: .regular))
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .padding(.horizontal, 24)
-                            .background(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.black, lineWidth: 2)
-                            )
-                    }
+                Button { onBack() } label: {
+                    Text("Eintrag abschließen")
+                        .font(.system(size: 18, weight: .regular))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 24)
+                        .background(Color.clear)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.black, lineWidth: 2)
+                        )
                 }
                 .padding(.horizontal, 80)
                 .padding(.top, 6)
@@ -131,38 +99,63 @@ struct PanicReflexion: View {
         .background(Color(red: 0.95, green: 0.95, blue: 0.95))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            // ✅ Back links
-            ToolbarItem(placement: .topBarLeading) {
-                Button { onBack() } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.black)
-                }
-            }
+        .toolbar { toolbarContent }
+        .onTapGesture { isKeyboardActive = false }
+    }
 
-            // ✅ Title + Date (wie Tagebuch)
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 2) {
-                    Text("Panik-Reflexion")
-                        .font(.headline)
-                        .foregroundStyle(.black)
-                    Text(formattedPanicDate)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+    // Formatiert das Datum für die Toolbar.
+    private var formattedPanicDate: String {
+        Self.panicDateFormatter.string(from: entryDate)
+    }
 
-            // ✅ Done Button in Keyboard
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Fertig") { isKeyboardActive = false }
+    // Statischer Formatter für das Panik-Datum.
+    private static let panicDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.dateFormat = "E. dd.MM.yy"
+        return f
+    }()
+
+    // Liefert ein sicheres Binding auf den Expand-State einer Sektion.
+    private func expandedBinding(_ index: Int) -> Binding<Bool> {
+        Binding(
+            get: { expanded.indices.contains(index) ? expanded[index] : false },
+            set: { newValue in
+                guard expanded.indices.contains(index) else { return }
+                expanded[index] = newValue
+            }
+        )
+    }
+
+    // Baut die Toolbar (Back, Titel/Datum, Keyboard Done).
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { onBack() } label: {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(.black)
             }
         }
-        .onTapGesture { isKeyboardActive = false }
+
+        ToolbarItem(placement: .principal) {
+            VStack(spacing: 2) {
+                Text("Panik-Reflexion")
+                    .font(.headline)
+                    .foregroundStyle(.black)
+
+                Text(formattedPanicDate)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        ToolbarItemGroup(placement: .keyboard) {
+            Spacer()
+            Button("Fertig") { isKeyboardActive = false }
+        }
     }
 }
 
-// MARK: - Section 1 Content (Situation & Belastung)
 private struct Category1Content: View {
     @Binding var location: String
     @Binding var intensity: Double
@@ -182,7 +175,9 @@ private struct Category1Content: View {
                     .foregroundColor(.black)
 
                 HStack(alignment: .center, spacing: 10) {
-                    Text("0").font(.title3).foregroundColor(.black)
+                    Text("0")
+                        .font(.title3)
+                        .foregroundColor(.black)
 
                     VStack(spacing: 6) {
                         Slider(value: $intensity, in: 0...10, step: 1)
@@ -191,7 +186,9 @@ private struct Category1Content: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Text("10").font(.title3).foregroundColor(.black)
+                    Text("10")
+                        .font(.title3)
+                        .foregroundColor(.black)
                 }
             }
 
@@ -203,7 +200,6 @@ private struct Category1Content: View {
     }
 }
 
-// MARK: - Section 2 Content (Mein Erleben)
 private struct Category2Content: View {
     @Binding var symptomOptions: [String]
     @Binding var selectedSymptoms: Set<String>
@@ -214,6 +210,7 @@ private struct Category2Content: View {
 
     @FocusState.Binding var isKeyboardActive: Bool
 
+    // Fügt ein neues Symptom hinzu und markiert es direkt.
     private func addSymptomIfPossible() {
         let cleaned = newSymptomText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else { return }
@@ -226,14 +223,13 @@ private struct Category2Content: View {
         }
 
         symptomOptions.append(cleaned)
-        selectedSymptoms.insert(cleaned) // ✅ direkt markieren
+        selectedSymptoms.insert(cleaned)
         newSymptomText = ""
         isKeyboardActive = false
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-
             VStack(alignment: .leading, spacing: 10) {
                 Text("Symptome")
                     .font(.subheadline)
@@ -251,7 +247,6 @@ private struct Category2Content: View {
                                 selectedSymptoms.insert(item)
                             }
                         }
-                        // optional: long press löschen
                         .contextMenu {
                             Button(role: .destructive) {
                                 symptomOptions.removeAll { $0 == item }
@@ -263,16 +258,13 @@ private struct Category2Content: View {
                     }
                 }
 
-                // ✅ WICHTIG: Einzeiliges Field -> onSubmit funktioniert auch am echten iPhone
                 RoundedSingleLineTextField(
                     placeholder: "Symptom hinzufügen",
                     text: $newSymptomText,
                     isKeyboardActive: $isKeyboardActive
                 )
                 .submitLabel(.done)
-                .onSubmit {
-                    addSymptomIfPossible()
-                }
+                .onSubmit { addSymptomIfPossible() }
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -302,7 +294,6 @@ private struct Category2Content: View {
     }
 }
 
-// MARK: - Section 3 Content (Meine Unterstützung)
 private struct Category3Content: View {
     @Binding var effectiveness: Double
     @Binding var nextTimeText: String
@@ -311,7 +302,6 @@ private struct Category3Content: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-
             Text("Welche Strategien hast du genutzt – und wie gut haben sie geholfen?")
                 .font(.subheadline)
                 .foregroundColor(.black)
@@ -376,7 +366,6 @@ private struct Category3Content: View {
     }
 }
 
-// MARK: - Section 4 Content (Einordnen & Loslassen)
 private struct Category4Content: View {
     @Binding var shortReflection: String
     @FocusState.Binding var isKeyboardActive: Bool
@@ -393,7 +382,6 @@ private struct Category4Content: View {
     }
 }
 
-// MARK: - Tagebuch Style Category Card
 private struct CategoryCard<Content: View>: View {
     let title: String
     let dateText: String?
@@ -455,7 +443,6 @@ private struct CategoryCard<Content: View>: View {
     }
 }
 
-// MARK: - Reusable UI Bits
 private struct SymptomRow: View {
     let title: String
     let isSelected: Bool
@@ -583,7 +570,6 @@ private struct RoundedTextField: View {
     }
 }
 
-/// ✅ Einzeiliges Feld: Return/Done triggert onSubmit auch am echten iPhone
 private struct RoundedSingleLineTextField: View {
     let placeholder: String
     @Binding var text: String
