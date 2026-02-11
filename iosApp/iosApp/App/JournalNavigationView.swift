@@ -3,24 +3,21 @@ import SwiftUI
 enum AppRoute: Hashable {
     case journalEntry(date: Date)
     case journalDiaryView(date: Date)
-    case panicReflection(date: Date)   // ✅ Datum rein
+    case panicReflection(date: Date)
     case questionCatalog
 }
-
 
 enum JournalRootMode: Hashable {
     case emotions
     case panicAttacks
 }
 
-// ✅ Welche “Art” Popup wird angezeigt?
 enum JournalPopupKind: Hashable {
-    case moodA   // rot/blau
-    case moodB   // grün/blau
-    case panic   // broken heart (soll aber gleichen Chip wie Emotionen kriegen)
+    case moodA
+    case moodB
+    case panic
 }
 
-// ✅ Identifiable Item für sheet(item:)
 struct JournalPopupItem: Identifiable, Hashable {
     let id = UUID()
     let date: Date
@@ -31,77 +28,84 @@ struct JournalNavigationView: View {
     @State private var navigationPath = NavigationPath()
     @State private var rootMode: JournalRootMode = .emotions
 
-    // ✅ stabiler Popup-State
-    @State private var popupItem: JournalPopupItem? = nil
+    // Steuert, ob ein Popup-Sheet angezeigt wird und welche Daten es bekommt.
+    @State private var popupItem: JournalPopupItem?
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-
-            Group {
-                switch rootMode {
-
-                case .emotions:
-                    JournalMainViewEmotions(
-                        rootMode: $rootMode,
-                        onPlusButtonTapped: { date, mark in
-                            // mark kommt aus Emotions-View (.moodGradientA / .moodGradientB)
-                            let kind: JournalPopupKind = (mark == .moodGradientA) ? .moodA : .moodB
-                            popupItem = JournalPopupItem(date: date, kind: kind)
-                        },
-                        onCreateEntry: { date in
-                            navigationPath.append(AppRoute.journalEntry(date: date))
-                        }
-                    )
-
-                case .panicAttacks:
-                    JournalMainViewPanicAttacks(
-                        rootMode: $rootMode,
-                        onPlusButtonTapped: { date in
-                            popupItem = JournalPopupItem(date: date, kind: .panic)
-                        },
-                        onCreateEntry: { date in
-                            navigationPath.append(AppRoute.journalEntry(date: date))
-                        }
-                    )
+            rootContent
+                .navigationDestination(for: AppRoute.self) { route in
+                    destinationView(for: route)
                 }
-            }
-            .navigationDestination(for: AppRoute.self) { route in
-                destinationView(for: route)
-            }
         }
-        // ✅ Popup als Sheet
         .sheet(item: $popupItem) { item in
-            let header = makePopupHeader(from: item.date)
-            let style = popupStyle(for: item.kind, date: item.date)
-
-            JournalMainPopUpView(
-                onEintragBearbeiten: {
-                    let date = item.date
-                    popupItem = nil
-                    navigationPath.append(AppRoute.journalEntry(date: date))
-                },
-                onDismiss: {
-                    popupItem = nil
-                },
-                dateHeader: header,
-                chipText: style.chipText,
-                chipGradient: style.gradient
-            )
-            .presentationDetents([.fraction(0.4)])
-            .presentationDragIndicator(.hidden)
-            .presentationBackground(Color.white)
+            popupSheet(for: item)
         }
     }
 
+    // Zeigt abhängig vom Root-Mode die passende Kalenderansicht.
+    private var rootContent: some View {
+        Group {
+            switch rootMode {
+            case .emotions:
+                JournalMainViewEmotions(
+                    rootMode: $rootMode,
+                    onPlusButtonTapped: { date, mark in
+                        let kind: JournalPopupKind = (mark == .moodGradientA) ? .moodA : .moodB
+                        popupItem = JournalPopupItem(date: date, kind: kind)
+                    },
+                    onCreateEntry: { date in
+                        navigationPath.append(AppRoute.journalEntry(date: date))
+                    }
+                )
+
+            case .panicAttacks:
+                JournalMainViewPanicAttacks(
+                    rootMode: $rootMode,
+                    onPlusButtonTapped: { date in
+                        popupItem = JournalPopupItem(date: date, kind: .panic)
+                    },
+                    onCreateEntry: { date in
+                        navigationPath.append(AppRoute.journalEntry(date: date))
+                    }
+                )
+            }
+        }
+    }
+
+    // Baut das Popup-Sheet mit Header und Chip-Style.
+    private func popupSheet(for item: JournalPopupItem) -> some View {
+        let header = Self.popupHeaderFormatter.string(from: item.date).capitalized
+        let style = popupStyle(for: item.kind, date: item.date)
+
+        return JournalMainPopUpView(
+            onEintragBearbeiten: {
+                let date = item.date
+                popupItem = nil
+                navigationPath.append(AppRoute.journalEntry(date: date))
+            },
+            onDismiss: {
+                popupItem = nil
+            },
+            dateHeader: header,
+            chipText: style.chipText,
+            chipGradient: style.gradient
+        )
+        .presentationDetents([.fraction(0.4)])
+        .presentationDragIndicator(.hidden)
+        .presentationBackground(Color.white)
+    }
+
+    // Navigiert einen Schritt zurück, wenn möglich.
     private func safePop() {
         guard !navigationPath.isEmpty else { return }
         navigationPath.removeLast()
     }
 
+    // Liefert die View für eine Route im NavigationStack.
     @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
-
         case .journalEntry(let date):
             JournalEntryView(
                 onBack: { safePop() },
@@ -132,21 +136,21 @@ struct JournalNavigationView: View {
         }
     }
 
-
-    private func makePopupHeader(from date: Date) -> String {
+    // Formatiert den Header-Text für das Popup.
+    private static let popupHeaderFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "de_DE")
         formatter.dateFormat = "EEEE, dd.MM."
-        return formatter.string(from: date).capitalized
-    }
+        return formatter
+    }()
 
-    // ✅ Panic soll exakt den gleichen Chip-Style bekommen wie Emotionen (Demo: 6 -> moodA, 7 -> moodB)
+    // Liefert den Text und den Farbverlauf für den Chip im Popup.
     private func popupStyle(
         for kind: JournalPopupKind,
         date: Date
     ) -> (chipText: String, gradient: LinearGradient) {
 
-        func moodA() -> (String, LinearGradient) {
+        func moodAStyle() -> (String, LinearGradient) {
             (
                 "deprimiert, fröhlich",
                 LinearGradient(
@@ -157,7 +161,7 @@ struct JournalNavigationView: View {
             )
         }
 
-        func moodB() -> (String, LinearGradient) {
+        func moodBStyle() -> (String, LinearGradient) {
             (
                 "energiegeladen, fröhlich",
                 LinearGradient(
@@ -170,21 +174,16 @@ struct JournalNavigationView: View {
 
         switch kind {
         case .moodA:
-            return moodA()
+            return moodAStyle()
 
         case .moodB:
-            return moodB()
+            return moodBStyle()
 
         case .panic:
-            // ✅ gleiche Darstellung wie Emotionen (für Demo anhand Tag)
-            let cal = Calendar(identifier: .gregorian)
-            let day = cal.component(.day, from: date)
-
-            if day == 6 { return moodA() }
-            if day == 7 { return moodB() }
-
-            // Default: nimm moodB (oder moodA – wie du willst)
-            return moodB()
+            let day = Calendar(identifier: .gregorian).component(.day, from: date)
+            if day == 6 { return moodAStyle() }
+            if day == 7 { return moodBStyle() }
+            return moodBStyle()
         }
     }
 }
