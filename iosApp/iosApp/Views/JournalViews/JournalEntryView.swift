@@ -1,27 +1,37 @@
 import SwiftUI
 
 struct JournalEntryView: View {
-
     let onBack: () -> Void
     let onOpenDiary: (_ date: Date) -> Void
     let onOpenPanicReflexion: (_ date: Date) -> Void
-
-    /// ✅ Datum kommt vom Kalender
     let entryDate: Date
 
+    // Speichert die aktuelle Stimmung als normalisierte X/Y-Position (-1...1).
     @State private var ballPosition = CGPoint(x: 0, y: 0)
+
+    // Sperrt das Verschieben der Stimmungskugel.
     @State private var isLocked = false
+
+    // Umschalter zwischen Symbol-Auswahl und Freitext.
     @State private var activityMode: ActivityMode = .symbols
+
+    // Speichert ausgewählte Aktivitäts-Symbole.
     @State private var selectedActivities: Set<ActivitySymbol> = []
+
+    // Freitext-Aktivität, wenn der Modus auf Freitext steht.
     @State private var freeTextActivity: String = ""
 
+    // Eingaben für Wasser und Schlaf (als String für TextFields).
     @State private var waterLiters: String = "0"
     @State private var sleepHours: String = "0"
+
+    // Kurze Notizen zum Tag.
     @State private var notes: String = ""
 
+    // Steuert Fokus (Keyboard) für verschiedene Felder.
     @FocusState private var focusedField: Field?
 
-    private enum Field: Hashable {
+    enum Field: Hashable {
         case freeTextActivity
         case waterLiters
         case sleepHours
@@ -51,121 +61,69 @@ struct JournalEntryView: View {
         case freetext = "Freitext"
     }
 
-    // MARK: - Datum
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                selfCheckHeader
+                activitiesSection
+                healthSection
+                notesSection
+                bottomNavButtons
+                Spacer(minLength: 100)
+            }
+        }
+        .background(Color.white)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar { toolbarContent }
+        .onTapGesture { focusedField = nil }
+        .onChange(of: focusedField) {
+            applyDefaultNumberBehavior()
+        }
+    }
 
+    // Formatiert das Datum für die Toolbar.
     private var formattedDate: String {
+        Self.entryDateFormatter.string(from: entryDate)
+    }
+
+    private static let entryDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "de_DE")
-        formatter.dateFormat = "E dd.MM.yy"   // z.B. "Mi 14.01.26"
-        return formatter.string(from: entryDate)
-    }
+        formatter.dateFormat = "E dd.MM.yy"
+        return formatter
+    }()
 
-    // MARK: - Lock Button
-
-    private var lockButton: some View {
-        Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                isLocked.toggle()
-            }
-        } label: {
-            Image(systemName: isLocked ? "lock.fill" : "lock.open")
-                .font(.title2)
-                .foregroundColor(.primary)
-        }
-    }
-
-    // MARK: - Mood Coordinate System
-
-    private var moodCoordinateSystem: some View {
-        GeometryReader { geo in
-            let centerX = geo.size.width / 2
-            let centerY = geo.size.height / 2
-            let maxDistanceX: CGFloat = centerX - 70
-            let maxDistanceY: CGFloat = centerY - 70
-
-            ZStack {
-                Path { path in
-                    path.move(to: CGPoint(x: centerX, y: 70))
-                    path.addLine(to: CGPoint(x: centerX, y: geo.size.height - 70))
-
-                    path.move(to: CGPoint(x: 60, y: centerY))
-                    path.addLine(to: CGPoint(x: geo.size.width - 60, y: centerY))
-                }
-                .stroke(Color.black, lineWidth: 2)
-
-                VStack(spacing: 4) {
-                    Text("energiegeladen")
-                        .font(.system(size: 12, weight: .medium))
-                    Image(systemName: "bolt.fill")
-                        .font(.system(size: 16))
-                }
-                .position(x: centerX, y: 25)
-
-                VStack(spacing: 4) {
-                    Image(systemName: "moon.zzz.fill")
-                        .font(.system(size: 16))
-                    Text("müde")
-                        .font(.system(size: 12, weight: .medium))
-                }
-                .position(x: centerX, y: geo.size.height - 25)
-
-                VStack(spacing: 2) {
-                    Text("😔").font(.system(size: 16))
-                    Text("deprimiert")
-                        .font(.system(size: 12, weight: .medium))
-                        .multilineTextAlignment(.center)
-                        .offset(y: 6)
-                }
-                .position(x: 40, y: centerY)
-
-                VStack(spacing: 2) {
-                    Text("😃").font(.system(size: 16))
-                    Text("fröhlich")
-                        .font(.system(size: 12, weight: .medium))
-                        .multilineTextAlignment(.center)
-                        .offset(y: 6)
-                }
-                .position(x: geo.size.width - 40, y: centerY)
-
-                Circle()
-                    .frame(width: 30, height: 30)
-                    .shadow(radius: 6, y: 2)
-                    .overlay(
-                        Group {
-                            if isLocked {
-                                Image(systemName: "lock.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.white)
-                            }
-                        }
-                    )
-                    .position(
-                        x: centerX + ballPosition.x * maxDistanceX,
-                        y: centerY - ballPosition.y * maxDistanceY
-                    )
-                    .gesture(isLocked ? nil : dragGesture(centerX: centerX, centerY: centerY, maxX: maxDistanceX, maxY: maxDistanceY))
-                    .opacity(isLocked ? 0.7 : 1.0)
+    // Baut die Toolbar (Back + Titel/Datum + Keyboard Done).
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(.black)
             }
         }
-    }
 
-    private func dragGesture(centerX: CGFloat, centerY: CGFloat, maxX: CGFloat, maxY: CGFloat) -> some Gesture {
-        DragGesture().onChanged { value in
-            let deltaX = value.location.x - centerX
-            let deltaY = centerY - value.location.y
+        ToolbarItem(placement: .principal) {
+            VStack(spacing: 2) {
+                Text("Tagescheck")
+                    .font(.headline)
+                    .foregroundColor(.black)
 
-            var normalizedX = deltaX / maxX
-            var normalizedY = deltaY / maxY
+                Text(formattedDate)
+                    .font(.caption)
+                    .foregroundColor(.black.opacity(0.6))
+            }
+        }
 
-            normalizedX = max(-1.0, min(1.0, normalizedX))
-            normalizedY = max(-1.0, min(1.0, normalizedY))
-
-            ballPosition = CGPoint(x: normalizedX, y: normalizedY)
+        ToolbarItemGroup(placement: .keyboard) {
+            Spacer()
+            Button("Fertig") { focusedField = nil }
         }
     }
 
-    // MARK: - Sections
-
+    // Zeigt Überschrift + Mood-Coordinate-System inkl. Lock-Button.
     private var selfCheckHeader: some View {
         VStack(spacing: 0) {
             Text("Selbstcheck")
@@ -180,6 +138,7 @@ struct JournalEntryView: View {
                     .fontWeight(.medium)
 
                 Spacer()
+
                 lockButton
             }
             .padding(.horizontal, 20)
@@ -192,6 +151,123 @@ struct JournalEntryView: View {
         }
     }
 
+    // Sperrt/entsperrt das Verschieben der Kugel.
+    private var lockButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                isLocked.toggle()
+            }
+        } label: {
+            Image(systemName: isLocked ? "lock.fill" : "lock.open")
+                .font(.title2)
+                .foregroundColor(.primary)
+        }
+    }
+
+    // Zeichnet Achsen, Labels und die verschiebbare Stimmungskugel.
+    private var moodCoordinateSystem: some View {
+        GeometryReader { geo in
+            let centerX = geo.size.width / 2
+            let centerY = geo.size.height / 2
+            let maxDistanceX: CGFloat = centerX - 70
+            let maxDistanceY: CGFloat = centerY - 70
+
+            ZStack {
+                axes(centerX: centerX, centerY: centerY, size: geo.size)
+                moodLabels(centerX: centerX, centerY: centerY, size: geo.size)
+                moodBall(centerX: centerX, centerY: centerY, maxX: maxDistanceX, maxY: maxDistanceY)
+            }
+        }
+    }
+
+    // Zeichnet das Kreuz (X/Y Achsen).
+    private func axes(centerX: CGFloat, centerY: CGFloat, size: CGSize) -> some View {
+        Path { path in
+            path.move(to: CGPoint(x: centerX, y: 70))
+            path.addLine(to: CGPoint(x: centerX, y: size.height - 70))
+
+            path.move(to: CGPoint(x: 60, y: centerY))
+            path.addLine(to: CGPoint(x: size.width - 60, y: centerY))
+        }
+        .stroke(Color.black, lineWidth: 2)
+    }
+
+    // Platziert die vier Stimmungs-Labels rund um die Achsen.
+    private func moodLabels(centerX: CGFloat, centerY: CGFloat, size: CGSize) -> some View {
+        ZStack {
+            VStack(spacing: 4) {
+                Text("energiegeladen")
+                    .font(.system(size: 12, weight: .medium))
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 16))
+            }
+            .position(x: centerX, y: 25)
+
+            VStack(spacing: 4) {
+                Image(systemName: "moon.zzz.fill")
+                    .font(.system(size: 16))
+                Text("müde")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .position(x: centerX, y: size.height - 25)
+
+            VStack(spacing: 2) {
+                Text("😔").font(.system(size: 16))
+                Text("deprimiert")
+                    .font(.system(size: 12, weight: .medium))
+                    .multilineTextAlignment(.center)
+                    .offset(y: 6)
+            }
+            .position(x: 40, y: centerY)
+
+            VStack(spacing: 2) {
+                Text("😃").font(.system(size: 16))
+                Text("fröhlich")
+                    .font(.system(size: 12, weight: .medium))
+                    .multilineTextAlignment(.center)
+                    .offset(y: 6)
+            }
+            .position(x: size.width - 40, y: centerY)
+        }
+    }
+
+    // Zeigt die Kugel an der passenden Position und erlaubt Dragging (wenn nicht gesperrt).
+    private func moodBall(centerX: CGFloat, centerY: CGFloat, maxX: CGFloat, maxY: CGFloat) -> some View {
+        Circle()
+            .frame(width: 30, height: 30)
+            .shadow(radius: 6, y: 2)
+            .overlay {
+                if isLocked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white)
+                }
+            }
+            .position(
+                x: centerX + ballPosition.x * maxX,
+                y: centerY - ballPosition.y * maxY
+            )
+            .gesture(isLocked ? nil : moodDragGesture(centerX: centerX, centerY: centerY, maxX: maxX, maxY: maxY))
+            .opacity(isLocked ? 0.7 : 1.0)
+    }
+
+    // Normalisiert Drag-Input in den Bereich -1...1.
+    private func moodDragGesture(centerX: CGFloat, centerY: CGFloat, maxX: CGFloat, maxY: CGFloat) -> some Gesture {
+        DragGesture().onChanged { value in
+            let deltaX = value.location.x - centerX
+            let deltaY = centerY - value.location.y
+
+            var normalizedX = deltaX / maxX
+            var normalizedY = deltaY / maxY
+
+            normalizedX = max(-1.0, min(1.0, normalizedX))
+            normalizedY = max(-1.0, min(1.0, normalizedY))
+
+            ballPosition = CGPoint(x: normalizedX, y: normalizedY)
+        }
+    }
+
+    // Zeigt Aktivitätsmodus + Symbolgrid oder Freitext.
     private var activitiesSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
@@ -223,63 +299,49 @@ struct JournalEntryView: View {
         }
     }
 
+    // Grid zum Auswählen von Aktivitäten per Icon.
     private var symbolsGrid: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible(), spacing: 16),
-            GridItem(.flexible(), spacing: 16),
-            GridItem(.flexible(), spacing: 16)
-        ], spacing: 16) {
-
+        LazyVGrid(
+            columns: [
+                GridItem(.flexible(), spacing: 16),
+                GridItem(.flexible(), spacing: 16),
+                GridItem(.flexible(), spacing: 16)
+            ],
+            spacing: 16
+        ) {
             ForEach(ActivitySymbol.allCases) { activity in
-                Button {
-                    if selectedActivities.contains(activity) {
-                        selectedActivities.remove(activity)
-                    } else {
-                        selectedActivities.insert(activity)
-                    }
-                } label: {
-                    VStack(spacing: 8) {
-                        Image(systemName: activity.rawValue)
-                            .font(.system(size: 24))
-                            .foregroundColor(.primary)
-                        Text(activity.label)
-                            .font(.caption)
-                            .foregroundColor(.primary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 80)
-                    .background(selectedActivities.contains(activity) ? Color.black.opacity(0.2) : Color(.systemGray6))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(selectedActivities.contains(activity) ? Color.black : Color.clear, lineWidth: 2)
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-
-            Button {
-                // TODO: Add new activity
-            } label: {
-                VStack(spacing: 8) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 24))
-                        .foregroundColor(.primary)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 80)
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.primary, lineWidth: 1)
-                        .opacity(0.3)
+                ActivityTile(
+                    title: activity.label,
+                    systemImage: activity.rawValue,
+                    isSelected: selectedActivities.contains(activity),
+                    onTap: { toggleActivity(activity) }
                 )
             }
-            .buttonStyle(.plain)
+
+            ActivityTile(
+                title: "",
+                systemImage: "plus",
+                isSelected: false,
+                onTap: {}
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.primary, lineWidth: 1)
+                    .opacity(0.3)
+            )
         }
     }
 
+    // Schaltet ein Symbol an/aus in der Auswahl.
+    private func toggleActivity(_ activity: ActivitySymbol) {
+        if selectedActivities.contains(activity) {
+            selectedActivities.remove(activity)
+        } else {
+            selectedActivities.insert(activity)
+        }
+    }
+
+    // Freitext-Eingabe für Aktivitäten inkl. Placeholder.
     private var freeTextEditor: some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: $freeTextActivity)
@@ -304,6 +366,7 @@ struct JournalEntryView: View {
         .padding(.horizontal, 20)
     }
 
+    // Eingabefelder für Wasser und Schlaf.
     private var healthSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Gesundheitstracker")
@@ -313,45 +376,30 @@ struct JournalEntryView: View {
                 .padding(.top, 40)
 
             HStack(spacing: 40) {
-                VStack(spacing: 10) {
-                    Image(systemName: "waterbottle")
-                        .font(.system(size: 40))
-                        .foregroundColor(.primary)
+                HealthInputColumn(
+                    icon: "waterbottle",
+                    text: $waterLiters,
+                    unit: "Liter",
+                    keyboardType: UIKeyboardType.decimalPad,
+                    focusedField: $focusedField,
+                    field: .waterLiters
+                )
 
-                    TextField("", text: $waterLiters)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 100)
-                        .multilineTextAlignment(.center)
-                        .focused($focusedField, equals: .waterLiters)
-
-                    Text("Liter")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                VStack(spacing: 10) {
-                    Image(systemName: "bed.double")
-                        .font(.system(size: 40))
-                        .foregroundColor(.primary)
-
-                    TextField("", text: $sleepHours)
-                        .keyboardType(.numberPad)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 100)
-                        .multilineTextAlignment(.center)
-                        .focused($focusedField, equals: .sleepHours)
-
-                    Text("Stunden")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                HealthInputColumn(
+                    icon: "bed.double",
+                    text: $sleepHours,
+                    unit: "Stunden",
+                    keyboardType: UIKeyboardType.numberPad,
+                    focusedField: $focusedField,
+                    field: .sleepHours
+                )
             }
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 20)
         }
     }
 
+    // Kurze Notizen als TextEditor.
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Notizen")
@@ -374,116 +422,122 @@ struct JournalEntryView: View {
         }
     }
 
+    // Buttons zum Wechseln in Tagebuch und Panik-Reflexion.
     private var bottomNavButtons: some View {
         HStack(spacing: 16) {
             Button { onOpenDiary(entryDate) } label: {
-                ZStack(alignment: .bottomTrailing) {
-                    Text("Tagebuch")
-                        .font(.system(size: 16, weight: .medium))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("4/6")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.black, lineWidth: 1)
-                )
+                NavButtonLabel(title: "Tagebuch", progress: "4/6")
             }
-            .foregroundColor(.primary)
 
             Button { onOpenPanicReflexion(entryDate) } label: {
-                ZStack(alignment: .bottomTrailing) {
-                    Text("Panik Reflexion")
-                        .font(.system(size: 16, weight: .medium))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("5/6")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.black, lineWidth: 1)
-                )
+                NavButtonLabel(title: "Panik Reflexion", progress: "5/6")
             }
-            .foregroundColor(.primary)
         }
+        .foregroundColor(.primary)
         .padding(.horizontal, 20)
         .padding(.top, 24)
     }
 
-    // MARK: - Body
+    // Setzt Default-Werte für Zahlfelder beim Fokus rein/raus.
+    private func applyDefaultNumberBehavior() {
+        if focusedField == .waterLiters, waterLiters == "0" { waterLiters = "" }
+        if focusedField == .sleepHours, sleepHours == "0" { sleepHours = "" }
+
+        if focusedField != .waterLiters, waterLiters.trimmed.isEmpty { waterLiters = "0" }
+        if focusedField != .sleepHours, sleepHours.trimmed.isEmpty { sleepHours = "0" }
+    }
+}
+
+private struct ActivityTile: View {
+    let title: String
+    let systemImage: String
+    let isSelected: Bool
+    let onTap: () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                selfCheckHeader
-                activitiesSection
-                healthSection
-                notesSection
-                bottomNavButtons
-                Spacer(minLength: 100)
-            }
-        }
-        .background(Color.white) // ✅ wie WhatsApp oben weiß
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
+        Button(action: onTap) {
+            VStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 24))
+                    .foregroundColor(.primary)
 
-            // ✅ Back links
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.black)
-                }
-            }
-
-            // ✅ Titel + Datum mittig (2 Zeilen) – wie Tagebuch
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 2) {
-                    Text("Tagescheck")
-                        .font(.headline)
-                        .foregroundColor(.black)
-
-                    Text(formattedDate)
+                if title.isEmpty == false {
+                    Text(title)
                         .font(.caption)
-                        .foregroundColor(.black.opacity(0.6))
+                        .foregroundColor(.primary)
                 }
             }
-
-            // ✅ Keyboard Done
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Fertig") { focusedField = nil }
-            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 80)
+            .background(isSelected ? Color.black.opacity(0.2) : Color(.systemGray6))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.black : Color.clear, lineWidth: 2)
+            )
         }
-        .onTapGesture { focusedField = nil }
-        .onChange(of: focusedField) { newValue in
-            // Fokus rein
-            if newValue == .waterLiters && waterLiters == "0" { waterLiters = "" }
-            if newValue == .sleepHours && sleepHours == "0" { sleepHours = "" }
+        .buttonStyle(.plain)
+    }
+}
 
-            // Fokus raus
-            if newValue != .waterLiters,
-               waterLiters.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                waterLiters = "0"
-            }
-            if newValue != .sleepHours,
-               sleepHours.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                sleepHours = "0"
-            }
+private struct HealthInputColumn: View {
+    let icon: String
+    @Binding var text: String
+    let unit: String
+    let keyboardType: UIKeyboardType
+    @FocusState.Binding var focusedField: JournalEntryView.Field?
+    let field: JournalEntryView.Field
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 40))
+                .foregroundColor(.primary)
+
+            TextField("", text: $text)
+                .keyboardType(keyboardType)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 100)
+                .multilineTextAlignment(.center)
+                .focused($focusedField, equals: field)
+
+            Text(unit)
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
 }
 
-// MARK: - Preview
+private struct NavButtonLabel: View {
+    let title: String
+    let progress: String
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Text(title)
+                .font(.system(size: 16, weight: .medium))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text(progress)
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color.clear)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.black, lineWidth: 1)
+        )
+    }
+}
+
+private extension String {
+    var trimmed: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 #Preview {
     NavigationStack {
         JournalEntryView(
