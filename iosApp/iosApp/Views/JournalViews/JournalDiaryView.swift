@@ -1,34 +1,34 @@
 import SwiftUI
 
-// MARK: - Main View
 struct JournalDiaryView: View {
-
     let onBack: () -> Void
     let onOpenQuestionCatalog: () -> Void
-
-    /// ✅ Datum aus EntryView
     let entryDate: Date
 
-    // ✅ Keyboard Focus
+    // Steuert, ob das TextField fokussiert ist (Keyboard an/aus).
     @FocusState private var isKeyboardActive: Bool
 
-    // ✅ Tooltip State
-    @State private var showPencilTooltip: Bool = false
+    // Steuert, ob der Pencil-Tooltip sichtbar ist.
+    @State private var showPencilTooltip = false
 
-    // ✅ Tooltip nur einmal pro View-Instanz anzeigen
-    @State private var didShowPencilTooltip: Bool = false
+    // Verhindert, dass der Tooltip mehrfach beim Re-Render auftaucht.
+    @State private var didShowPencilTooltip = false
 
-    // MARK: - State Variables
-    @State private var expanded: [Bool] = Array(repeating: true, count: 7)
-    @State private var answer1: String = ""
-    @State private var answer2: String = ""
-    @State private var answer3: String = ""
-    @State private var answer4: String = ""
-    @State private var answer5: [String] = Array(repeating: "", count: 4) // Morgen, Mittag, Abend, Nacht
-    @State private var answer6: String = ""
-    @State private var answer7: String = ""
+    // Steuert, welche Cards aufgeklappt sind.
+    @State private var expanded = Array(repeating: true, count: 7)
 
-    // MARK: - Data (✅ alles auf Deutsch)
+    // Speichert die Antworten der Textfragen.
+    @State private var answer1 = ""
+    @State private var answer2 = ""
+    @State private var answer3 = ""
+    @State private var answer4 = ""
+    @State private var answer6 = ""
+    @State private var answer7 = ""
+
+    // Speichert die Stimmungsauswahl für vier Tageszeiten.
+    @State private var moodSelections = Array(repeating: "", count: 4)
+
+    // Texte der Tagebuchfragen.
     private let diaryQuestions = [
         "Gab es heute schwierige Momente für dich?",
         "Was ist gut gelaufen?",
@@ -39,74 +39,35 @@ struct JournalDiaryView: View {
         "Gibt es etwas, das du morgen anders machen möchtest?"
     ]
 
+    // Emoji-Auswahl für die Stimmung.
     private let moodEmojis = ["😢", "🙁", "😐", "😊", "😄"]
 
-    private var formattedDiaryDate: String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "de_DE")
-        f.dateFormat = "E dd.MM.yy"   // z.B. "Di 06.01.26"
-        return f.string(from: entryDate)
-    }
-
-    // MARK: - Body
     var body: some View {
         ZStack {
-            // ===== Main Content =====
             ScrollView {
                 VStack(spacing: 14) {
                     VStack(spacing: 12) {
-
-                        CategoryCard(title: diaryQuestions[0], dateText: nil, isExpanded: $expanded[0]) {
-                            DiaryContent(text: $answer1, isKeyboardActive: $isKeyboardActive)
-                        }
-
-                        CategoryCard(title: diaryQuestions[1], dateText: nil, isExpanded: $expanded[1]) {
-                            DiaryContent(text: $answer2, isKeyboardActive: $isKeyboardActive)
-                        }
-
-                        CategoryCard(title: diaryQuestions[2], dateText: nil, isExpanded: $expanded[2]) {
-                            DiaryContent(text: $answer3, isKeyboardActive: $isKeyboardActive)
-                        }
-
-                        CategoryCard(title: diaryQuestions[3], dateText: nil, isExpanded: $expanded[3]) {
-                            DiaryContent(text: $answer4, isKeyboardActive: $isKeyboardActive)
-                        }
-
-                        CategoryCard(title: diaryQuestions[4], dateText: nil, isExpanded: $expanded[4]) {
-                            VStack(alignment: .leading, spacing: 14) {
-                                MoodPickerRow(title: "Morgen ☀️", emojis: moodEmojis, selection: $answer5[0])
-                                MoodPickerRow(title: "Mittag 🌤", emojis: moodEmojis, selection: $answer5[1])
-                                MoodPickerRow(title: "Abend 🌆", emojis: moodEmojis, selection: $answer5[2])
-                                MoodPickerRow(title: "Nacht 🌙", emojis: moodEmojis, selection: $answer5[3])
+                        ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
+                            CategoryCard(title: section.title, dateText: nil, isExpanded: $expanded[index]) {
+                                section.content
                             }
-                        }
-
-                        CategoryCard(title: diaryQuestions[5], dateText: nil, isExpanded: $expanded[5]) {
-                            DiaryContent(text: $answer6, isKeyboardActive: $isKeyboardActive)
-                        }
-
-                        CategoryCard(title: diaryQuestions[6], dateText: nil, isExpanded: $expanded[6]) {
-                            DiaryContent(text: $answer7, isKeyboardActive: $isKeyboardActive)
                         }
                     }
                     .padding(.horizontal, 12)
                     .padding(.top, 10)
 
-                    // MARK: Submit Button
-                    VStack(spacing: 10) {
-                        Button { onBack() } label: {
-                            Text("Eintrag abschließen")
-                                .font(.system(size: 18, weight: .regular))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .padding(.horizontal, 24)
-                                .background(Color.clear)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.black, lineWidth: 2)
-                                )
-                        }
+                    Button { onBack() } label: {
+                        Text("Eintrag abschließen")
+                            .font(.system(size: 18, weight: .regular))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 24)
+                            .background(Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.black, lineWidth: 2)
+                            )
                     }
                     .padding(.horizontal, 80)
                     .padding(.top, 6)
@@ -115,69 +76,13 @@ struct JournalDiaryView: View {
             }
             .background(Color(red: 0.95, green: 0.95, blue: 0.95))
 
-            // ✅ Wir setzen den Titel über "principal" (stabil & hübsch)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button { onBack() } label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                    }
-                }
-
-                // ✅ Titel + Datum mittig (2 Zeilen)
-                ToolbarItem(placement: .principal) {
-                    VStack(spacing: 2) {
-                        Text("Tagebuch")
-                            .font(.headline)
-                            .foregroundColor(.black)
-
-                        Text(formattedDiaryDate)
-                            .font(.caption)
-                            .foregroundColor(.black.opacity(0.6))
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showPencilTooltip = false
-                        onOpenQuestionCatalog()
-                    } label: {
-                        Image(systemName: "pencil")
-                            .foregroundColor(.black)
-                            .imageScale(.large)
-                    }
-                }
-
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Fertig") { isKeyboardActive = false }
-                }
-            }
-            .onTapGesture { isKeyboardActive = false }
-            .onAppear {
-                // ✅ Tooltip nur EINMAL pro Tagebuch-View-Instanz anzeigen
-                guard didShowPencilTooltip == false else { return }
-                didShowPencilTooltip = true
-
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
-                        showPencilTooltip = true
-                    }
-                }
-            }
-
-            // ===== Tooltip Overlay =====
+            // Zeigt den Tooltip über der UI.
             if showPencilTooltip {
                 Color.black.opacity(0.001)
                     .ignoresSafeArea()
                     .onTapGesture {
                         isKeyboardActive = false
-                        withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
-                            showPencilTooltip = false
-                        }
+                        hideTooltip()
                     }
                     .zIndex(9)
 
@@ -185,25 +90,125 @@ struct JournalDiaryView: View {
                     text: "Hier kannst du\ndeine Fragen\nanpassen!",
                     buttonTitle: "OK!",
                     arrowX: 0.86,
-                    onClose: {
-                        withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
-                            showPencilTooltip = false
-                        }
-                    }
+                    onClose: { hideTooltip() }
                 )
                 .frame(width: 260)
                 .position(
-                    x: UIScreen.main.bounds.width - 260/2 - 8,
+                    x: UIScreen.main.bounds.width - 260 / 2 - 8,
                     y: 105
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
                 .zIndex(10)
             }
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar { toolbarContent }
+        .onTapGesture { isKeyboardActive = false }
+        .onAppear { showTooltipOnce() }
+    }
+
+    // Liefert Titel + Content pro Card, damit der Body nicht aus Copy/Paste besteht.
+    private var sections: [SectionDefinition] {
+        [
+            .init(title: diaryQuestions[0], content: AnyView(DiaryContent(text: $answer1, isKeyboardActive: $isKeyboardActive))),
+            .init(title: diaryQuestions[1], content: AnyView(DiaryContent(text: $answer2, isKeyboardActive: $isKeyboardActive))),
+            .init(title: diaryQuestions[2], content: AnyView(DiaryContent(text: $answer3, isKeyboardActive: $isKeyboardActive))),
+            .init(title: diaryQuestions[3], content: AnyView(DiaryContent(text: $answer4, isKeyboardActive: $isKeyboardActive))),
+            .init(title: diaryQuestions[4], content: AnyView(moodPickerContent)),
+            .init(title: diaryQuestions[5], content: AnyView(DiaryContent(text: $answer6, isKeyboardActive: $isKeyboardActive))),
+            .init(title: diaryQuestions[6], content: AnyView(DiaryContent(text: $answer7, isKeyboardActive: $isKeyboardActive)))
+        ]
+    }
+
+    // Content für die vier Mood-Picker Reihen.
+    private var moodPickerContent: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            MoodPickerRow(title: "Morgen ☀️", emojis: moodEmojis, selection: $moodSelections[0])
+            MoodPickerRow(title: "Mittag 🌤", emojis: moodEmojis, selection: $moodSelections[1])
+            MoodPickerRow(title: "Abend 🌆", emojis: moodEmojis, selection: $moodSelections[2])
+            MoodPickerRow(title: "Nacht 🌙", emojis: moodEmojis, selection: $moodSelections[3])
+        }
+    }
+
+    // Toolbar mit Back, Titel/Datum, Pencil und Keyboard-“Fertig”.
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { onBack() } label: {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(.black)
+            }
+        }
+
+        ToolbarItem(placement: .principal) {
+            VStack(spacing: 2) {
+                Text("Tagebuch")
+                    .font(.headline)
+                    .foregroundColor(.black)
+
+                Text(formattedDiaryDate)
+                    .font(.caption)
+                    .foregroundColor(.black.opacity(0.6))
+            }
+        }
+
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                showPencilTooltip = false
+                onOpenQuestionCatalog()
+            } label: {
+                Image(systemName: "pencil")
+                    .foregroundColor(.black)
+                    .imageScale(.large)
+            }
+        }
+
+        ToolbarItemGroup(placement: .keyboard) {
+            Spacer()
+            Button("Fertig") { isKeyboardActive = false }
+        }
+    }
+
+    // Zeigt den Tooltip nur einmal, wenn die View das erste Mal erscheint.
+    private func showTooltipOnce() {
+        guard didShowPencilTooltip == false else { return }
+        didShowPencilTooltip = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                showPencilTooltip = true
+            }
+        }
+    }
+
+    // Blendet den Tooltip animiert aus.
+    private func hideTooltip() {
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+            showPencilTooltip = false
+        }
+    }
+
+    // Formatiert das Datum für die Toolbar.
+    private var formattedDiaryDate: String {
+        Self.diaryDateFormatter.string(from: entryDate)
+    }
+
+    // DateFormatter als static, damit er nicht bei jedem Render neu erzeugt wird.
+    private static let diaryDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.dateFormat = "E dd.MM.yy"
+        return f
+    }()
+
+    private struct SectionDefinition {
+        let title: String
+        let content: AnyView
     }
 }
 
-// MARK: - Tooltip Speech Bubble (3 Ebenen wie Figma)
 private struct TooltipSpeechBubble: View {
     let text: String
     let buttonTitle: String
@@ -279,40 +284,32 @@ private struct BubbleShape: Shape {
         p.addLine(to: CGPoint(x: arrowRight, y: bodyRect.minY))
 
         p.addLine(to: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY))
-        p.addArc(
-            center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY + corner),
-            radius: corner,
-            startAngle: Angle(degrees: -90),
-            endAngle: Angle(degrees: 0),
-            clockwise: false
-        )
+        p.addArc(center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY + corner),
+                 radius: corner,
+                 startAngle: .degrees(-90),
+                 endAngle: .degrees(0),
+                 clockwise: false)
 
         p.addLine(to: CGPoint(x: bodyRect.maxX, y: bodyRect.maxY - corner))
-        p.addArc(
-            center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.maxY - corner),
-            radius: corner,
-            startAngle: Angle(degrees: 0),
-            endAngle: Angle(degrees: 90),
-            clockwise: false
-        )
+        p.addArc(center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.maxY - corner),
+                 radius: corner,
+                 startAngle: .degrees(0),
+                 endAngle: .degrees(90),
+                 clockwise: false)
 
         p.addLine(to: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY))
-        p.addArc(
-            center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY - corner),
-            radius: corner,
-            startAngle: Angle(degrees: 90),
-            endAngle: Angle(degrees: 180),
-            clockwise: false
-        )
+        p.addArc(center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY - corner),
+                 radius: corner,
+                 startAngle: .degrees(90),
+                 endAngle: .degrees(180),
+                 clockwise: false)
 
         p.addLine(to: CGPoint(x: bodyRect.minX, y: bodyRect.minY + corner))
-        p.addArc(
-            center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.minY + corner),
-            radius: corner,
-            startAngle: Angle(degrees: 180),
-            endAngle: Angle(degrees: 270),
-            clockwise: false
-        )
+        p.addArc(center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.minY + corner),
+                 radius: corner,
+                 startAngle: .degrees(180),
+                 endAngle: .degrees(270),
+                 clockwise: false)
 
         p.closeSubpath()
         return p
@@ -324,10 +321,8 @@ private struct DiaryContent: View {
     @FocusState.Binding var isKeyboardActive: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            RoundedTextField(placeholder: "…", text: $text, isKeyboardActive: $isKeyboardActive)
-        }
-        .padding(.top, 8)
+        RoundedTextField(placeholder: "…", text: $text, isKeyboardActive: $isKeyboardActive)
+            .padding(.top, 8)
     }
 }
 
@@ -446,7 +441,6 @@ private struct RoundedTextField: View {
     }
 }
 
-// MARK: - Preview
 #Preview {
     NavigationStack {
         JournalDiaryView(
@@ -456,3 +450,4 @@ private struct RoundedTextField: View {
         )
     }
 }
+

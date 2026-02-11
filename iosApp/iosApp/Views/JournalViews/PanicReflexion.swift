@@ -25,6 +25,9 @@ struct PanicReflexion: View {
     @State private var newSymptomText: String = ""
     @State private var selectedFeelings: Set<String> = []
 
+    // ✅ Wichtig: @State damit neue Symptome als Buttons entstehen
+    @State private var symptomOptions: [String] = ["Schwindel", "Kurzatmigkeit", "Herzrasen"]
+
     // Section 3 (UI-State)
     @State private var skillEffectiveness: Double = 5
     @State private var nextTimeText: String = ""
@@ -33,7 +36,6 @@ struct PanicReflexion: View {
     @State private var shortReflection: String = ""
 
     // ✅ Alles auf Deutsch
-    private let symptomOptions = ["Schwindel", "Kurzatmigkeit", "Herzrasen"]
     private let feelingOptions: [(key: String, emoji: String, label: String)] = [
         ("wut", "😠", "Wut"),
         ("panikAngst", "😨", "Panik/Angst"),
@@ -76,7 +78,7 @@ struct PanicReflexion: View {
 
                     CategoryCard(title: "Mein Erleben", dateText: nil, isExpanded: expandedBinding(1)) {
                         Category2Content(
-                            symptomOptions: symptomOptions,
+                            symptomOptions: $symptomOptions,              // ✅ Binding!
                             selectedSymptoms: $selectedSymptoms,
                             newSymptomText: $newSymptomText,
                             feelingOptions: feelingOptions,
@@ -203,7 +205,7 @@ private struct Category1Content: View {
 
 // MARK: - Section 2 Content (Mein Erleben)
 private struct Category2Content: View {
-    let symptomOptions: [String]
+    @Binding var symptomOptions: [String]
     @Binding var selectedSymptoms: Set<String>
     @Binding var newSymptomText: String
 
@@ -211,6 +213,23 @@ private struct Category2Content: View {
     @Binding var selectedFeelings: Set<String>
 
     @FocusState.Binding var isKeyboardActive: Bool
+
+    private func addSymptomIfPossible() {
+        let cleaned = newSymptomText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return }
+
+        let exists = symptomOptions.contains { $0.lowercased() == cleaned.lowercased() }
+        guard !exists else {
+            newSymptomText = ""
+            isKeyboardActive = false
+            return
+        }
+
+        symptomOptions.append(cleaned)
+        selectedSymptoms.insert(cleaned) // ✅ direkt markieren
+        newSymptomText = ""
+        isKeyboardActive = false
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -232,10 +251,28 @@ private struct Category2Content: View {
                                 selectedSymptoms.insert(item)
                             }
                         }
+                        // optional: long press löschen
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                symptomOptions.removeAll { $0 == item }
+                                selectedSymptoms.remove(item)
+                            } label: {
+                                Label("Löschen", systemImage: "trash")
+                            }
+                        }
                     }
                 }
 
-                RoundedTextField(placeholder: "Symptom hinzufügen", text: $newSymptomText, isKeyboardActive: $isKeyboardActive)
+                // ✅ WICHTIG: Einzeiliges Field -> onSubmit funktioniert auch am echten iPhone
+                RoundedSingleLineTextField(
+                    placeholder: "Symptom hinzufügen",
+                    text: $newSymptomText,
+                    isKeyboardActive: $isKeyboardActive
+                )
+                .submitLabel(.done)
+                .onSubmit {
+                    addSymptomIfPossible()
+                }
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -538,6 +575,32 @@ private struct RoundedTextField: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .lineLimit(1...6)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.black, lineWidth: 1)
+        )
+        .background(Color.white)
+    }
+}
+
+/// ✅ Einzeiliges Feld: Return/Done triggert onSubmit auch am echten iPhone
+private struct RoundedSingleLineTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    var isKeyboardActive: FocusState<Bool>.Binding? = nil
+
+    var body: some View {
+        Group {
+            if let isKeyboardActive {
+                TextField(placeholder, text: $text)
+                    .focused(isKeyboardActive)
+            } else {
+                TextField(placeholder, text: $text)
+            }
+        }
+        .textFieldStyle(.plain)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(Color.black, lineWidth: 1)
