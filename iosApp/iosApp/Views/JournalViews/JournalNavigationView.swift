@@ -1,29 +1,5 @@
 import SwiftUI
 
-enum AppRoute: Hashable {
-    case journalEntry(date: Date)
-    case journalDiaryView(date: Date)
-    case panicReflection(date: Date)
-    case questionCatalog
-}
-
-enum JournalRootMode: Hashable {
-    case emotions
-    case panicAttacks
-}
-
-enum JournalPopupKind: Hashable {
-    case moodA
-    case moodB
-    case panic
-}
-
-struct JournalPopupItem: Identifiable, Hashable {
-    let id = UUID()
-    let date: Date
-    let kind: JournalPopupKind
-}
-
 struct JournalNavigationView: View {
     @State private var navigationPath = NavigationPath()
     @State private var rootMode: JournalRootMode = .emotions
@@ -75,8 +51,8 @@ struct JournalNavigationView: View {
 
     // Baut das Popup-Sheet mit Header und Chip-Style.
     private func popupSheet(for item: JournalPopupItem) -> some View {
-        let header = Self.popupHeaderFormatter.string(from: item.date).capitalized
-        let style = popupStyle(for: item.kind, date: item.date)
+        let header = JournalPopupStyleProvider.headerFormatter.string(from: item.date).capitalized
+        let style = JournalPopupStyleProvider.style(for: item.kind, date: item.date)
 
         return JournalMainPopUpView(
             onEintragBearbeiten: {
@@ -133,57 +109,6 @@ struct JournalNavigationView: View {
 
         case .questionCatalog:
             QuestionCatalog(onBack: { safePop() })
-        }
-    }
-
-    // Formatiert den Header-Text für das Popup.
-    private static let popupHeaderFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "de_DE")
-        formatter.dateFormat = "EEEE, dd.MM."
-        return formatter
-    }()
-
-    // Liefert den Text und den Farbverlauf für den Chip im Popup.
-    private func popupStyle(
-        for kind: JournalPopupKind,
-        date: Date
-    ) -> (chipText: String, gradient: LinearGradient) {
-
-        func moodAStyle() -> (String, LinearGradient) {
-            (
-                "deprimiert, fröhlich",
-                LinearGradient(
-                    colors: [Color.red.opacity(0.95), Color.blue.opacity(0.95)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-        }
-
-        func moodBStyle() -> (String, LinearGradient) {
-            (
-                "energiegeladen, fröhlich",
-                LinearGradient(
-                    colors: [Color.green.opacity(0.95), Color.blue.opacity(0.95)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-        }
-
-        switch kind {
-        case .moodA:
-            return moodAStyle()
-
-        case .moodB:
-            return moodBStyle()
-
-        case .panic:
-            let day = Calendar(identifier: .gregorian).component(.day, from: date)
-            if day == 6 { return moodAStyle() }
-            if day == 7 { return moodBStyle() }
-            return moodBStyle()
         }
     }
 }
