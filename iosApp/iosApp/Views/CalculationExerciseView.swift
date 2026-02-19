@@ -83,3 +83,13 @@ struct CalculationExerciseView: View {
         }
     }
 }
+struct CalculationExerciseView_Previews: PreviewProvider {
+    static var previews: some View {
+        // Wir brauchen @State Variablen für die Bindings
+        CalculationExerciseView(
+            isShowing: .constant(true),
+            currentStep: .constant(1),
+            isStandalone: true
+        )
+    }
+}
