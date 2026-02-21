@@ -1,32 +1,11 @@
-package org.iremia.iremia.domain
+package org.iremia.iremia.domain.engines
 
+// MARK: - IMPORTS
+import org.iremia.iremia.domain.models.MathOperation
+import org.iremia.iremia.domain.models.QuestionData
 import kotlin.random.Random
 
-// 1. Die Enum für die Rechenarten
-enum class MathOperation(val symbol: String) {
-    PLUS("+"),
-    MINUS("−");
-
-    fun compute(a: Int, b: Int): Int = when (this) {
-        PLUS -> a + b
-        MINUS -> a - b
-    }
-
-    companion object {
-        fun random() = entries.random()
-    }
-}
-
-// 2. Das Datenmodell für eine Aufgabe
-data class QuestionData(
-    val a: Int,
-    val b: Int,
-    val operation: MathOperation,
-    val answerOptions: List<Int>,
-    val correctAnswer: Int
-)
-
-// 3. Die Engine, die alles steuert
+// MARK: - ENGINE
 class CalculationEngine {
     val totalQuestions = 3
 

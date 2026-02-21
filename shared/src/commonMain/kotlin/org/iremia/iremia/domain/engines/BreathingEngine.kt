@@ -1,4 +1,4 @@
-package org.iremia.iremia.domain
+package org.iremia.iremia.domain.engines
 
 class BreathingEngine {
     val totalTime = 180
