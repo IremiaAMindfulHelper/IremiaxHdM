@@ -1,0 +1,107 @@
+import SwiftUI
+import Shared
+
+struct HomeView: View {
+    @StateObject private var viewModel = HomeViewModel()
+    @State private var selectedFilter = "Alle"
+    @Binding var showSoundPlayer: Bool
+    @Binding var currentSoundTitle: String
+    
+    private let petrol = Color(red: 0.2, green: 0.45, blue: 0.55)
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 25) {
+                HStack {
+                    Text("Hi User!").font(.system(size: 34, weight: .bold, design: .rounded))
+                    Spacer()
+                    Image(systemName: "phone.circle.fill").font(.system(size: 30)).foregroundColor(petrol.opacity(0.6))
+                }.padding(.top, 10)
+                
+                FilterBar(selectedFilter: $selectedFilter, showSoundPlayer: $showSoundPlayer, currentSoundTitle: $currentSoundTitle)
+
+                // Übungen Sektion
+                if selectedFilter == "Alle" || selectedFilter == "Übungen" {
+                    VStack(alignment: .leading, spacing: 15) {
+                        sectionHeader(title: "Übungen", category: "Übungen")
+                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
+                            ForEach(viewModel.exercises.prefix(4), id: \.id) { item in
+                                ExerciseCard(exercise: item)
+                            }
+                        }
+                    }
+                }
+
+                // Mantras Sektion
+                if selectedFilter == "Alle" || selectedFilter == "Mantras" {
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("Mantras").font(.title2).bold()
+                        VStack(spacing: 12) {
+                            ForEach(viewModel.mantras, id: \.id) { item in
+                                MantraCard(mantra: item)
+                            }
+                        }
+                    }
+                }
+
+                // Sounds Sektion
+                if selectedFilter == "Alle" || selectedFilter == "Sounds" {
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("Sounds").font(.title2).bold()
+                        VStack(spacing: 15) {
+                            ForEach(viewModel.sounds, id: \.id) { item in
+                                SoundCard(sound: item, currentSoundTitle: $currentSoundTitle, showSoundPlayer: $showSoundPlayer)
+                            }
+                        }
+                    }
+                }
+
+                Color.clear.frame(height: 150)
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private func sectionHeader(title: String, category: String) -> some View {
+        HStack(alignment: .lastTextBaseline) {
+            Text(title).font(.title2).bold()
+            Spacer()
+            NavigationLink(destination: CategoryDetailView(category: category, showSoundPlayer: $showSoundPlayer, currentSoundTitle: $currentSoundTitle)) {
+                Text("Alle anzeigen").font(.system(size: 14, weight: .semibold)).foregroundColor(petrol).underline()
+            }
+        }
+    }
+}
+
+// PREVIEWS
+#Preview("Gesamte App (Startseite)") {
+    IremiaMainView()
+}
+
+#Preview("Home Inhalt") {
+    // Da HomeView Bindings braucht, nutzen wir .constant
+    HomeView(
+        showSoundPlayer: .constant(false),
+        currentSoundTitle: .constant("")
+    )
+}
+
+#Preview("Übungs-Karte") {
+    // Wir ziehen uns eine Beispiel-Übung aus dem Shared Repository
+    if let exampleExercise = WellnessRepository.shared.exercises.first {
+        ExerciseCard(exercise: exampleExercise)
+            .padding()
+            .frame(width: 200)
+    } else {
+        Text("Keine Daten im Repository")
+    }
+}
+
+#Preview("Mantra Zeile") {
+    if let exampleMantra = WellnessRepository.shared.mantras.first {
+        MantraCard(mantra: exampleMantra)
+            .padding()
+    } else {
+        Text("Keine Mantras vorhanden")
+    }
+}
