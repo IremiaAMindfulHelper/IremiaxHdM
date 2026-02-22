@@ -1,7 +1,10 @@
 import SwiftUI
+import Shared // Wichtig, damit WellnessMantra erkannt wird
 
 struct MantraView: View {
-    let mantra: Mantra
+    // Hier die Änderung: WellnessMantra statt Mantra
+    let mantra: WellnessMantra
+    
     @Binding var isShowing: Bool
     @Binding var currentStep: Int
     var isStandalone: Bool = false
@@ -43,6 +46,7 @@ struct MantraView: View {
                         Text(mantra.titel).font(.system(size: 14, weight: .bold))
                             .textCase(.uppercase).tracking(3).foregroundColor(.gray)
                         
+                        // Hier nutzen wir mantra.spruch (wie in Kotlin definiert)
                         Text(mantra.spruch)
                             .font(.system(size: 28, weight: .medium, design: .rounded))
                             .multilineTextAlignment(.center).padding(.horizontal, 30)
@@ -55,6 +59,7 @@ struct MantraView: View {
                 
                 Spacer()
                 
+                // Hinweis: ExerciseFooter muss in deinem Projekt existieren
                 ExerciseFooter { goToNextStep() }
             }
         }
@@ -76,11 +81,14 @@ struct MantraView: View {
             showCheckpoint = true
         }
     }
-}// MARK: - PREVIEW
+}
+
+// MARK: - PREVIEW
 struct MantraView_Previews: PreviewProvider {
     static var previews: some View {
         MantraView(
-            mantra: WellnessData.mantras[0],
+            // Hier nutzen wir jetzt die Daten aus dem Shared WellnessRepository
+            mantra: WellnessRepository.shared.mantras[0],
             isShowing: .constant(true),
             currentStep: .constant(2)
         )

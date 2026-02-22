@@ -10,9 +10,17 @@ class BreathingViewModel: ObservableObject {
     @Published var showCheckpoint: Bool = false
     
     func tick() {
-        engine.updateTimer()
+        engine.updateTimer(onIntroFinished: {
+            DispatchQueue.main.async {
+                self.isIntroActive = false
+            }
+        })
+        
         self.timeLeft = Int(engine.timeLeft)
-        if engine.timeLeft == 0 { self.showCheckpoint = true }
+        
+        if engine.timeLeft == 0 {
+            self.showCheckpoint = true
+        }
     }
     
     func endIntro() {

@@ -107,7 +107,13 @@ struct CheckpointView: View {
         case .memory:
             MemoryExerciseView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
         case .mantra:
-            MantraView(mantra: WellnessData.mantras[0], isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
+            // HIER DIE ÄNDERUNG:
+            // Wir nutzen das neue WellnessRepository aus Kotlin statt WellnessData
+            if let mantra = WellnessRepository.shared.mantras.first {
+                MantraView(mantra: mantra, isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
+            } else {
+                EmptyView()
+            }
         default:
             EmptyView()
         }

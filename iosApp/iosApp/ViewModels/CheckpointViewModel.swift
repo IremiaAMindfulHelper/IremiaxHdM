@@ -1,11 +1,3 @@
-//
-//  CheckpointViewModel.swift
-//  iosApp
-//
-//  Created by Michael Jaufmann on 21.02.26.
-//
-
-
 import SwiftUI
 import Shared
 
@@ -13,7 +5,7 @@ class CheckpointViewModel: ObservableObject {
     @Published var sosSteps: [SOSStep] = SOSFlowData.shared.steps
     @Published var animatedStep: Int = 0
     
-    // Wir nutzen die Kotlin-Logik für den nächsten Schritt
+    //Kotlin-Logik für den nächsten Schritt
     func prepareNextStep(currentStep: Int) {
         self.animatedStep = currentStep
         

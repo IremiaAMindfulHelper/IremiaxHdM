@@ -1,151 +1,104 @@
 import SwiftUI
+import Shared
 
+// --- VIEW ---
 struct EmergencyPlanView: View {
     @Binding var isShowing: Bool
-    
-    @State private var stepIndex = 0
-    @State private var phaseTime: Double = 4.0
-    @State private var startFirstExercise = false
+    @StateObject private var viewModel = EmergencyPlanViewModel()
     @State private var sliderOffset: CGFloat = 0
     @State private var internalStep: Int = 0
     
-    private let sliderWidth: CGFloat = 300
-    private let handleSize: CGFloat = 54
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
-    
     let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
-    
-    // Die Icons aus den Schritten (sosSteps muss global oder in der Datei verfügbar sein)
-    let previewIcons = ["plus.forwardslash.minus", "wind", "leaf", "brain"]
-    
-    let phases = [
-        (title: "Atme ein", duration: 4.0),
-        (title: "Halte", duration: 4.0),
-        (title: "Atme aus", duration: 4.0)
-    ]
     
     var body: some View {
         ZStack {
             Color.white.ignoresSafeArea()
             
             VStack(spacing: 30) {
-                // MARK: - ANGEPASSTE SYMBOL-KETTE (FORMAT WIE CHECKPOINT)
+                // MARK: - PROGRESS BAR (Einheitlich mit CheckpointView)
                 HStack(spacing: 0) {
-                    ForEach(0..<previewIcons.count, id: \.self) { index in
+                    ForEach(0..<viewModel.sosSteps.count, id: \.self) { index in
+                        let step = viewModel.sosSteps[index]
+                        
                         VStack(spacing: 8) {
                             ZStack {
-                                // Der Kreis (Größe 45 wie im Checkpoint bei inaktiven Schritten)
                                 Circle()
                                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                                     .frame(width: 45, height: 45)
                                 
-                                Image(systemName: previewIcons[index])
+                                Image(systemName: step.icon)
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.gray.opacity(0.6))
                             }
                         }
                         .frame(maxWidth: .infinity)
                         
-                        // Verbindungslinie (exakt wie im Checkpoint)
-                        if index != previewIcons.count - 1 {
+                        if index != viewModel.sosSteps.count - 1 {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.15))
                                 .frame(width: 25, height: 2)
-                                .padding(.bottom, 8) // Zentrierung zur Kugelhöhe
+                                .padding(.bottom, 8)
                         }
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 60)
+                .padding(.horizontal, 20).padding(.top, 60)
                 
-                // Atem-Bereich
+                // MARK: - ATEM BEREICH
                 VStack(spacing: 20) {
-                    Image(stepIndex == 1 ? "Wolkeein" : "Wolkeaus")
+                    // Nutzt das Suffix ("ein"/"aus") direkt aus Kotlin
+                    Image("Wolke\(viewModel.engine.getImageNameSuffix())")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 180, height: 180)
-                        .scaleEffect(calculateScale())
+                        .scaleEffect(CGFloat(viewModel.engine.getScaleFactor()))
                         .frame(height: 200)
                     
-                    Text(phases[stepIndex].title)
-                        .font(.system(size: 34, weight: .bold))
+                    Text(viewModel.engine.getCurrentPhase().title)
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
                     
-                    Text("\(Int(phaseTime.rounded(.up)))")
+                    Text("\(Int(viewModel.engine.currentPhaseTime.rounded(.up)))")
                         .font(.system(size: 110, weight: .thin, design: .rounded))
                         .foregroundColor(petrolColor)
                 }
                 .onReceive(timer) { _ in
-                    if phaseTime > 0.1 {
-                        phaseTime -= 0.1
-                    } else {
-                        advanceBreathing()
-                    }
+                    viewModel.tick()
                 }
                 
                 Spacer()
                 
-                // Abbrechen Slider
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(petrolColor)
-                        .frame(width: sliderWidth, height: 64)
-                    
-                    Text("Abbrechen")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.white)
-                        .frame(width: sliderWidth)
-                    
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 56, height: 56)
-                        Image(systemName: "xmark")
-                            .foregroundColor(petrolColor)
-                    }
-                    .padding(.leading, 4)
-                    .offset(x: sliderOffset)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { gesture in
-                                if gesture.translation.width > 0 && sliderOffset <= (sliderWidth - handleSize - 8) {
-                                    sliderOffset = gesture.translation.width
-                                }
-                            }
-                            .onEnded { _ in
-                                if sliderOffset > (sliderWidth * 0.75) {
-                                    isShowing = false
-                                } else {
-                                    withAnimation { sliderOffset = 0 }
-                                }
-                            }
-                    )
-                }
-                .padding(.bottom, 60)
+                // MARK: - SLIDER
+                cancelSlider
+                    .padding(.bottom, 60)
             }
         }
-        .fullScreenCover(isPresented: $startFirstExercise) {
-            CalculationExerciseView(isShowing: $isShowing, currentStep: $internalStep)
+        .fullScreenCover(isPresented: $viewModel.startFirstExercise) {
+            // Übergang zur nächsten Übung
+            CalculationExerciseView(isShowing: $isShowing, currentStep: $internalStep, isStandalone: false)
         }
     }
     
-    func advanceBreathing() {
-        if stepIndex < phases.count - 1 {
-            stepIndex += 1
-            phaseTime = phases[stepIndex].duration
-        } else {
-            startFirstExercise = true
-        }
-    }
-    
-    func calculateScale() -> CGFloat {
-        let minScale: CGFloat = 0.8
-        let maxScale: CGFloat = 1.2
-        let progress = (4.0 - phaseTime) / 4.0
-        switch stepIndex {
-        case 0: return minScale + (maxScale - minScale) * CGFloat(progress)
-        case 1: return maxScale
-        case 2: return maxScale - (maxScale - minScale) * CGFloat(progress)
-        default: return minScale
+    private var cancelSlider: some View {
+        ZStack(alignment: .leading) {
+            Capsule().fill(petrolColor).frame(width: 300, height: 64)
+            Text("Abbrechen").font(.headline).foregroundColor(.white).frame(width: 300)
+            
+            ZStack {
+                Circle().fill(.white).frame(width: 56, height: 56)
+                Image(systemName: "xmark").foregroundColor(petrolColor)
+            }
+            .padding(.leading, 4)
+            .offset(x: sliderOffset)
+            .gesture(
+                DragGesture().onChanged { g in
+                    if g.translation.width > 0 && sliderOffset <= 238 {
+                        sliderOffset = g.translation.width
+                    }
+                }.onEnded { _ in
+                    if sliderOffset > 200 { isShowing = false }
+                    else { withAnimation { sliderOffset = 0 } }
+                }
+            )
         }
     }
 }
