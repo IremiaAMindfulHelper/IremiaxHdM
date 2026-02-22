@@ -1,42 +1,28 @@
 import SwiftUI
+import Shared
 
-
-struct MemoryCard: Identifiable {
-    let id = UUID()
-    let content: String
-    var isFaceUp = false
-    var isMatched = false
-}
-
-
+// MARK: - MAIN VIEW
 struct MemoryExerciseView: View {
     @Binding var isShowing: Bool
     @Binding var currentStep: Int
     var isStandalone: Bool = false
     
+    @StateObject private var viewModel = MemoryViewModel()
     @State private var showCheckpoint = false
-    @State private var cards: [MemoryCard] = []
-    @State private var firstSelectedIndex: Int?
-    @State private var secondsRemaining = 60
-    @State private var timerActive = true
     
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
-    private let emojis = ["🧠", "☀️", "🌿", "🧘", "💧", "☁️"]
-    
-    var matchedPairs: Int { cards.filter { $0.isMatched }.count / 2 }
-    var totalPairs: Int { emojis.count }
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
+            // MARK: - HEADER
             HStack(spacing: 20) {
                 Button(action: { isShowing = false }) {
                     Image(systemName: "xmark").font(.title2).foregroundColor(.gray)
                 }
                 
                 GeometryReader { geo in
-                    let progress = CGFloat(Double(matchedPairs) / Double(totalPairs))
+                    let progress = CGFloat(Double(viewModel.engine.getMatchedPairsCount()) / Double(viewModel.engine.getTotalPairsCount()))
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 10).fill(Color.gray.opacity(0.1)).frame(height: 12)
                         RoundedRectangle(cornerRadius: 10).fill(petrolColor)
@@ -49,8 +35,9 @@ struct MemoryExerciseView: View {
             }
             .padding(.horizontal).padding(.top, 20)
             
+            // TIMER
             HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text(timeString(from: secondsRemaining)).font(.system(size: 24, weight: .bold, design: .rounded))
+                Text(viewModel.timeString()).font(.system(size: 24, weight: .bold, design: .rounded))
                 Text("Min").font(.system(size: 16)).foregroundColor(.gray)
                 Spacer()
             }
@@ -58,75 +45,51 @@ struct MemoryExerciseView: View {
             
             Spacer()
             
-            // Grid
+            // MARK: - GRID (Altes Design)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
-                ForEach(0..<cards.count, id: \.self) { index in
+                ForEach(0..<viewModel.cards.count, id: \.self) { index in
+                    let card = viewModel.cards[index]
+                    
                     ZStack {
+                        // Die Karten-Fläche
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(cards[index].isFaceUp || cards[index].isMatched ? Color.white : Color(red: 0.9, green: 0.93, blue: 0.94))
+                            .fill(card.isFaceUp || card.isMatched ? Color.white : Color(red: 0.9, green: 0.93, blue: 0.94))
                         
-                        if cards[index].isFaceUp || cards[index].isMatched {
-                            Text(cards[index].content).font(.system(size: 35))
+                        // Der Inhalt (nur wenn aufgedeckt oder gematcht)
+                        if card.isFaceUp || card.isMatched {
+                            Text(card.content)
+                                .font(.system(size: 35))
                         }
                     }
                     .frame(height: 100)
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(cards[index].isMatched ? petrolColor.opacity(0.5) : Color.clear, lineWidth: 2))
-                    .onTapGesture { choose(index) }
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(card.isMatched ? petrolColor.opacity(0.5) : Color.clear, lineWidth: 2)
+                    )
+                    .onTapGesture {
+                        viewModel.selectCard(at: index)
+                    }
                 }
             }
             .padding(.horizontal, 25)
             
             Spacer()
             
+            // Footer
             ExerciseFooter { goToNextStep() }
         }
         .background(Color.white.ignoresSafeArea())
-        .onAppear { setupGame() }
         .onReceive(timer) { _ in
-            if timerActive && secondsRemaining > 0 {
-                secondsRemaining -= 1
-            } else if secondsRemaining == 0 {
-                timerActive = false
-                goToNextStep()
+            viewModel.tick()
+            if viewModel.engine.isGameOver {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    goToNextStep()
+                }
             }
         }
         .fullScreenCover(isPresented: $showCheckpoint) {
             CheckpointView(isShowing: $isShowing, currentStep: $currentStep)
         }
-    }
-    
-    private func setupGame() {
-        let gameContent = (emojis + emojis).shuffled()
-        cards = gameContent.map { MemoryCard(content: $0) }
-    }
-    
-    private func choose(_ index: Int) {
-        if cards[index].isFaceUp || cards[index].isMatched || firstSelectedIndex == index { return }
-        
-        if let chosenIndex = firstSelectedIndex {
-            cards[index].isFaceUp = true
-            if cards[index].content == cards[chosenIndex].content {
-                cards[index].isMatched = true
-                cards[chosenIndex].isMatched = true
-                if matchedPairs == totalPairs {
-                    timerActive = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { goToNextStep() }
-                }
-            }
-            firstSelectedIndex = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                withAnimation {
-                    for i in cards.indices { if !cards[i].isMatched { cards[i].isFaceUp = false } }
-                }
-            }
-        } else {
-            cards[index].isFaceUp = true
-            firstSelectedIndex = index
-        }
-    }
-    
-    private func timeString(from seconds: Int) -> String {
-        return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
     
     private func goToNextStep() {
@@ -137,9 +100,17 @@ struct MemoryExerciseView: View {
         }
     }
 }
-// d
+// MARK: - PREVIEWS
+
 struct MemoryExerciseView_Previews: PreviewProvider {
     static var previews: some View {
-        MemoryExerciseView(isShowing: .constant(true), currentStep: .constant(3))
+        Group {
+            MemoryExerciseView(
+                isShowing: .constant(true),
+                currentStep: .constant(1),
+                isStandalone: false
+            )
+            .previewDisplayName("SOS-Flow Modus")
+        }
     }
 }
