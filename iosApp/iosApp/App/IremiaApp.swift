@@ -1,10 +1,10 @@
 import SwiftUI
 
 @main
-struct iOSApp: App {
+struct IremiaApp: App {
     var body: some Scene {
         WindowGroup {
-            MyWellnessApp()
+            IremiaMainView() 
         }
     }
 }

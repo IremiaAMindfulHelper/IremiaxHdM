@@ -23,13 +23,7 @@ struct BreathingExerciseView: View {
 
     var body: some View {
         ZStack {
-            // Hintergrund-Design
-            LinearGradient(
-                gradient: Gradient(colors: [petrolColor.opacity(0.1), .white]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+
             
             VStack(spacing: 0) {
                 // MARK: - HEADER
