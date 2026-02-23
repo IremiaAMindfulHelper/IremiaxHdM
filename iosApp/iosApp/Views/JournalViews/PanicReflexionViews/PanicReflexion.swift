@@ -4,51 +4,26 @@ struct PanicReflexion: View {
     let onBack: () -> Void
     let entryDate: Date
 
-    @Environment(\.dismiss) private var dismiss
-
-    // Steuert, ob ein Textfeld fokussiert ist (Keyboard an/aus).
+    // UI-only
     @FocusState private var isKeyboardActive: Bool
 
-    // Steuert, welche Sektionen aufgeklappt sind.
-    @State private var expanded: [Bool] = [true, true, true, true]
-
-    // Eingaben für Situation und Belastung.
-    @State private var location1: String = ""
-    @State private var cause1: String = ""
-    @State private var intensity1: Double = 5
-
-    // Eingaben für Symptome und Gefühle.
-    @State private var selectedSymptoms: Set<String> = []
-    @State private var newSymptomText: String = ""
-    @State private var selectedFeelings: Set<String> = []
-    @State private var symptomOptions: [String] = ["Schwindel", "Kurzatmigkeit", "Herzrasen"]
-
-    // Eingaben zur Unterstützung.
-    @State private var skillEffectiveness: Double = 5
-    @State private var nextTimeText: String = ""
-
-    // Freitext zum Einordnen.
-    @State private var shortReflection: String = ""
-
-    private let feelingOptions: [(key: String, emoji: String, label: String)] = [
-        ("wut", "😠", "Wut"),
-        ("panikAngst", "😨", "Panik/Angst"),
-        ("hilflosigkeit", "🧍", "Hilflosigkeit")
-    ]
+    // State + Logik
+    @StateObject private var vm = PanicReflexionViewModel()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
                 VStack(spacing: 12) {
+
                     CategoryCard(
                         title: "Situation & Belastung",
                         dateText: nil,
-                        isExpanded: expandedBinding(0)
+                        isExpanded: binding(for: vm.expandedBinding(0))
                     ) {
                         Category1Content(
-                            location: $location1,
-                            intensity: $intensity1,
-                            cause: $cause1,
+                            location: $vm.location1,
+                            intensity: $vm.intensity1,
+                            cause: $vm.cause1,
                             isKeyboardActive: $isKeyboardActive
                         )
                     }
@@ -56,14 +31,10 @@ struct PanicReflexion: View {
                     CategoryCard(
                         title: "Mein Erleben",
                         dateText: nil,
-                        isExpanded: expandedBinding(1)
+                        isExpanded: binding(for: vm.expandedBinding(1))
                     ) {
                         Category2Content(
-                            symptomOptions: $symptomOptions,
-                            selectedSymptoms: $selectedSymptoms,
-                            newSymptomText: $newSymptomText,
-                            feelingOptions: feelingOptions,
-                            selectedFeelings: $selectedFeelings,
+                            vm: vm,
                             isKeyboardActive: $isKeyboardActive
                         )
                     }
@@ -71,11 +42,11 @@ struct PanicReflexion: View {
                     CategoryCard(
                         title: "Meine Unterstützung",
                         dateText: nil,
-                        isExpanded: expandedBinding(2)
+                        isExpanded: binding(for: vm.expandedBinding(2))
                     ) {
                         Category3Content(
-                            effectiveness: $skillEffectiveness,
-                            nextTimeText: $nextTimeText,
+                            effectiveness: $vm.skillEffectiveness,
+                            nextTimeText: $vm.nextTimeText,
                             isKeyboardActive: $isKeyboardActive
                         )
                     }
@@ -83,10 +54,10 @@ struct PanicReflexion: View {
                     CategoryCard(
                         title: "Einordnen & Loslassen",
                         dateText: nil,
-                        isExpanded: expandedBinding(3)
+                        isExpanded: binding(for: vm.expandedBinding(3))
                     ) {
                         Category4Content(
-                            shortReflection: $shortReflection,
+                            shortReflection: $vm.shortReflection,
                             isKeyboardActive: $isKeyboardActive
                         )
                     }
@@ -119,7 +90,11 @@ struct PanicReflexion: View {
         .onTapGesture { isKeyboardActive = false }
     }
 
-    // Formatiert das Datum für die Toolbar.
+    // BindingProxy -> SwiftUI.Binding
+    private func binding<T>(for proxy: PanicReflexionViewModel.BindingProxy<T>) -> Binding<T> {
+        Binding(get: proxy.get, set: proxy.set)
+    }
+
     private var formattedPanicDate: String {
         Self.panicDateFormatter.string(from: entryDate)
     }
@@ -130,17 +105,6 @@ struct PanicReflexion: View {
         f.dateFormat = "E. dd.MM.yy"
         return f
     }()
-
-    // Liefert ein sicheres Binding auf den Expand-State einer Sektion.
-    private func expandedBinding(_ index: Int) -> Binding<Bool> {
-        Binding(
-            get: { expanded.indices.contains(index) ? expanded[index] : false },
-            set: { newValue in
-                guard expanded.indices.contains(index) else { return }
-                expanded[index] = newValue
-            }
-        )
-    }
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
@@ -176,7 +140,6 @@ private struct Category1Content: View {
     @Binding var location: String
     @Binding var intensity: Double
     @Binding var cause: String
-
     @FocusState.Binding var isKeyboardActive: Bool
 
     var body: some View {
@@ -217,31 +180,8 @@ private struct Category1Content: View {
 }
 
 private struct Category2Content: View {
-    @Binding var symptomOptions: [String]
-    @Binding var selectedSymptoms: Set<String>
-    @Binding var newSymptomText: String
-
-    let feelingOptions: [(key: String, emoji: String, label: String)]
-    @Binding var selectedFeelings: Set<String>
-
+    @ObservedObject var vm: PanicReflexionViewModel
     @FocusState.Binding var isKeyboardActive: Bool
-
-    private func addSymptomIfPossible() {
-        let cleaned = newSymptomText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleaned.isEmpty else { return }
-
-        let exists = symptomOptions.contains { $0.lowercased() == cleaned.lowercased() }
-        guard !exists else {
-            newSymptomText = ""
-            isKeyboardActive = false
-            return
-        }
-
-        symptomOptions.append(cleaned)
-        selectedSymptoms.insert(cleaned)
-        newSymptomText = ""
-        isKeyboardActive = false
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -251,18 +191,13 @@ private struct Category2Content: View {
                     .foregroundColor(.black)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(symptomOptions, id: \.self) { item in
-                        SymptomRow(title: item, isSelected: selectedSymptoms.contains(item)) {
-                            if selectedSymptoms.contains(item) {
-                                selectedSymptoms.remove(item)
-                            } else {
-                                selectedSymptoms.insert(item)
-                            }
+                    ForEach(vm.symptomOptions, id: \.self) { item in
+                        SymptomRow(title: item, isSelected: vm.selectedSymptoms.contains(item)) {
+                            vm.toggleSymptom(item)
                         }
                         .contextMenu {
                             Button(role: .destructive) {
-                                symptomOptions.removeAll { $0 == item }
-                                selectedSymptoms.remove(item)
+                                vm.deleteSymptom(item)
                             } label: {
                                 Label("Löschen", systemImage: "trash")
                             }
@@ -272,11 +207,14 @@ private struct Category2Content: View {
 
                 RoundedTextField(
                     placeholder: "Symptom hinzufügen",
-                    text: $newSymptomText,
+                    text: $vm.newSymptomText,
                     isKeyboardActive: $isKeyboardActive
                 )
                 .submitLabel(.done)
-                .onSubmit { addSymptomIfPossible() }
+                .onSubmit {
+                    _ = vm.addSymptomIfPossible()
+                    isKeyboardActive = false
+                }
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -285,17 +223,13 @@ private struct Category2Content: View {
                     .foregroundColor(.black)
 
                 HStack(spacing: 10) {
-                    ForEach(feelingOptions, id: \.key) { f in
+                    ForEach(vm.feelingOptions, id: \.key) { f in
                         FeelingButton(
                             emoji: f.emoji,
                             label: f.label,
-                            isSelected: selectedFeelings.contains(f.key)
+                            isSelected: vm.selectedFeelings.contains(f.key)
                         ) {
-                            if selectedFeelings.contains(f.key) {
-                                selectedFeelings.remove(f.key)
-                            } else {
-                                selectedFeelings.insert(f.key)
-                            }
+                            vm.toggleFeeling(f.key)
                         }
                     }
 
@@ -310,7 +244,6 @@ private struct Category2Content: View {
 private struct Category3Content: View {
     @Binding var effectiveness: Double
     @Binding var nextTimeText: String
-
     @FocusState.Binding var isKeyboardActive: Bool
 
     var body: some View {
@@ -395,7 +328,7 @@ private struct Category4Content: View {
     }
 }
 
-// MARK: - Local helpers (unique names, no duplicates)
+// MARK: - Local helpers
 
 private struct LabeledField<Content: View>: View {
     let title: String
@@ -495,11 +428,5 @@ private struct FeelingPlusButton: View {
             }
         }
         .buttonStyle(.plain)
-    }
-}
-
-#Preview {
-    NavigationStack {
-        PanicReflexion(onBack: {}, entryDate: Date())
     }
 }

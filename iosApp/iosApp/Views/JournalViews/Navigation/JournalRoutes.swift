@@ -1,10 +1,3 @@
-//
-//  JournalRoutes.swift
-//  iosApp
-//
-//  Created by Anke Raab on 11.02.26.
-//
-
 import Foundation
 
 // Definiert alle Navigation-Ziele innerhalb des Journal-Flows.
