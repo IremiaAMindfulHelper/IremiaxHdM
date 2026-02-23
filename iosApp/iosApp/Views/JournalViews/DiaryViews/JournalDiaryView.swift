@@ -5,47 +5,64 @@ struct JournalDiaryView: View {
     let onOpenQuestionCatalog: () -> Void
     let entryDate: Date
 
-    // UI/Keyboard-Fokus bleibt in der View
     @FocusState private var isKeyboardActive: Bool
-
-    // ViewModel hält State + Logik
     @StateObject private var vm = JournalDiaryViewModel()
+
+    @State private var pencilFrame: CGRect = .zero
+
+    // Farben
+    private let headerBlue = Color(red: 0.38, green: 0.53, blue: 0.84)
+    private let buttonBlue = Color(red: 0.38, green: 0.53, blue: 0.84)
+
+    // ✅ weniger Rand (wie Referenz)
+    private let pageSidePadding: CGFloat = 16
+    private let sectionSpacing: CGFloat = 14
+
+    // Tooltip
+    private let bubbleWidth: CGFloat = 280
+    private let bubbleHeight: CGFloat = 150
 
     var body: some View {
         ZStack {
             ScrollView {
-                VStack(spacing: 14) {
-                    VStack(spacing: 12) {
+                VStack(spacing: sectionSpacing) {
+                    VStack(spacing: sectionSpacing) {
                         ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
-                            CategoryCard(title: section.title, dateText: nil, isExpanded: $vm.expanded[index]) {
+                            TimelineCard(
+                                title: section.title,
+                                isExpanded: $vm.expanded[index],
+                                isDone: vm.isSectionDone(index: index)
+                            ) {
                                 section.content
                             }
                         }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 10)
+                    .padding(.horizontal, pageSidePadding)
+                    .padding(.top, 12)
 
+                    // ✅ Button blau
                     Button { onBack() } label: {
                         Text("Eintrag abschließen")
-                            .font(.system(size: 18, weight: .regular))
-                            .foregroundColor(.black)
+                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .padding(.horizontal, 24)
-                            .background(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.black, lineWidth: 2)
-                            )
+                            .background(buttonBlue)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 8)
                     }
-                    .padding(.horizontal, 80)
+                    .padding(.horizontal, 70)
                     .padding(.top, 6)
                     .padding(.bottom, 18)
                 }
             }
-            .background(Color(red: 0.95, green: 0.95, blue: 0.95))
+            .background(Color(.systemGray6))
+            .blur(radius: vm.showPencilTooltip ? 2 : 0)
+            .overlay(
+                Color.black.opacity(vm.showPencilTooltip ? 0.10 : 0)
+                    .ignoresSafeArea()
+            )
 
-            // Tooltip Overlay
             if vm.showPencilTooltip {
                 Color.black.opacity(0.001)
                     .ignoresSafeArea()
@@ -57,38 +74,124 @@ struct JournalDiaryView: View {
                     }
                     .zIndex(9)
 
-                TooltipSpeechBubble(
-                    text: "Hier kannst du\ndeine Fragen\nanpassen!",
-                    buttonTitle: "OK!",
-                    arrowX: 0.86,
-                    onClose: {
-                        withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
-                            vm.hideTooltip()
-                        }
-                    }
-                )
-                .frame(width: 260)
-                .position(
-                    x: UIScreen.main.bounds.width - 260 / 2 - 8,
-                    y: 105
-                )
-                .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
-                .zIndex(10)
+                tooltipBubble
+                    .zIndex(10)
             }
         }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+
+        .toolbarBackground(headerBlue, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+
         .toolbar { toolbarContent }
         .onTapGesture { isKeyboardActive = false }
         .onAppear {
-            withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
-                vm.showTooltipOnce()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                    if pencilFrame != .zero { vm.showTooltipOnce() }
+                }
+            }
+        }
+        .onChange(of: pencilFrame) { _, newValue in
+            guard newValue != .zero else { return }
+            if vm.showPencilTooltip == false {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                        vm.showTooltipOnce()
+                    }
+                }
             }
         }
     }
 
-    // Sections: View baut UI, VM liefert State
+    // MARK: - Tooltip
+
+    private var tooltipBubble: some View {
+        GeometryReader { geo in
+            let screenW: CGFloat = geo.size.width
+            let arrowTargetX: CGFloat = pencilFrame.midX
+
+            let preferredArrowXInBubble: CGFloat = 0.84
+            var bubbleLeft: CGFloat = arrowTargetX - bubbleWidth * preferredArrowXInBubble
+
+            let side: CGFloat = 14
+            bubbleLeft = min(max(bubbleLeft, side), screenW - bubbleWidth - side)
+
+            // wie vorher: leicht nach rechts + etwas runter
+            bubbleLeft += 12
+            let bubbleCenterX: CGFloat = bubbleLeft + bubbleWidth / 2
+
+            let bubbleTopY: CGFloat = max(pencilFrame.maxY + 18, 102)
+            let bubbleCenterY: CGFloat = bubbleTopY + bubbleHeight / 2
+
+            let rawArrowX: CGFloat = (arrowTargetX - bubbleLeft) / bubbleWidth
+            let arrowX: CGFloat = min(max(rawArrowX, 0.12), 0.92)
+
+            return TooltipSpeechBubble(
+                text: "Hier kannst du deine\nFragen anpassen!",
+                buttonTitle: "Ok",
+                arrowX: arrowX,
+                onClose: {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                        vm.hideTooltip()
+                    }
+                }
+            )
+            .frame(width: bubbleWidth, height: bubbleHeight)
+            .position(x: bubbleCenterX, y: bubbleCenterY)
+        }
+        .ignoresSafeArea()
+    }
+
+    // MARK: - Toolbar
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button(action: onBack) {
+                ToolbarCircleSF(systemName: "chevron.left")
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 6)
+        }
+
+        ToolbarItem(placement: .principal) {
+            VStack(spacing: 2) {
+                Text("Tagebuch")
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white)
+
+                Text(formattedDiaryDate)
+                    .font(.system(size: 12.5, weight: .regular))
+                    .foregroundColor(.white.opacity(0.85))
+            }
+        }
+
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                vm.hideTooltip()
+                onOpenQuestionCatalog()
+            } label: {
+                ToolbarCircleSF(systemName: "square.and.pencil")
+                    .background(
+                        PencilFrameReader { frame in
+                            self.pencilFrame = frame
+                        }
+                    )
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 6)
+        }
+
+        ToolbarItemGroup(placement: .keyboard) {
+            Spacer()
+            Button("Fertig") { isKeyboardActive = false }
+        }
+    }
+
+    // MARK: - Sections
+
     private var sections: [SectionDefinition] {
         [
             .init(title: vm.diaryQuestions[0], content: AnyView(DiaryContent(text: $vm.answer1, isKeyboardActive: $isKeyboardActive))),
@@ -102,54 +205,16 @@ struct JournalDiaryView: View {
     }
 
     private var moodPickerContent: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             MoodPickerRow(title: "Morgen ☀️", emojis: vm.moodEmojis, selection: $vm.moodSelections[0])
             MoodPickerRow(title: "Mittag 🌤", emojis: vm.moodEmojis, selection: $vm.moodSelections[1])
             MoodPickerRow(title: "Abend 🌆", emojis: vm.moodEmojis, selection: $vm.moodSelections[2])
             MoodPickerRow(title: "Nacht 🌙", emojis: vm.moodEmojis, selection: $vm.moodSelections[3])
         }
+        .padding(.top, 2)
+        .padding(.bottom, 6)
     }
 
-    // Toolbar
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button { onBack() } label: {
-                Image(systemName: "chevron.left")
-                    .foregroundColor(.black)
-            }
-        }
-
-        ToolbarItem(placement: .principal) {
-            VStack(spacing: 2) {
-                Text("Tagebuch")
-                    .font(.headline)
-                    .foregroundColor(.black)
-
-                Text(formattedDiaryDate)
-                    .font(.caption)
-                    .foregroundColor(.black.opacity(0.6))
-            }
-        }
-
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                vm.hideTooltip()
-                onOpenQuestionCatalog()
-            } label: {
-                Image(systemName: "pencil")
-                    .foregroundColor(.black)
-                    .imageScale(.large)
-            }
-        }
-
-        ToolbarItemGroup(placement: .keyboard) {
-            Spacer()
-            Button("Fertig") { isKeyboardActive = false }
-        }
-    }
-
-    // Datum
     private var formattedDiaryDate: String {
         Self.diaryDateFormatter.string(from: entryDate)
     }
@@ -164,5 +229,43 @@ struct JournalDiaryView: View {
     private struct SectionDefinition {
         let title: String
         let content: AnyView
+    }
+}
+
+// MARK: - Toolbar look
+
+private struct ToolbarCircleSF: View {
+    let systemName: String
+
+    var body: some View {
+        ZStack {
+            Image(systemName: "circle.fill")
+                .font(.system(size: 42))
+                .foregroundColor(.white.opacity(0.22))
+
+            Image(systemName: systemName)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.white)
+        }
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Done logic
+
+extension JournalDiaryViewModel {
+    func isSectionDone(index: Int) -> Bool {
+        func filled(_ s: String) -> Bool { !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        switch index {
+        case 0: return filled(answer1)
+        case 1: return filled(answer2)
+        case 2: return filled(answer3)
+        case 3: return filled(answer4)
+        case 4: return moodSelections.contains { filled($0) }
+        case 5: return filled(answer6)
+        case 6: return filled(answer7)
+        default: return false
+        }
     }
 }

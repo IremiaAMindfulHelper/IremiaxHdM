@@ -1,13 +1,114 @@
-//
-//  JournalDiaryComponents.swift
-//  iosApp
-//
-//  Created by Anke Raab on 23.02.26.
-//
-
 import SwiftUI
 
-// MARK: - Tooltip
+struct PencilFrameReader: View {
+    let onChange: (CGRect) -> Void
+
+    var body: some View {
+        GeometryReader { proxy in
+            Color.clear
+                .onAppear { onChange(proxy.frame(in: .global)) }
+                .onChange(of: proxy.frame(in: .global)) { _, newValue in
+                    onChange(newValue)
+                }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - Timeline Card (✅ schmaler, mehr Luft links/rechts)
+
+struct TimelineCard<Content: View>: View {
+    let title: String
+    @Binding var isExpanded: Bool
+    let isDone: Bool
+    @ViewBuilder var content: Content
+
+    private let rightStripW: CGFloat = 50
+    private let corner: CGFloat = 20
+    private let stripBlue = Color(red: 0.55, green: 0.66, blue: 0.88)
+
+    // ✅ das ist der wichtigste Wert:
+    // je größer, desto weiter weg vom Rand.
+    private let cardHorizontalPadding: CGFloat = 12
+
+    var body: some View {
+        HStack(spacing: 0) {
+
+            // Left timeline column
+            VStack(spacing: 0) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .fill(stripBlue.opacity(0.55))
+                        .frame(width: 32, height: 32)
+
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .opacity(isDone ? 1 : 0.45)
+                }
+                .padding(.top, 14)
+
+                Rectangle()
+                    .fill(stripBlue.opacity(0.45))
+                    .frame(width: 4)
+                    .frame(maxHeight: .infinity)
+                    .padding(.top, 10)
+                    .padding(.bottom, 14)
+            }
+            .frame(width: 46)
+
+            // Main content
+            VStack(alignment: .leading, spacing: 10) {
+                Text(title)
+                    .font(.system(size: 19, weight: .regular, design: .rounded))
+                    .foregroundColor(.black)
+                    .padding(.top, 14)
+
+                if isExpanded {
+                    content
+                        .padding(.bottom, 12)
+                } else {
+                    Color.clear
+                        .frame(height: 8)
+                        .padding(.bottom, 10)
+                }
+            }
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Right strip
+            Button {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                ZStack(alignment: .topTrailing) {
+                    Rectangle()
+                        .fill(stripBlue)
+                        .frame(width: rightStripW)
+
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.trailing, 12)
+                        .padding(.top, 14)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: corner, style: .continuous)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.07), radius: 14, x: 0, y: 10)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+
+        // ✅ DER FIX: Karte schmaler machen, damit sie nicht am Rand klebt
+        .padding(.horizontal, cardHorizontalPadding)
+    }
+}
+
+// ----- der Rest deiner Datei kann 그대로 bleiben -----
 
 struct TooltipSpeechBubble: View {
     let text: String
@@ -15,43 +116,39 @@ struct TooltipSpeechBubble: View {
     let arrowX: CGFloat
     let onClose: () -> Void
 
+    private let buttonBlue = Color(red: 0.33, green: 0.63, blue: 0.93)
+
     var body: some View {
         ZStack {
             BubbleShape(arrowX: arrowX)
-                .fill(Color.black.opacity(0.18))
-                .offset(y: 6)
-                .blur(radius: 0.8)
+                .fill(Color.black.opacity(0.16))
+                .offset(y: 5)
+                .blur(radius: 1)
 
             BubbleShape(arrowX: arrowX)
                 .fill(Color.white)
-                .overlay(
-                    BubbleShape(arrowX: arrowX)
-                        .stroke(Color.black.opacity(0.9), lineWidth: 2)
-                )
 
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 Text(text)
-                    .font(.system(size: 18, weight: .regular))
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
                     .foregroundColor(.black)
                     .multilineTextAlignment(.center)
-                    .padding(.top, 18)
-                    .padding(.horizontal, 18)
+                    .padding(.top, 16)
+                    .padding(.horizontal, 16)
 
                 Button(action: onClose) {
                     Text(buttonTitle)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.black.opacity(0.08))
-                        .cornerRadius(14)
+                        .frame(width: 130)
+                        .padding(.vertical, 10)
+                        .background(buttonBlue.opacity(0.75))
+                        .cornerRadius(18)
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 18)
-                .padding(.bottom, 18)
+                .padding(.bottom, 16)
             }
         }
-        .frame(height: 160)
     }
 }
 
@@ -59,17 +156,11 @@ struct BubbleShape: Shape {
     let arrowX: CGFloat
 
     func path(in rect: CGRect) -> Path {
-        let corner: CGFloat = 18
-        let strokePad: CGFloat = 2
+        let corner: CGFloat = 20
         let arrowW: CGFloat = 26
-        let arrowH: CGFloat = 14
+        let arrowH: CGFloat = 12
 
-        let bodyRect = CGRect(
-            x: rect.minX + strokePad,
-            y: rect.minY + arrowH + strokePad,
-            width: rect.width - strokePad * 2,
-            height: rect.height - arrowH - strokePad * 2
-        )
+        let bodyRect = CGRect(x: rect.minX, y: rect.minY + arrowH, width: rect.width, height: rect.height - arrowH)
 
         let ax = bodyRect.minX + (bodyRect.width * arrowX)
         let arrowLeft = max(bodyRect.minX + corner + 8, ax - arrowW / 2)
@@ -77,46 +168,31 @@ struct BubbleShape: Shape {
         let arrowMid = (arrowLeft + arrowRight) / 2
 
         var p = Path()
-
         p.move(to: CGPoint(x: bodyRect.minX + corner, y: bodyRect.minY))
         p.addLine(to: CGPoint(x: arrowLeft, y: bodyRect.minY))
         p.addLine(to: CGPoint(x: arrowMid, y: bodyRect.minY - arrowH))
         p.addLine(to: CGPoint(x: arrowRight, y: bodyRect.minY))
-
         p.addLine(to: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY))
+
         p.addArc(center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.minY + corner),
-                 radius: corner,
-                 startAngle: .degrees(-90),
-                 endAngle: .degrees(0),
-                 clockwise: false)
+                 radius: corner, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
 
         p.addLine(to: CGPoint(x: bodyRect.maxX, y: bodyRect.maxY - corner))
         p.addArc(center: CGPoint(x: bodyRect.maxX - corner, y: bodyRect.maxY - corner),
-                 radius: corner,
-                 startAngle: .degrees(0),
-                 endAngle: .degrees(90),
-                 clockwise: false)
+                 radius: corner, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
 
         p.addLine(to: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY))
         p.addArc(center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.maxY - corner),
-                 radius: corner,
-                 startAngle: .degrees(90),
-                 endAngle: .degrees(180),
-                 clockwise: false)
+                 radius: corner, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
 
         p.addLine(to: CGPoint(x: bodyRect.minX, y: bodyRect.minY + corner))
         p.addArc(center: CGPoint(x: bodyRect.minX + corner, y: bodyRect.minY + corner),
-                 radius: corner,
-                 startAngle: .degrees(180),
-                 endAngle: .degrees(270),
-                 clockwise: false)
+                 radius: corner, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
 
         p.closeSubpath()
         return p
     }
 }
-
-// MARK: - Content Helpers
 
 struct DiaryContent: View {
     @Binding var text: String
@@ -124,7 +200,7 @@ struct DiaryContent: View {
 
     var body: some View {
         RoundedTextField(placeholder: "…", text: $text, isKeyboardActive: $isKeyboardActive)
-            .padding(.top, 8)
+            .padding(.top, 4)
     }
 }
 
@@ -144,15 +220,14 @@ struct MoodPickerRow: View {
                     Button { selection = emoji } label: {
                         ZStack {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(selection == emoji ? Color.black.opacity(0.2) : Color(.systemGray6))
+                                .fill(selection == emoji ? Color.black.opacity(0.12) : Color(.systemGray6))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .stroke(selection == emoji ? Color.black : Color.clear, lineWidth: 2)
+                                        .stroke(selection == emoji ? Color.black.opacity(0.35) : Color.clear, lineWidth: 2)
                                 )
-                                .frame(width: 50, height: 40)
+                                .frame(width: 48, height: 38)
 
-                            Text(emoji)
-                                .font(.system(size: 24))
+                            Text(emoji).font(.system(size: 22))
                         }
                     }
                     .buttonStyle(.plain)
@@ -172,17 +247,15 @@ struct RoundedTextField: View {
             .focused($isKeyboardActive)
             .textFieldStyle(.plain)
             .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.vertical, 11)
             .lineLimit(1...6)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.black, lineWidth: 1)
-            )
             .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.black.opacity(0.16), lineWidth: 1)
+            )
     }
 }
-
-// MARK: - Card
 
 struct CategoryCard<Content: View>: View {
     let title: String
@@ -190,63 +263,9 @@ struct CategoryCard<Content: View>: View {
     @Binding var isExpanded: Bool
     @ViewBuilder var content: Content
 
-    private let sideInset: CGFloat = 40
-    private let cornerRadius: CGFloat = 18
-
     var body: some View {
-        HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    VStack(spacing: 2) {
-                        Text(title)
-                            .font(.system(size: 20, weight: .regular, design: .rounded))
-                            .foregroundColor(.black)
-
-                        if let dateText {
-                            Text(dateText)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.trailing, 12)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
-
-                if isExpanded {
-                    content
-                        .padding(.horizontal, 12)
-                        .padding(.bottom, 10)
-                }
-            }
-
-            Button {
-                withAnimation { isExpanded.toggle() }
-            } label: {
-                ZStack(alignment: .topTrailing) {
-                    Rectangle()
-                        .fill(Color(red: 0.4, green: 0.4, blue: 0.4))
-                        .frame(width: sideInset)
-
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundColor(.white)
-                        .font(.system(size: 14, weight: .bold))
-                        .padding(.trailing, 12)
-                        .padding(.top, 12)
-                }
-                .frame(width: sideInset)
-                .frame(maxHeight: .infinity)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+        TimelineCard(title: title, isExpanded: $isExpanded, isDone: false) {
+            content
         }
-        .background(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(Color.white)
-        )
-        .clipShape(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        )
     }
 }
