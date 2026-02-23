@@ -367,12 +367,14 @@ private struct CategoryCard<Content: View>: View {
     @ViewBuilder var content: Content
 
     private let sideInset: CGFloat = 40
+    private let cornerRadius: CGFloat = 18
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button {
-                withAnimation { isExpanded.toggle() }
-            } label: {
+        // Struktur als HStack: links Inhalt, rechts der graue "Handle" als einziger Toggle-Button.
+        HStack(spacing: 0) {
+
+            // Linke Seite: Titel + optional Content (hier gibt es KEINEN Button mehr).
+            VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     VStack(spacing: 2) {
                         Text(title)
@@ -386,37 +388,48 @@ private struct CategoryCard<Content: View>: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.trailing, sideInset + 12)
+                    .padding(.trailing, 12)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 12)
+
+                if isExpanded {
+                    content
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 10)
+                }
+            }
+
+            // Rechte Seite: grauer Bereich ist der EINZIGE Tap-Bereich zum Ein-/Ausklappen.
+            Button {
+                withAnimation { isExpanded.toggle() }
+            } label: {
+                ZStack(alignment: .topTrailing) {
+                    // Graue Fläche (dein "Drückbereich")
+                    Rectangle()
+                        .fill(Color(red: 0.4, green: 0.4, blue: 0.4))
+                        .frame(width: sideInset)
+
+                    // Chevron sitzt oben rechts im grauen Bereich.
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.white)
+                        .font(.system(size: 14, weight: .bold))
+                        .padding(.trailing, 12)
+                        .padding(.top, 12)
+                }
+                .frame(width: sideInset)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle()) // sorgt dafür, dass die komplette graue Fläche tappbar ist
             }
             .buttonStyle(.plain)
-
-            if isExpanded {
-                content
-                    .padding(.trailing, sideInset)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 10)
-            }
         }
         .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(Color.white)
         )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(red: 0.4, green: 0.4, blue: 0.4))
-                .frame(width: sideInset),
-            alignment: .trailing
-        )
-        .overlay(
-            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                .foregroundColor(.white)
-                .font(.system(size: 14, weight: .bold))
-                .padding(.trailing, 12)
-                .padding(.top, 12),
-            alignment: .topTrailing
+        .clipShape(
+            // Clip sorgt dafür, dass auch der rechte graue Bereich die runden Ecken übernimmt.
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         )
     }
 }
@@ -450,4 +463,3 @@ private struct RoundedTextField: View {
         )
     }
 }
-
