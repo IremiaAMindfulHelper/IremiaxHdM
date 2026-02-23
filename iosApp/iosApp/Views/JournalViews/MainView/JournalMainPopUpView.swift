@@ -10,14 +10,13 @@ struct JournalMainPopUpView: View {
     let chipText: String
     let chipGradient: LinearGradient
 
-    // Aktueller Drag-Offset für das Sheet.
-    @State private var dragOffset: CGFloat = 0
+    // ViewModel hält Drag-State + Dismiss-Entscheidung
+    @StateObject private var vm = JournalMainPopUpViewModel()
 
     private let sheetCornerRadius: CGFloat = 26
     private let handleWidth: CGFloat = 56
     private let handleHeight: CGFloat = 6
     private let sheetHeightFactor: CGFloat = 0.4
-    private let dismissDragThreshold: CGFloat = 120
 
     var body: some View {
         VStack(spacing: 0) {
@@ -92,18 +91,18 @@ struct JournalMainPopUpView: View {
             .fill(Color.white)
         )
         .shadow(radius: 10)
-        .offset(y: max(0, dragOffset))
+        .offset(y: max(0, vm.dragOffset))
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    dragOffset = max(0, value.translation.height)
+                    vm.onDragChanged(translationY: value.translation.height)
                 }
                 .onEnded { value in
-                    if value.translation.height > dismissDragThreshold {
+                    if vm.shouldDismiss(translationY: value.translation.height) {
                         onDismiss()
                     } else {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                            dragOffset = 0
+                            vm.resetDragOffset()
                         }
                     }
                 }
