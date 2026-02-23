@@ -19,34 +19,28 @@ struct JournalNavigationView: View {
         }
     }
 
-    // Zeigt abhängig vom Root-Mode die passende Kalenderansicht.
+    // Eine einzige Kalenderansicht. Der Toggle in JournalMainView schaltet rootMode um,
+    // aber wir bleiben auf derselben Seite.
     private var rootContent: some View {
-        Group {
-            switch rootMode {
-            case .emotions:
-                JournalMainViewEmotions(
-                    rootMode: $rootMode,
-                    onPlusButtonTapped: { date, mark in
-                        let kind: JournalPopupKind = (mark == .moodGradientA) ? .moodA : .moodB
-                        popupItem = JournalPopupItem(date: date, kind: kind)
-                    },
-                    onCreateEntry: { date in
-                        navigationPath.append(AppRoute.journalEntry(date: date))
-                    }
-                )
+        JournalMainView(
+            rootMode: $rootMode,
 
-            case .panicAttacks:
-                JournalMainViewPanicAttacks(
-                    rootMode: $rootMode,
-                    onPlusButtonTapped: { date in
-                        popupItem = JournalPopupItem(date: date, kind: .panic)
-                    },
-                    onCreateEntry: { date in
-                        navigationPath.append(AppRoute.journalEntry(date: date))
-                    }
-                )
+            // Stimmung: Mood-Gradient-Tage öffnen Mood-Popup
+            onPlusButtonTappedMood: { date, mark in
+                let kind: JournalPopupKind = (mark == .moodGradientA) ? .moodA : .moodB
+                popupItem = JournalPopupItem(date: date, kind: kind)
+            },
+
+            // Panik: Broken-Heart-Tage öffnen Panic-Popup
+            onPlusButtonTappedPanic: { date in
+                popupItem = JournalPopupItem(date: date, kind: .panic)
+            },
+
+            // Plus-Tage: Eintrag erstellen/öffnen
+            onCreateEntry: { date in
+                navigationPath.append(AppRoute.journalEntry(date: date))
             }
-        }
+        )
     }
 
     // Baut das Popup-Sheet mit Header und Chip-Style.
