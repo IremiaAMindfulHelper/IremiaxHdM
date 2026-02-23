@@ -10,84 +10,120 @@ struct PanicReflexion: View {
     // State + Logik
     @StateObject private var vm = PanicReflexionViewModel()
 
+    // ✅ GELB nur für Panik
+    private let headerYellow = PanicTheme.yellow
+    private let buttonYellow = PanicTheme.yellow
+
+    // Spacing
+    private let pageSidePadding: CGFloat = 16
+    private let sectionSpacing: CGFloat = 14
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 14) {
-                VStack(spacing: 12) {
+        ZStack {
+            ScrollView {
+                VStack(spacing: sectionSpacing) {
 
-                    CategoryCard(
-                        title: "Situation & Belastung",
-                        dateText: nil,
-                        isExpanded: binding(for: vm.expandedBinding(0))
-                    ) {
-                        Category1Content(
-                            location: $vm.location1,
-                            intensity: $vm.intensity1,
-                            cause: $vm.cause1,
-                            isKeyboardActive: $isKeyboardActive
-                        )
-                    }
+                    VStack(spacing: sectionSpacing) {
 
-                    CategoryCard(
-                        title: "Mein Erleben",
-                        dateText: nil,
-                        isExpanded: binding(for: vm.expandedBinding(1))
-                    ) {
-                        Category2Content(
-                            vm: vm,
-                            isKeyboardActive: $isKeyboardActive
-                        )
-                    }
+                        PanicCategoryCard(
+                            title: "Situation & Belastung",
+                            isExpanded: binding(for: vm.expandedBinding(0)),
+                            isDone: isCategory1Done
+                        ) {
+                            Category1Content(
+                                location: $vm.location1,
+                                intensity: $vm.intensity1,
+                                cause: $vm.cause1,
+                                isKeyboardActive: $isKeyboardActive
+                            )
+                        }
 
-                    CategoryCard(
-                        title: "Meine Unterstützung",
-                        dateText: nil,
-                        isExpanded: binding(for: vm.expandedBinding(2))
-                    ) {
-                        Category3Content(
-                            effectiveness: $vm.skillEffectiveness,
-                            nextTimeText: $vm.nextTimeText,
-                            isKeyboardActive: $isKeyboardActive
-                        )
-                    }
+                        PanicCategoryCard(
+                            title: "Mein Erleben",
+                            isExpanded: binding(for: vm.expandedBinding(1)),
+                            isDone: isCategory2Done
+                        ) {
+                            Category2Content(
+                                vm: vm,
+                                isKeyboardActive: $isKeyboardActive
+                            )
+                        }
 
-                    CategoryCard(
-                        title: "Einordnen & Loslassen",
-                        dateText: nil,
-                        isExpanded: binding(for: vm.expandedBinding(3))
-                    ) {
-                        Category4Content(
-                            shortReflection: $vm.shortReflection,
-                            isKeyboardActive: $isKeyboardActive
-                        )
+                        PanicCategoryCard(
+                            title: "Meine Unterstützung",
+                            isExpanded: binding(for: vm.expandedBinding(2)),
+                            isDone: isCategory3Done
+                        ) {
+                            Category3Content(
+                                effectiveness: $vm.skillEffectiveness,
+                                nextTimeText: $vm.nextTimeText,
+                                isKeyboardActive: $isKeyboardActive
+                            )
+                        }
+
+                        PanicCategoryCard(
+                            title: "Einordnen & Loslassen",
+                            isExpanded: binding(for: vm.expandedBinding(3)),
+                            isDone: isCategory4Done
+                        ) {
+                            Category4Content(
+                                shortReflection: $vm.shortReflection,
+                                isKeyboardActive: $isKeyboardActive
+                            )
+                        }
                     }
+                    .padding(.horizontal, pageSidePadding)
+                    .padding(.top, 12)
+
+                    // ✅ Button GELB (schwarzer Text)
+                    Button { onBack() } label: {
+                        Text("Eintrag abschließen")
+                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(buttonYellow)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 8)
+                    }
+                    .padding(.horizontal, 70)
+                    .padding(.top, 6)
+                    .padding(.bottom, 18)
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 10)
-
-                Button { onBack() } label: {
-                    Text("Eintrag abschließen")
-                        .font(.system(size: 18, weight: .regular))
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 24)
-                        .background(Color.clear)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.black, lineWidth: 2)
-                        )
-                }
-                .padding(.horizontal, 80)
-                .padding(.top, 6)
-                .padding(.bottom, 18)
             }
+            .background(PanicTheme.pageBG)
         }
-        .background(Color(red: 0.95, green: 0.95, blue: 0.95))
-        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+
+        // ✅ Header GELB
+        .toolbarBackground(headerYellow, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+
         .toolbar { toolbarContent }
         .onTapGesture { isKeyboardActive = false }
+    }
+
+    // MARK: - Done Logic (Checkmarks)
+
+    private func filled(_ s: String) -> Bool {
+        !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var isCategory1Done: Bool {
+        filled(vm.location1) || filled(vm.cause1) || Int(vm.intensity1) != 5
+    }
+
+    private var isCategory2Done: Bool {
+        !vm.selectedSymptoms.isEmpty || !vm.selectedFeelings.isEmpty
+    }
+
+    private var isCategory3Done: Bool {
+        filled(vm.nextTimeText) || Int(vm.skillEffectiveness) != 5
+    }
+
+    private var isCategory4Done: Bool {
+        filled(vm.shortReflection)
     }
 
     // BindingProxy -> SwiftUI.Binding
@@ -106,24 +142,28 @@ struct PanicReflexion: View {
         return f
     }()
 
+    // MARK: - Toolbar (schwarz)
+
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+
         ToolbarItem(placement: .topBarLeading) {
-            Button { onBack() } label: {
-                Image(systemName: "chevron.left")
-                    .foregroundColor(.black)
+            Button(action: onBack) {
+                ToolbarCircleSFBlack(systemName: "chevron.left")
             }
+            .buttonStyle(.plain)
+            .padding(.leading, 6)
         }
 
         ToolbarItem(placement: .principal) {
             VStack(spacing: 2) {
                 Text("Panik-Reflexion")
-                    .font(.headline)
-                    .foregroundStyle(.black)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundColor(.black)
 
                 Text(formattedPanicDate)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 12.5, weight: .regular))
+                    .foregroundColor(.black.opacity(0.60))
             }
         }
 
@@ -134,7 +174,26 @@ struct PanicReflexion: View {
     }
 }
 
-// MARK: - Category Contents
+// ✅ Toolbar Icon schwarz (passt zu gelbem Header)
+private struct ToolbarCircleSFBlack: View {
+    let systemName: String
+
+    var body: some View {
+        ZStack {
+            Image(systemName: "circle.fill")
+                .font(.system(size: 42))
+                .foregroundColor(.black.opacity(0.10))
+
+            Image(systemName: systemName)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.black)
+        }
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Category Contents (Panik)
 
 private struct Category1Content: View {
     @Binding var location: String
@@ -185,6 +244,7 @@ private struct Category2Content: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+
             VStack(alignment: .leading, spacing: 10) {
                 Text("Symptome")
                     .font(.subheadline)
@@ -232,7 +292,6 @@ private struct Category2Content: View {
                             vm.toggleFeeling(f.key)
                         }
                     }
-
                     FeelingPlusButton { }
                 }
             }
@@ -328,7 +387,7 @@ private struct Category4Content: View {
     }
 }
 
-// MARK: - Local helpers
+// MARK: - Local Helpers
 
 private struct LabeledField<Content: View>: View {
     let title: String

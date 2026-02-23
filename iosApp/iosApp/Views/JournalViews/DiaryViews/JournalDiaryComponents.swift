@@ -261,10 +261,11 @@ struct CategoryCard<Content: View>: View {
     let title: String
     let dateText: String?
     @Binding var isExpanded: Bool
+    var isDone: Bool = false
     @ViewBuilder var content: Content
 
     var body: some View {
-        TimelineCard(title: title, isExpanded: $isExpanded, isDone: false) {
+        TimelineCard(title: title, isExpanded: $isExpanded, isDone: isDone) {
             content
         }
     }
