@@ -6,29 +6,10 @@ struct JournalEntryView: View {
     let onOpenPanicReflexion: (_ date: Date) -> Void
     let entryDate: Date
 
-    // Speichert die aktuelle Stimmung als normalisierte X/Y-Position (-1...1).
-    @State private var ballPosition = CGPoint(x: 0, y: 0)
+    // ViewModel hält Daten + Logik
+    @StateObject private var vm = JournalEntryViewModel()
 
-    // Sperrt das Verschieben der Stimmungskugel.
-    @State private var isLocked = false
-
-    // Umschalter zwischen Symbol-Auswahl und Freitext.
-    @State private var activityMode: ActivityMode = .symbols
-
-    // Speichert ausgewählte Aktivitäts-Symbole.
-    @State private var selectedActivities: Set<ActivitySymbol> = []
-
-    // Freitext-Aktivität, wenn der Modus auf Freitext steht.
-    @State private var freeTextActivity: String = ""
-
-    // Eingaben für Wasser und Schlaf (als String für TextFields).
-    @State private var waterLiters: String = "0"
-    @State private var sleepHours: String = "0"
-
-    // Kurze Notizen zum Tag.
-    @State private var notes: String = ""
-
-    // Steuert Fokus (Keyboard) für verschiedene Felder.
+    // Fokus/Keyboard bleibt UI-State in der View
     @FocusState private var focusedField: Field?
 
     enum Field: Hashable {
@@ -38,28 +19,9 @@ struct JournalEntryView: View {
         case notes
     }
 
-    enum ActivitySymbol: String, CaseIterable, Identifiable {
-        case football = "soccerball"
-        case university = "graduationcap"
-        case shopping = "cart"
-        case train = "tram"
-
-        var id: String { rawValue }
-
-        var label: String {
-            switch self {
-            case .football: return "Fußball"
-            case .university: return "Uni"
-            case .shopping: return "Einkaufen"
-            case .train: return "Zug"
-            }
-        }
-    }
-
-    enum ActivityMode: String, CaseIterable {
-        case symbols = "Symbole"
-        case freetext = "Freitext"
-    }
+    // Damit der Code unten wie vorher lesbar bleibt
+    private typealias ActivitySymbol = JournalEntryViewModel.ActivitySymbol
+    private typealias ActivityMode = JournalEntryViewModel.ActivityMode
 
     var body: some View {
         ScrollView {
@@ -95,7 +57,7 @@ struct JournalEntryView: View {
         return formatter
     }()
 
-    // Baut die Toolbar (Back + Titel/Datum + Keyboard Done).
+    // Toolbar (Back + Titel/Datum + Keyboard Done).
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
@@ -123,7 +85,7 @@ struct JournalEntryView: View {
         }
     }
 
-    // Zeigt Überschrift + Mood-Coordinate-System inkl. Lock-Button.
+    // Überschrift + Mood-Coordinate-System inkl. Lock-Button.
     private var selfCheckHeader: some View {
         VStack(spacing: 0) {
             Text("Selbstcheck")
@@ -155,16 +117,16 @@ struct JournalEntryView: View {
     private var lockButton: some View {
         Button {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                isLocked.toggle()
+                vm.toggleLock()
             }
         } label: {
-            Image(systemName: isLocked ? "lock.fill" : "lock.open")
+            Image(systemName: vm.isLocked ? "lock.fill" : "lock.open")
                 .font(.title2)
                 .foregroundColor(.primary)
         }
     }
 
-    // Zeichnet Achsen, Labels und die verschiebbare Stimmungskugel.
+    // Coordinate System
     private var moodCoordinateSystem: some View {
         GeometryReader { geo in
             let centerX = geo.size.width / 2
@@ -180,7 +142,6 @@ struct JournalEntryView: View {
         }
     }
 
-    // Zeichnet das Kreuz (X/Y Achsen).
     private func axes(centerX: CGFloat, centerY: CGFloat, size: CGSize) -> some View {
         Path { path in
             path.move(to: CGPoint(x: centerX, y: 70))
@@ -192,7 +153,6 @@ struct JournalEntryView: View {
         .stroke(Color.black, lineWidth: 2)
     }
 
-    // Platziert die vier Stimmungs-Labels rund um die Achsen.
     private func moodLabels(centerX: CGFloat, centerY: CGFloat, size: CGSize) -> some View {
         ZStack {
             VStack(spacing: 4) {
@@ -231,27 +191,25 @@ struct JournalEntryView: View {
         }
     }
 
-    // Zeigt die Kugel an der passenden Position und erlaubt Dragging (wenn nicht gesperrt).
     private func moodBall(centerX: CGFloat, centerY: CGFloat, maxX: CGFloat, maxY: CGFloat) -> some View {
         Circle()
             .frame(width: 30, height: 30)
             .shadow(radius: 6, y: 2)
             .overlay {
-                if isLocked {
+                if vm.isLocked {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 12))
                         .foregroundColor(.white)
                 }
             }
             .position(
-                x: centerX + ballPosition.x * maxX,
-                y: centerY - ballPosition.y * maxY
+                x: centerX + vm.ballPosition.x * maxX,
+                y: centerY - vm.ballPosition.y * maxY
             )
-            .gesture(isLocked ? nil : moodDragGesture(centerX: centerX, centerY: centerY, maxX: maxX, maxY: maxY))
-            .opacity(isLocked ? 0.7 : 1.0)
+            .gesture(vm.isLocked ? nil : moodDragGesture(centerX: centerX, centerY: centerY, maxX: maxX, maxY: maxY))
+            .opacity(vm.isLocked ? 0.7 : 1.0)
     }
 
-    // Normalisiert Drag-Input in den Bereich -1...1.
     private func moodDragGesture(centerX: CGFloat, centerY: CGFloat, maxX: CGFloat, maxY: CGFloat) -> some Gesture {
         DragGesture().onChanged { value in
             let deltaX = value.location.x - centerX
@@ -263,11 +221,11 @@ struct JournalEntryView: View {
             normalizedX = max(-1.0, min(1.0, normalizedX))
             normalizedY = max(-1.0, min(1.0, normalizedY))
 
-            ballPosition = CGPoint(x: normalizedX, y: normalizedY)
+            vm.ballPosition = CGPoint(x: normalizedX, y: normalizedY)
         }
     }
 
-    // Zeigt Aktivitätsmodus + Symbolgrid oder Freitext.
+    // Aktivitäten
     private var activitiesSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
@@ -279,7 +237,7 @@ struct JournalEntryView: View {
             .padding(.horizontal, 20)
             .padding(.top, 40)
 
-            Picker("Aktivitätsmodus", selection: $activityMode) {
+            Picker("Aktivitätsmodus", selection: $vm.activityMode) {
                 ForEach(ActivityMode.allCases, id: \.self) { mode in
                     Text(mode.rawValue).tag(mode)
                 }
@@ -288,7 +246,7 @@ struct JournalEntryView: View {
             .padding(.horizontal, 20)
             .padding(.top, 12)
 
-            if activityMode == .symbols {
+            if vm.activityMode == .symbols {
                 symbolsGrid
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
@@ -299,7 +257,6 @@ struct JournalEntryView: View {
         }
     }
 
-    // Grid zum Auswählen von Aktivitäten per Icon.
     private var symbolsGrid: some View {
         LazyVGrid(
             columns: [
@@ -313,8 +270,8 @@ struct JournalEntryView: View {
                 ActivityTile(
                     title: activity.label,
                     systemImage: activity.rawValue,
-                    isSelected: selectedActivities.contains(activity),
-                    onTap: { toggleActivity(activity) }
+                    isSelected: vm.selectedActivities.contains(activity),
+                    onTap: { vm.toggleActivity(activity) }
                 )
             }
 
@@ -332,19 +289,9 @@ struct JournalEntryView: View {
         }
     }
 
-    // Schaltet ein Symbol an/aus in der Auswahl.
-    private func toggleActivity(_ activity: ActivitySymbol) {
-        if selectedActivities.contains(activity) {
-            selectedActivities.remove(activity)
-        } else {
-            selectedActivities.insert(activity)
-        }
-    }
-
-    // Freitext-Eingabe für Aktivitäten inkl. Placeholder.
     private var freeTextEditor: some View {
         ZStack(alignment: .topLeading) {
-            TextEditor(text: $freeTextActivity)
+            TextEditor(text: $vm.freeTextActivity)
                 .focused($focusedField, equals: .freeTextActivity)
                 .frame(height: 200)
                 .scrollContentBackground(.hidden)
@@ -355,7 +302,7 @@ struct JournalEntryView: View {
                         .stroke(Color.black, lineWidth: 1)
                 )
 
-            if freeTextActivity.isEmpty {
+            if vm.freeTextActivity.isEmpty {
                 Text("Was hast du heute gemacht?")
                     .foregroundColor(.gray)
                     .padding(.horizontal, 16)
@@ -366,7 +313,6 @@ struct JournalEntryView: View {
         .padding(.horizontal, 20)
     }
 
-    // Eingabefelder für Wasser und Schlaf.
     private var healthSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Gesundheitstracker")
@@ -378,7 +324,7 @@ struct JournalEntryView: View {
             HStack(spacing: 40) {
                 HealthInputColumn(
                     icon: "waterbottle",
-                    text: $waterLiters,
+                    text: $vm.waterLiters,
                     unit: "Liter",
                     keyboardType: UIKeyboardType.decimalPad,
                     focusedField: $focusedField,
@@ -387,7 +333,7 @@ struct JournalEntryView: View {
 
                 HealthInputColumn(
                     icon: "bed.double",
-                    text: $sleepHours,
+                    text: $vm.sleepHours,
                     unit: "Stunden",
                     keyboardType: UIKeyboardType.numberPad,
                     focusedField: $focusedField,
@@ -399,7 +345,6 @@ struct JournalEntryView: View {
         }
     }
 
-    // Kurze Notizen als TextEditor.
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Notizen")
@@ -408,7 +353,7 @@ struct JournalEntryView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 24)
 
-            TextEditor(text: $notes)
+            TextEditor(text: $vm.notes)
                 .focused($focusedField, equals: .notes)
                 .frame(height: 60)
                 .scrollContentBackground(.hidden)
@@ -422,7 +367,6 @@ struct JournalEntryView: View {
         }
     }
 
-    // Buttons zum Wechseln in Tagebuch und Panik-Reflexion.
     private var bottomNavButtons: some View {
         HStack(spacing: 16) {
             Button { onOpenDiary(entryDate) } label: {
@@ -438,15 +382,17 @@ struct JournalEntryView: View {
         .padding(.top, 24)
     }
 
-    // Setzt Default-Werte für Zahlfelder beim Fokus rein/raus.
+    // UI-UX für Zahlfelder: Default 0 rein/raus
     private func applyDefaultNumberBehavior() {
-        if focusedField == .waterLiters, waterLiters == "0" { waterLiters = "" }
-        if focusedField == .sleepHours, sleepHours == "0" { sleepHours = "" }
+        if focusedField == .waterLiters, vm.waterLiters == "0" { vm.waterLiters = "" }
+        if focusedField == .sleepHours, vm.sleepHours == "0" { vm.sleepHours = "" }
 
-        if focusedField != .waterLiters, waterLiters.trimmed.isEmpty { waterLiters = "0" }
-        if focusedField != .sleepHours, sleepHours.trimmed.isEmpty { sleepHours = "0" }
+        if focusedField != .waterLiters, vm.waterLiters.trimmed.isEmpty { vm.waterLiters = "0" }
+        if focusedField != .sleepHours, vm.sleepHours.trimmed.isEmpty { vm.sleepHours = "0" }
     }
 }
+
+// MARK: - Subviews
 
 private struct ActivityTile: View {
     let title: String
