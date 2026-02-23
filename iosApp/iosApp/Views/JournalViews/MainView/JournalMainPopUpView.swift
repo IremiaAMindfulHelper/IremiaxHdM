@@ -66,15 +66,26 @@ struct JournalMainPopUpView: View {
             // Button zum Bearbeiten des Eintrags.
             Button { onEintragBearbeiten() } label: {
                 Text("Eintrag bearbeiten")
-                    .font(.system(size: 20, weight: .regular, design: .rounded))
-                    .foregroundStyle(.black.opacity(0.95))
+                    .font(.system(size: 20, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.black.opacity(0.85), lineWidth: 2)
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.42, green: 0.56, blue: 0.85),
+                                        Color(red: 0.30, green: 0.44, blue: 0.75)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
                     )
             }
+            
+            
             .padding(.horizontal, 52)
             .padding(.top, 26)
             .padding(.bottom, 32)
