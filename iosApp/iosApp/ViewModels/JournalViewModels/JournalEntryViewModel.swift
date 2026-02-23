@@ -1,38 +1,18 @@
-//
-//  JournalEntryViewModel.swift
-//  iosApp
-//
-//  Created by Anke Raab on 23.02.26.
-//
-
 import Foundation
 import CoreGraphics
 
 final class JournalEntryViewModel: ObservableObject {
 
-    // Stimmungskugel: normalisierte X/Y-Position (-1...1)
     @Published var ballPosition: CGPoint = CGPoint(x: 0, y: 0)
-
-    // Sperrt das Verschieben der Stimmungskugel
     @Published var isLocked: Bool = false
 
-    // Umschalter zwischen Symbol-Auswahl und Freitext
     @Published var activityMode: ActivityMode = .symbols
-
-    // Ausgewählte Aktivitäts-Symbole
     @Published var selectedActivities: Set<ActivitySymbol> = []
-
-    // Freitext-Aktivität
     @Published var freeTextActivity: String = ""
 
-    // Gesundheitstracker (Textfelder als String)
     @Published var waterLiters: String = "0"
     @Published var sleepHours: String = "0"
-
-    // Notizen
     @Published var notes: String = ""
-
-    // MARK: - Types
 
     enum ActivitySymbol: String, CaseIterable, Identifiable, Hashable {
         case football = "soccerball"
@@ -56,8 +36,6 @@ final class JournalEntryViewModel: ObservableObject {
         case symbols = "Symbole"
         case freetext = "Freitext"
     }
-
-    // MARK: - Actions
 
     func toggleLock() {
         isLocked.toggle()
