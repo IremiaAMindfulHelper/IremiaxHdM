@@ -1,32 +1,13 @@
 import SwiftUI
 
-/// Eine einzige Journal-Seite für Stimmung + Panik.
-/// - Der Toggle schaltet nur den Mode (rootMode), aber es bleibt dieselbe View.
-/// - Der Kalender bleibt gleich, nur Markierungen + Tap-Verhalten ändern sich pro Mode.
 struct JournalMainView: View {
     @Binding var rootMode: JournalRootMode
 
-    // Stimmung: Popup für einen bestehenden Tag (Datum + Mark).
     let onPlusButtonTappedMood: (_ date: Date, _ mark: MoodMark) -> Void
-
-    // Panik: Popup für einen Tag mit Panik-Markierung.
     let onPlusButtonTappedPanic: (_ date: Date) -> Void
-
-    // Erstellung/Bearbeitung eines Eintrags für ein Datum.
     let onCreateEntry: (_ date: Date) -> Void
 
-    @State private var currentYear: Int = 2026
-    @State private var currentMonth: Int = 1
-
-    // Toggle-Binding (Stimmung <-> Panik) über rootMode.
-    private var isPanicBinding: Binding<Bool> {
-        Binding(
-            get: { rootMode == .panicAttacks },
-            set: { isOn in
-                withAnimation { rootMode = isOn ? .panicAttacks : .emotions }
-            }
-        )
-    }
+    @StateObject private var vm: JournalMainViewModel
 
     private let titleTopInset: CGFloat = 34
     private let gridCircleSize: CGFloat = 38
@@ -35,24 +16,44 @@ struct JournalMainView: View {
     private let gridColumnSpacing: CGFloat = 12
     private let dayFontSize: CGFloat = 14
 
+    init(
+        rootMode: Binding<JournalRootMode>,
+        onPlusButtonTappedMood: @escaping (_ date: Date, _ mark: MoodMark) -> Void,
+        onPlusButtonTappedPanic: @escaping (_ date: Date) -> Void,
+        onCreateEntry: @escaping (_ date: Date) -> Void
+    ) {
+        self._rootMode = rootMode
+        self.onPlusButtonTappedMood = onPlusButtonTappedMood
+        self.onPlusButtonTappedPanic = onPlusButtonTappedPanic
+        self.onCreateEntry = onCreateEntry
+        _vm = StateObject(wrappedValue: JournalMainViewModel(rootMode: rootMode.wrappedValue))
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
-
             modeToggleRow
-
             monthSwitcher
-
             weekdayHeader
-
             calendarGrid
-
             Spacer(minLength: 0)
         }
         .background(Color.white)
-    }
 
-    // MARK: - UI Blocks
+        // Parent -> VM sync (iOS 17+ API)
+        .onChange(of: rootMode) {
+            if vm.rootMode != rootMode {
+                vm.setIsPanic(rootMode == .panicAttacks)
+            }
+        }
+
+        // VM -> Parent sync
+        .onChange(of: vm.rootMode) {
+            if rootMode != vm.rootMode {
+                rootMode = vm.rootMode
+            }
+        }
+    }
 
     private var header: some View {
         VStack(spacing: 0) {
@@ -66,7 +67,14 @@ struct JournalMainView: View {
     }
 
     private var modeToggleRow: some View {
-        HStack(spacing: 16) {
+        let isPanicBinding = Binding<Bool>(
+            get: { vm.rootMode == .panicAttacks },
+            set: { isOn in
+                withAnimation { vm.setIsPanic(isOn) }
+            }
+        )
+
+        return HStack(spacing: 16) {
             VStack(spacing: 6) {
                 Image(systemName: "circle.fill")
                     .font(.system(size: 28))
@@ -96,7 +104,7 @@ struct JournalMainView: View {
     private var monthSwitcher: some View {
         HStack {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: -1) }
+                withAnimation(.easeInOut(duration: 0.2)) { vm.shiftMonth(by: -1) }
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 17, weight: .semibold))
@@ -106,14 +114,14 @@ struct JournalMainView: View {
 
             Spacer()
 
-            Text(monthTitle)
+            Text(vm.monthTitle)
                 .font(.system(size: 26, weight: .regular, design: .rounded))
                 .foregroundStyle(.black.opacity(0.9))
 
             Spacer()
 
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: 1) }
+                withAnimation(.easeInOut(duration: 0.2)) { vm.shiftMonth(by: 1) }
             } label: {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 17, weight: .semibold))
@@ -147,17 +155,16 @@ struct JournalMainView: View {
 
     private var calendarGrid: some View {
         let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
-        let cells = calendarCells
 
         return LazyVGrid(columns: cols, spacing: gridSpacing) {
-            ForEach(cells) { cell in
+            ForEach(vm.cells) { cell in
                 UnifiedDayCell(
                     day: cell.day,
                     style: cell.style,
                     circleSize: gridCircleSize,
                     plusSize: gridPlusSize,
                     dayFontSize: dayFontSize,
-                    onTap: { handleTap(on: cell) }
+                    onTap: { handleTap(cell) }
                 )
                 .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
                 .allowsHitTesting(cell.isTappable)
@@ -168,246 +175,25 @@ struct JournalMainView: View {
         .padding(.bottom, 6)
     }
 
-    // MARK: - Tap Handling (je nach Mode anderes Verhalten)
-
-    private func handleTap(on cell: UnifiedCell) {
-        // Tap auf Vormonat-/Folgemontag-Zellen kann den Monat wechseln.
-        if !cell.isInDisplayedMonth, let offset = cell.monthOffset {
-            withAnimation(.easeInOut(duration: 0.2)) { shiftMonth(by: offset) }
+    private func handleTap(_ cell: UnifiedCell) {
+        switch vm.handleTap(on: cell) {
+        case .none:
+            break
+        case .createEntry(let date):
+            onCreateEntry(date)
+        case .openMoodPopup(let date, let mark):
+            onPlusButtonTappedMood(date, mark)
+        case .openPanicPopup(let date):
+            onPlusButtonTappedPanic(date)
         }
-
-        guard cell.isTappable else { return }
-        guard let date = dateForCell(cell) else { return }
-
-        switch rootMode {
-        case .emotions:
-            // Stimmung: plus -> neuer Eintrag, moodGradient -> Popup
-            switch cell.style {
-            case .mood(.plus):
-                onCreateEntry(date)
-            case .mood(.gradientA):
-                onPlusButtonTappedMood(date, .moodGradientA)
-            case .mood(.gradientB):
-                onPlusButtonTappedMood(date, .moodGradientB)
-            case .panic:
-                // kommt in emotions nicht vor, aber sicherheitshalber
-                onCreateEntry(date)
-            case .none:
-                break
-            }
-
-        case .panicAttacks:
-            // Panik: plus/filled -> Eintrag öffnen, brokenHeart -> Popup
-            switch cell.style {
-            case .panic(.plus), .panic(.filled):
-                onCreateEntry(date)
-            case .panic(.brokenHeart):
-                onPlusButtonTappedPanic(date)
-            case .mood:
-                // kommt in panic nicht vor, aber sicherheitshalber
-                onCreateEntry(date)
-            case .none:
-                break
-            }
-        }
-    }
-
-    // MARK: - Calendar Helpers
-
-    private func dateForCell(_ cell: UnifiedCell) -> Date? {
-        let y = cell.effectiveYear ?? currentYear
-        let m = cell.effectiveMonth ?? currentMonth
-        return calendar.date(from: DateComponents(year: y, month: m, day: cell.day))
-    }
-
-    private var calendar: Calendar {
-        var cal = Calendar(identifier: .gregorian)
-        cal.locale = Locale(identifier: "de_DE")
-        cal.firstWeekday = 2 // Montag
-        return cal
-    }
-
-    private var monthTitle: String {
-        let date = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "de_DE")
-        f.dateFormat = "LLLL yyyy"
-        return f.string(from: date).capitalized
-    }
-
-    private var isDemoMonth: Bool { currentYear == 2026 && currentMonth == 1 }
-    private var todayStart: Date { calendar.startOfDay(for: Date()) }
-
-    private func isPastOrToday(year: Int, month: Int, day: Int) -> Bool {
-        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return false }
-        return calendar.startOfDay(for: date) <= todayStart
-    }
-
-    /// Erzeugt 42 Zellen und wählt die Markierungen abhängig von rootMode.
-    private var calendarCells: [UnifiedCell] {
-        let cal = calendar
-
-        let firstOfMonth = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1))!
-        let daysInMonth = cal.range(of: .day, in: .month, for: firstOfMonth)!.count
-
-        let weekday = cal.component(.weekday, from: firstOfMonth)
-        let leading = (weekday - cal.firstWeekday + 7) % 7
-
-        let prevMonthDate = cal.date(byAdding: .month, value: -1, to: firstOfMonth)!
-        let daysInPrevMonth = cal.range(of: .day, in: .month, for: prevMonthDate)!.count
-        let nextMonthDate = cal.date(byAdding: .month, value: 1, to: firstOfMonth)!
-
-        var cells: [UnifiedCell] = []
-
-        // Leading (Vormonat)
-        if leading > 0 {
-            let startDay = daysInPrevMonth - leading + 1
-            let prevYM = cal.dateComponents([.year, .month], from: prevMonthDate)
-
-            for d in startDay...daysInPrevMonth {
-                let y = prevYM.year ?? currentYear
-                let m = prevYM.month ?? currentMonth
-                let allowed = isPastOrToday(year: y, month: m, day: d)
-
-                cells.append(
-                    UnifiedCell(
-                        day: d,
-                        isInDisplayedMonth: false,
-                        style: allowed ? styleForPlus() : .none,
-                        monthOffset: -1,
-                        effectiveYear: y,
-                        effectiveMonth: m,
-                        isTappable: allowed
-                    )
-                )
-            }
-        }
-
-        // Aktueller Monat
-        for d in 1...daysInMonth {
-            let allowed = isPastOrToday(year: currentYear, month: currentMonth, day: d)
-
-            let style: CellStyle
-            if !allowed {
-                style = .none
-            } else if isDemoMonth {
-                // Demo-Design: in emotions zwei Gradient-Tage, in panic zwei BrokenHeart-Tage + filled-Tage
-                switch rootMode {
-                case .emotions:
-                    if d == 6 { style = .mood(.gradientA) }
-                    else if d == 7 { style = .mood(.gradientB) }
-                    else { style = .mood(.plus) }
-
-                case .panicAttacks:
-                    if d == 6 || d == 7 { style = .panic(.brokenHeart) }
-                    else if [16, 17, 18].contains(d) { style = .panic(.filled) }
-                    else { style = .panic(.plus) }
-                }
-            } else {
-                // Normal: nur plus (je nach Mode in mood/panic)
-                style = styleForPlus()
-            }
-
-            cells.append(
-                UnifiedCell(
-                    day: d,
-                    isInDisplayedMonth: true,
-                    style: style,
-                    monthOffset: 0,
-                    effectiveYear: currentYear,
-                    effectiveMonth: currentMonth,
-                    isTappable: allowed
-                )
-            )
-        }
-
-        // Trailing (Folgemontag) bis 42
-        let nextYM = cal.dateComponents([.year, .month], from: nextMonthDate)
-        var nextDay = 1
-
-        while cells.count < 42 {
-            let y = nextYM.year ?? currentYear
-            let m = nextYM.month ?? currentMonth
-            let allowed = isPastOrToday(year: y, month: m, day: nextDay)
-
-            cells.append(
-                UnifiedCell(
-                    day: nextDay,
-                    isInDisplayedMonth: false,
-                    style: allowed ? styleForPlus() : .none,
-                    monthOffset: 1,
-                    effectiveYear: y,
-                    effectiveMonth: m,
-                    isTappable: allowed
-                )
-            )
-            nextDay += 1
-        }
-
-        return cells
-    }
-
-    /// Plus-Style je nach aktuellem Mode.
-    private func styleForPlus() -> CellStyle {
-        switch rootMode {
-        case .emotions: return .mood(.plus)
-        case .panicAttacks: return .panic(.plus)
-        }
-    }
-
-    private func shiftMonth(by delta: Int) {
-        let base = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) ?? Date()
-        let newDate = calendar.date(byAdding: .month, value: delta, to: base) ?? base
-        let comps = calendar.dateComponents([.year, .month], from: newDate)
-        currentYear = comps.year ?? currentYear
-        currentMonth = comps.month ?? currentMonth
     }
 }
 
-// MARK: - Types
-
-/// Mood-Marks (damit dein existierender Mood-Popup Callback weiter passt)
-enum MoodMark: Equatable {
-    case moodGradientA
-    case moodGradientB
-}
-
-/// Unified Zell-Style für beide Modi
-private enum CellStyle: Equatable {
-    case mood(MoodCellStyle)
-    case panic(PanicCellStyle)
-    case none
-}
-
-private enum MoodCellStyle: Equatable {
-    case plus
-    case gradientA
-    case gradientB
-}
-
-private enum PanicCellStyle: Equatable {
-    case plus
-    case filled
-    case brokenHeart
-}
-
-private struct UnifiedCell: Identifiable {
-    let id = UUID()
-    let day: Int
-    let isInDisplayedMonth: Bool
-    let style: CellStyle
-    let monthOffset: Int?
-    let effectiveYear: Int?
-    let effectiveMonth: Int?
-    let isTappable: Bool
-}
-
-// MARK: - Cell View
+// MARK: - Cell Views (UI-only)
 
 private struct UnifiedDayCell: View {
     let day: Int
     let style: CellStyle
-
     let circleSize: CGFloat
     let plusSize: CGFloat
     let dayFontSize: CGFloat
@@ -420,14 +206,12 @@ private struct UnifiedDayCell: View {
                     .fill(circleFill)
                     .frame(width: circleSize, height: circleSize)
 
-                // Plus in Mood oder Panic (plus/filled)
                 if showsPlus {
                     Image(systemName: "plus")
                         .font(.system(size: plusSize, weight: .bold))
                         .foregroundStyle(.black.opacity(0.8))
                 }
 
-                // BrokenHeart nur im Panic-Modus
                 if case .panic(.brokenHeart) = style {
                     BrokenHeartIcon(size: 22, isActive: true)
                 }
@@ -481,8 +265,6 @@ private struct UnifiedDayCell: View {
     }
 }
 
-// MARK: - Icon
-
 private struct BrokenHeartIcon: View {
     let size: CGFloat
     let isActive: Bool
@@ -497,18 +279,5 @@ private struct BrokenHeartIcon: View {
                 .font(.system(size: size * 0.55, weight: .bold))
                 .foregroundStyle(.black.opacity(isActive ? 0.85 : 0.35))
         }
-    }
-}
-
-// MARK: - Preview
-
-struct JournalMainView_Previews: PreviewProvider {
-    static var previews: some View {
-        JournalMainView(
-            rootMode: .constant(.emotions),
-            onPlusButtonTappedMood: { _, _ in },
-            onPlusButtonTappedPanic: { _ in },
-            onCreateEntry: { _ in }
-        )
     }
 }
