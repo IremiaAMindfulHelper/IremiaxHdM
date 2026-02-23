@@ -3,25 +3,11 @@ import SwiftUI
 struct QuestionCatalog: View {
     let onBack: () -> Void
 
-    // Steuert den Fokus der Texteingabe.
+    // Steuert den Fokus der Texteingabe (UI-only -> bleibt in der View).
     @FocusState private var isKeyboardActive: Bool
 
-    // Datenquelle der verfügbaren Fragen.
-    @State private var questions: [String] = [
-        "Gab es heute schwierige Momente für dich?",
-        "Was ist heute gut gelaufen?",
-        "Welche Gedanken oder Sorgen möchtest du heute loslassen?",
-        "Was kann dir helfen, die Situation zu verbessern?",
-        "Wie hat sich deine Stimmung im Laufe des Tages verändert?",
-        "Wofür bist du heute dankbar?",
-        "Gibt es etwas, das du morgen anders machen möchtest?"
-    ]
-
-    // Speichert die aktuell ausgewählten Fragen.
-    @State private var selectedQuestions: Set<String> = []
-
-    // Eingabetext für eine neue Frage.
-    @State private var newQuestionText: String = ""
+    // ViewModel hält State + Logik.
+    @StateObject private var vm = QuestionCatalogViewModel()
 
     var body: some View {
         ScrollView {
@@ -46,15 +32,15 @@ struct QuestionCatalog: View {
             .padding(.top, 12)
     }
 
-    // Liste aller Fragen mit Auswahl-Logik.
+    // Liste aller Fragen mit Auswahl-Logik (delegiert ans VM).
     private var questionsSection: some View {
         VStack(spacing: 14) {
-            ForEach(questions, id: \.self) { question in
+            ForEach(vm.questions, id: \.self) { question in
                 QuestionRow(
                     title: question,
-                    isSelected: selectedQuestions.contains(question)
+                    isSelected: vm.selectedQuestions.contains(question)
                 ) {
-                    toggleSelection(question)
+                    vm.toggleSelection(question)
                 }
             }
         }
@@ -63,7 +49,7 @@ struct QuestionCatalog: View {
 
     // Eingabebereich zum Hinzufügen einer neuen Frage.
     private var addQuestionSection: some View {
-        TextField("Neue Frage hinzufügen", text: $newQuestionText)
+        TextField("Neue Frage hinzufügen", text: $vm.newQuestionText)
             .focused($isKeyboardActive)
             .textFieldStyle(.plain)
             .padding(.horizontal, 14)
@@ -75,6 +61,11 @@ struct QuestionCatalog: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             .padding(.bottom, 24)
+            .submitLabel(.done)
+            .onSubmit {
+                vm.addQuestionIfPossible()
+                isKeyboardActive = false
+            }
     }
 
     // Toolbar mit Zurück-Button und Keyboard-Aktion.
@@ -90,17 +81,10 @@ struct QuestionCatalog: View {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
             Button("Fertig") {
+                // Wenn du beim "Fertig" auch direkt hinzufügen willst:
+                vm.addQuestionIfPossible()
                 isKeyboardActive = false
             }
-        }
-    }
-
-    // Schaltet den Auswahlstatus einer Frage um.
-    private func toggleSelection(_ question: String) {
-        if selectedQuestions.contains(question) {
-            selectedQuestions.remove(question)
-        } else {
-            selectedQuestions.insert(question)
         }
     }
 }
