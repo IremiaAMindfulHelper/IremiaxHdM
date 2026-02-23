@@ -40,7 +40,11 @@ struct PanicReflexion: View {
         ScrollView {
             VStack(spacing: 14) {
                 VStack(spacing: 12) {
-                    CategoryCard(title: "Situation & Belastung", dateText: nil, isExpanded: expandedBinding(0)) {
+                    CategoryCard(
+                        title: "Situation & Belastung",
+                        dateText: nil,
+                        isExpanded: expandedBinding(0)
+                    ) {
                         Category1Content(
                             location: $location1,
                             intensity: $intensity1,
@@ -49,7 +53,11 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Mein Erleben", dateText: nil, isExpanded: expandedBinding(1)) {
+                    CategoryCard(
+                        title: "Mein Erleben",
+                        dateText: nil,
+                        isExpanded: expandedBinding(1)
+                    ) {
                         Category2Content(
                             symptomOptions: $symptomOptions,
                             selectedSymptoms: $selectedSymptoms,
@@ -60,7 +68,11 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Meine Unterstützung", dateText: nil, isExpanded: expandedBinding(2)) {
+                    CategoryCard(
+                        title: "Meine Unterstützung",
+                        dateText: nil,
+                        isExpanded: expandedBinding(2)
+                    ) {
                         Category3Content(
                             effectiveness: $skillEffectiveness,
                             nextTimeText: $nextTimeText,
@@ -68,7 +80,11 @@ struct PanicReflexion: View {
                         )
                     }
 
-                    CategoryCard(title: "Einordnen & Loslassen", dateText: nil, isExpanded: expandedBinding(3)) {
+                    CategoryCard(
+                        title: "Einordnen & Loslassen",
+                        dateText: nil,
+                        isExpanded: expandedBinding(3)
+                    ) {
                         Category4Content(
                             shortReflection: $shortReflection,
                             isKeyboardActive: $isKeyboardActive
@@ -108,7 +124,6 @@ struct PanicReflexion: View {
         Self.panicDateFormatter.string(from: entryDate)
     }
 
-    // Statischer Formatter für das Panik-Datum.
     private static let panicDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "de_DE")
@@ -127,7 +142,6 @@ struct PanicReflexion: View {
         )
     }
 
-    // Baut die Toolbar (Back, Titel/Datum, Keyboard Done).
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
@@ -155,6 +169,8 @@ struct PanicReflexion: View {
         }
     }
 }
+
+// MARK: - Category Contents
 
 private struct Category1Content: View {
     @Binding var location: String
@@ -210,7 +226,6 @@ private struct Category2Content: View {
 
     @FocusState.Binding var isKeyboardActive: Bool
 
-    // Fügt ein neues Symptom hinzu und markiert es direkt.
     private func addSymptomIfPossible() {
         let cleaned = newSymptomText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else { return }
@@ -237,10 +252,7 @@ private struct Category2Content: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(symptomOptions, id: \.self) { item in
-                        SymptomRow(
-                            title: item,
-                            isSelected: selectedSymptoms.contains(item)
-                        ) {
+                        SymptomRow(title: item, isSelected: selectedSymptoms.contains(item)) {
                             if selectedSymptoms.contains(item) {
                                 selectedSymptoms.remove(item)
                             } else {
@@ -258,7 +270,7 @@ private struct Category2Content: View {
                     }
                 }
 
-                RoundedSingleLineTextField(
+                RoundedTextField(
                     placeholder: "Symptom hinzufügen",
                     text: $newSymptomText,
                     isKeyboardActive: $isKeyboardActive
@@ -286,6 +298,7 @@ private struct Category2Content: View {
                             }
                         }
                     }
+
                     FeelingPlusButton { }
                 }
             }
@@ -382,64 +395,19 @@ private struct Category4Content: View {
     }
 }
 
-private struct CategoryCard<Content: View>: View {
+// MARK: - Local helpers (unique names, no duplicates)
+
+private struct LabeledField<Content: View>: View {
     let title: String
-    let dateText: String?
-    @Binding var isExpanded: Bool
     @ViewBuilder var content: Content
 
-    private let sideInset: CGFloat = 40
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button {
-                withAnimation { isExpanded.toggle() }
-            } label: {
-                HStack {
-                    VStack(spacing: 2) {
-                        Text(title)
-                            .font(.system(size: 20, weight: .regular, design: .rounded))
-                            .foregroundColor(.black)
-
-                        if let dateText {
-                            Text(dateText)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.trailing, sideInset + 12)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
-            }
-            .buttonStyle(.plain)
-
-            if isExpanded {
-                content
-                    .padding(.trailing, sideInset)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 10)
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.black)
+            content
         }
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(red: 0.4, green: 0.4, blue: 0.4))
-                .frame(width: sideInset),
-            alignment: .trailing
-        )
-        .overlay(
-            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                .foregroundColor(.white)
-                .font(.system(size: 14, weight: .bold))
-                .padding(.trailing, 12)
-                .padding(.top, 12),
-            alignment: .topTrailing
-        )
     }
 }
 
@@ -527,71 +495,6 @@ private struct FeelingPlusButton: View {
             }
         }
         .buttonStyle(.plain)
-    }
-}
-
-private struct LabeledField<Content: View>: View {
-    let title: String
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.subheadline)
-                .foregroundColor(.black)
-            content
-        }
-    }
-}
-
-private struct RoundedTextField: View {
-    let placeholder: String
-    @Binding var text: String
-    var isKeyboardActive: FocusState<Bool>.Binding? = nil
-
-    var body: some View {
-        Group {
-            if let isKeyboardActive {
-                TextField(placeholder, text: $text, axis: .vertical)
-                    .focused(isKeyboardActive)
-            } else {
-                TextField(placeholder, text: $text, axis: .vertical)
-            }
-        }
-        .textFieldStyle(.plain)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .lineLimit(1...6)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.black, lineWidth: 1)
-        )
-        .background(Color.white)
-    }
-}
-
-private struct RoundedSingleLineTextField: View {
-    let placeholder: String
-    @Binding var text: String
-    var isKeyboardActive: FocusState<Bool>.Binding? = nil
-
-    var body: some View {
-        Group {
-            if let isKeyboardActive {
-                TextField(placeholder, text: $text)
-                    .focused(isKeyboardActive)
-            } else {
-                TextField(placeholder, text: $text)
-            }
-        }
-        .textFieldStyle(.plain)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.black, lineWidth: 1)
-        )
-        .background(Color.white)
     }
 }
 
