@@ -7,10 +7,21 @@ final class JournalMainViewModel: ObservableObject {
     @Published private(set) var currentMonth: Int
     @Published private(set) var cells: [UnifiedCell] = []
 
+    // Gespeicherte Daten (später aus DB/Repository füllen)
+    // Stimmung: Datum -> MoodMark (A/B)
+    private var moodByDate: [Date: MoodMark] = [:]
+
+    // Panik: Datum -> Anzahl (oder Intensität). > 0 => broken heart anzeigen
+    private var panicCountByDate: [Date: Int] = [:]
+
     init(rootMode: JournalRootMode = .emotions, year: Int = 2026, month: Int = 1) {
         self.rootMode = rootMode
         self.currentYear = year
         self.currentMonth = month
+
+        // Demo: Marker für den 23. und 24. im aktuell angezeigten Monat
+        seedDemoMarksFor23And24()
+
         rebuildCells()
     }
 
@@ -33,6 +44,10 @@ final class JournalMainViewModel: ObservableObject {
         let comps = calendar.dateComponents([.year, .month], from: newDate)
         currentYear = comps.year ?? currentYear
         currentMonth = comps.month ?? currentMonth
+
+        // Optional: Demo-Marks auch für neu angezeigten Monat setzen (nur wenn du es willst)
+        // seedDemoMarksFor23And24()
+
         rebuildCells()
     }
 
@@ -78,6 +93,20 @@ final class JournalMainViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Public Update Hooks (später vom Entry/DB aufrufen)
+
+    /// Wenn ein Tagebucheintrag gespeichert wurde (Stimmung ausgewählt):
+    func setMoodMark(for date: Date, mark: MoodMark) {
+        moodByDate[normalized(date)] = mark
+        rebuildCells()
+    }
+
+    /// Wenn eine Panik-Reflexion gespeichert wurde (panicCount > 0):
+    func setPanicCount(for date: Date, count: Int) {
+        panicCountByDate[normalized(date)] = count
+        rebuildCells()
+    }
+
     // MARK: - Calendar internals
 
     private var calendar: Calendar {
@@ -87,26 +116,21 @@ final class JournalMainViewModel: ObservableObject {
         return cal
     }
 
-    private var isDemoMonth: Bool { currentYear == 2026 && currentMonth == 1 }
     private var todayStart: Date { calendar.startOfDay(for: Date()) }
 
-    /// Erlaubt Interaktionen nur für Heute und Zukunft (Vergangenheit ist gesperrt).
-    private func isTodayOrFuture(year: Int, month: Int, day: Int) -> Bool {
-        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return false }
-        return calendar.startOfDay(for: date) >= todayStart
+    /// Nur heute und Zukunft dürfen einen neuen Eintrag erzeugen (Plus).
+    private func isTodayOrFuture(_ date: Date) -> Bool {
+        calendar.startOfDay(for: date) >= todayStart
+    }
+
+    private func normalized(_ date: Date) -> Date {
+        calendar.startOfDay(for: date)
     }
 
     private func dateForCell(_ cell: UnifiedCell) -> Date? {
         let y = cell.effectiveYear ?? currentYear
         let m = cell.effectiveMonth ?? currentMonth
         return calendar.date(from: DateComponents(year: y, month: m, day: cell.day))
-    }
-
-    private func styleForPlus() -> CellStyle {
-        switch rootMode {
-        case .emotions: return .mood(.plus)
-        case .panicAttacks: return .panic(.plus)
-        }
     }
 
     private func rebuildCells() {
@@ -136,56 +160,15 @@ final class JournalMainViewModel: ObservableObject {
             for d in startDay...daysInPrevMonth {
                 let y = prevYM.year ?? currentYear
                 let m = prevYM.month ?? currentMonth
-                let allowed = isTodayOrFuture(year: y, month: m, day: d)
-
-                result.append(
-                    UnifiedCell(
-                        day: d,
-                        isInDisplayedMonth: false,
-                        style: allowed ? styleForPlus() : .none,
-                        monthOffset: -1,
-                        effectiveYear: y,
-                        effectiveMonth: m,
-                        isTappable: allowed
-                    )
-                )
+                let date = cal.date(from: DateComponents(year: y, month: m, day: d))!
+                result.append(makeCell(day: d, date: date, isInDisplayedMonth: false, monthOffset: -1, effectiveYear: y, effectiveMonth: m))
             }
         }
 
         // Current month
         for d in 1...daysInMonth {
-            let allowed = isTodayOrFuture(year: currentYear, month: currentMonth, day: d)
-
-            let style: CellStyle
-            if !allowed {
-                style = .none
-            } else if isDemoMonth {
-                switch rootMode {
-                case .emotions:
-                    if d == 6 { style = .mood(.gradientA) }
-                    else if d == 7 { style = .mood(.gradientB) }
-                    else { style = .mood(.plus) }
-
-                case .panicAttacks:
-                    if d == 6 || d == 7 { style = .panic(.brokenHeart) }
-                    else if [16, 17, 18].contains(d) { style = .panic(.filled) }
-                    else { style = .panic(.plus) }
-                }
-            } else {
-                style = styleForPlus()
-            }
-
-            result.append(
-                UnifiedCell(
-                    day: d,
-                    isInDisplayedMonth: true,
-                    style: style,
-                    monthOffset: 0,
-                    effectiveYear: currentYear,
-                    effectiveMonth: currentMonth,
-                    isTappable: allowed
-                )
-            )
+            let date = cal.date(from: DateComponents(year: currentYear, month: currentMonth, day: d))!
+            result.append(makeCell(day: d, date: date, isInDisplayedMonth: true, monthOffset: 0, effectiveYear: currentYear, effectiveMonth: currentMonth))
         }
 
         // Trailing (Folgemontag) bis 42
@@ -195,22 +178,93 @@ final class JournalMainViewModel: ObservableObject {
         while result.count < 42 {
             let y = nextYM.year ?? currentYear
             let m = nextYM.month ?? currentMonth
-            let allowed = isTodayOrFuture(year: y, month: m, day: nextDay)
-
-            result.append(
-                UnifiedCell(
-                    day: nextDay,
-                    isInDisplayedMonth: false,
-                    style: allowed ? styleForPlus() : .none,
-                    monthOffset: 1,
-                    effectiveYear: y,
-                    effectiveMonth: m,
-                    isTappable: allowed
-                )
-            )
+            let date = cal.date(from: DateComponents(year: y, month: m, day: nextDay))!
+            result.append(makeCell(day: nextDay, date: date, isInDisplayedMonth: false, monthOffset: 1, effectiveYear: y, effectiveMonth: m))
             nextDay += 1
         }
 
         return result
+    }
+
+    /// Baut eine Zelle:
+    /// - Marker (Mood/Panik) haben PRIORITÄT und sind auch in der Vergangenheit tappbar.
+    /// - Plus nur für heute/zukunft und nur wenn kein Marker vorhanden ist.
+    private func makeCell(
+        day: Int,
+        date: Date,
+        isInDisplayedMonth: Bool,
+        monthOffset: Int,
+        effectiveYear: Int,
+        effectiveMonth: Int
+    ) -> UnifiedCell {
+
+        let key = normalized(date)
+
+        // Gibt es gespeicherte Marker?
+        let storedMood = moodByDate[key]               // MoodMark? (A/B)
+        let storedPanic = (panicCountByDate[key] ?? 0) // Int
+
+        let hasMoodMarker = (storedMood != nil)
+        let hasPanicMarker = (storedPanic > 0)
+
+        // Darf Plus angezeigt werden?
+        let canCreateNew = isTodayOrFuture(key)
+
+        // Style abhängig vom Mode, aber Marker haben Priorität
+        let style: CellStyle
+        switch rootMode {
+        case .emotions:
+            if let mood = storedMood {
+                style = (mood == .moodGradientA) ? .mood(.gradientA) : .mood(.gradientB)
+            } else if canCreateNew {
+                style = .mood(.plus)
+            } else {
+                style = .none
+            }
+
+        case .panicAttacks:
+            if hasPanicMarker {
+                style = .panic(.brokenHeart)
+            } else if canCreateNew {
+                style = .panic(.plus)
+            } else {
+                style = .none
+            }
+        }
+
+        // Tappbar:
+        // - heute/zukunft: ja (Plus)
+        // - vergangenheit: nur wenn Marker existiert (Popup öffnen)
+        let isTappable = canCreateNew || hasMoodMarker || hasPanicMarker
+
+        return UnifiedCell(
+            day: day,
+            isInDisplayedMonth: isInDisplayedMonth,
+            style: style,
+            monthOffset: monthOffset,
+            effectiveYear: effectiveYear,
+            effectiveMonth: effectiveMonth,
+            isTappable: isTappable
+        )
+    }
+
+    // MARK: - Demo Seed (23/24)
+
+    private func seedDemoMarksFor23And24() {
+        // Stimmung: 23 -> GradientA, 24 -> GradientB
+        if let d23 = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 23)) {
+            moodByDate[normalized(d23)] = .moodGradientA
+        }
+        if let d24 = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 24)) {
+            moodByDate[normalized(d24)] = .moodGradientB
+        }
+
+        // Panik: 23/24 -> count > 0 => broken heart
+        if let d23 = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 23)) {
+            panicCountByDate[normalized(d23)] = 1
+        }
+        if let d24 = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 24)) {
+            panicCountByDate[normalized(d24)] = 2
+        }
     }
 }
