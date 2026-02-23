@@ -9,13 +9,6 @@ struct JournalMainView: View {
 
     @StateObject private var vm: JournalMainViewModel
 
-    private let titleTopInset: CGFloat = 34
-    private let gridCircleSize: CGFloat = 38
-    private let gridPlusSize: CGFloat = 16
-    private let gridSpacing: CGFloat = 14
-    private let gridColumnSpacing: CGFloat = 12
-    private let dayFontSize: CGFloat = 14
-
     init(
         rootMode: Binding<JournalRootMode>,
         onPlusButtonTappedMood: @escaping (_ date: Date, _ mark: MoodMark) -> Void,
@@ -31,23 +24,24 @@ struct JournalMainView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            modeToggleRow
-            monthSwitcher
-            weekdayHeader
-            calendarGrid
-            Spacer(minLength: 0)
+            headerRow
+            topControlsRow
+                .padding(.top, 6)
+
+            calendarCard
+                .padding(.top, 14)
+
+            // bewusst kleiner Abstand, damit es nicht “bis unten” wirkt
+            Spacer(minLength: 16)
         }
         .background(Color.white)
 
-        // Parent -> VM sync (iOS 17+ API)
         .onChange(of: rootMode) {
             if vm.rootMode != rootMode {
                 vm.setIsPanic(rootMode == .panicAttacks)
             }
         }
 
-        // VM -> Parent sync
         .onChange(of: vm.rootMode) {
             if rootMode != vm.rootMode {
                 rootMode = vm.rootMode
@@ -55,124 +49,173 @@ struct JournalMainView: View {
         }
     }
 
-    private var header: some View {
-        VStack(spacing: 0) {
+    // MARK: - Header (zarter)
+
+    private var headerRow: some View {
+        HStack {
             Text("Journal")
-                .font(.system(size: 40, weight: .regular, design: .rounded))
-                .padding(.top, 18)
-                .padding(.bottom, 14)
-            Divider()
+                .font(.system(size: 42, weight: .bold, design: .rounded))
+                .foregroundStyle(.black.opacity(0.78))
+            Spacer()
         }
-        .safeAreaPadding(.top, titleTopInset)
+        .padding(.horizontal, 20)
+        .padding(.top, 26)
+        .safeAreaPadding(.top, 6)
     }
 
-    private var modeToggleRow: some View {
+    // MARK: - Controls Row
+
+    private var topControlsRow: some View {
         let isPanicBinding = Binding<Bool>(
             get: { vm.rootMode == .panicAttacks },
-            set: { isOn in
-                withAnimation { vm.setIsPanic(isOn) }
-            }
+            set: { isOn in withAnimation { vm.setIsPanic(isOn) } }
         )
 
-        return HStack(spacing: 16) {
-            VStack(spacing: 6) {
-                Image(systemName: "circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.25 : 0.75))
-                Text("Stimmung")
-                    .font(.system(size: 13, design: .rounded))
-                    .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.45 : 0.85))
+        return HStack(spacing: 14) {
+            chip {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.green.opacity(0.70), Color.blue.opacity(0.70)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 24, height: 24)
             }
 
-            Toggle("", isOn: isPanicBinding)
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .tint(.black.opacity(0.8))
-                .scaleEffect(0.95)
-
-            VStack(spacing: 6) {
-                BrokenHeartIcon(size: 26, isActive: isPanicBinding.wrappedValue)
-                Text("Panik")
-                    .font(.system(size: 13, design: .rounded))
-                    .foregroundStyle(.black.opacity(isPanicBinding.wrappedValue ? 0.85 : 0.45))
+            chip {
+                Toggle("", isOn: isPanicBinding)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .tint(.black.opacity(0.85))
+                    .scaleEffect(0.88)
+                    .frame(height: 24)
             }
+
+            chip {
+                BrokenHeartIcon(size: 22, isActive: isPanicBinding.wrappedValue)
+            }
+
+            Spacer(minLength: 0)
+
+            monthNavCapsule
         }
-        .padding(.top, 14)
-        .padding(.bottom, 4)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
     }
 
-    private var monthSwitcher: some View {
-        HStack {
+    private func chip<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.black.opacity(0.06))
+            )
+    }
+
+    private var monthNavCapsule: some View {
+        HStack(spacing: 0) {
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) { vm.shiftMonth(by: -1) }
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.black.opacity(0.7))
-                    .frame(width: 40, height: 40)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.70))
+                    .frame(width: 44, height: 36)
             }
 
-            Spacer()
-
-            Text(vm.monthTitle)
-                .font(.system(size: 26, weight: .regular, design: .rounded))
-                .foregroundStyle(.black.opacity(0.9))
-
-            Spacer()
+            Rectangle()
+                .fill(Color.black.opacity(0.10))
+                .frame(width: 1, height: 20)
 
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) { vm.shiftMonth(by: 1) }
             } label: {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.black.opacity(0.7))
-                    .frame(width: 40, height: 40)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.70))
+                    .frame(width: 44, height: 36)
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 14)
+        .background(
+            Capsule(style: .continuous)
+                .fill(Color.black.opacity(0.06))
+        )
     }
 
-    private var weekdayHeader: some View {
+    // MARK: - Calendar Card (kompakt + zarte Schrift)
+
+    private var calendarCard: some View {
+        VStack(spacing: 0) {
+            Text(vm.monthTitle)
+                .font(.system(size: 22, weight: .regular, design: .rounded))
+                .foregroundStyle(.black.opacity(0.75))
+                .padding(.top, 14)
+
+            weekdayRow
+                .padding(.top, 10)
+
+            Rectangle()
+                .fill(Color.black.opacity(0.45))
+                .frame(height: 1)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+
+            calendarGrid
+                .padding(.top, 12)
+                .padding(.bottom, 14)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 5)
+        )
+        .padding(.horizontal, 20)
+    }
+
+    private var weekdayRow: some View {
         let labels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
         return HStack(spacing: 0) {
             ForEach(labels, id: \.self) { d in
                 Text(d)
-                    .font(.system(size: 17, design: .rounded))
-                    .foregroundStyle(.black.opacity(0.85))
+                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                    .foregroundStyle(.black.opacity(0.65))
                     .frame(maxWidth: .infinity)
             }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.black.opacity(0.12))
-        )
-        .padding(.horizontal, 18)
-        .padding(.top, 12)
+        .padding(.horizontal, 16)
     }
 
     private var calendarGrid: some View {
-        let cols = Array(repeating: GridItem(.flexible(), spacing: gridColumnSpacing), count: 7)
+        // >>> KOMPAKT wie Prototype <<<
+        let circleSize: CGFloat = 34
+        let plusSize: CGFloat = 14
+        let dayFontSize: CGFloat = 13
 
-        return LazyVGrid(columns: cols, spacing: gridSpacing) {
+        let cols = Array(repeating: GridItem(.flexible(), spacing: 10), count: 7)
+
+        return LazyVGrid(columns: cols, spacing: 10) {
             ForEach(vm.cells) { cell in
                 UnifiedDayCell(
                     day: cell.day,
                     style: cell.style,
-                    circleSize: gridCircleSize,
-                    plusSize: gridPlusSize,
+                    circleSize: circleSize,
+                    plusSize: plusSize,
                     dayFontSize: dayFontSize,
+                    isTappable: cell.isTappable,
                     onTap: { handleTap(cell) }
                 )
-                .opacity(cell.isInDisplayedMonth ? 1.0 : 0.55)
+                .opacity(cell.isInDisplayedMonth ? 1.0 : 0.72)
                 .allowsHitTesting(cell.isTappable)
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 12)
-        .padding(.bottom, 6)
+        .padding(.horizontal, 16)
     }
 
     private func handleTap(_ cell: UnifiedCell) {
@@ -189,7 +232,7 @@ struct JournalMainView: View {
     }
 }
 
-// MARK: - Cell Views (UI-only)
+// MARK: - Cell
 
 private struct UnifiedDayCell: View {
     let day: Int
@@ -197,54 +240,73 @@ private struct UnifiedDayCell: View {
     let circleSize: CGFloat
     let plusSize: CGFloat
     let dayFontSize: CGFloat
+    let isTappable: Bool
     let onTap: () -> Void
 
     var body: some View {
+        let isPastDisabled = (!isTappable && !hasMarker)
+
         VStack(spacing: 5) {
             ZStack {
                 Circle()
-                    .fill(circleFill)
+                    .fill(circleFill(isPastDisabled: isPastDisabled))
                     .frame(width: circleSize, height: circleSize)
 
-                if showsPlus {
+                if showsPlus && !isPastDisabled {
                     Image(systemName: "plus")
-                        .font(.system(size: plusSize, weight: .bold))
-                        .foregroundStyle(.black.opacity(0.8))
+                        .font(.system(size: plusSize, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.75))
                 }
 
                 if case .panic(.brokenHeart) = style {
-                    BrokenHeartIcon(size: 22, isActive: true)
+                    BrokenHeartIcon(size: plusSize + 6, isActive: true)
                 }
             }
-            .onTapGesture { onTap() }
+            .contentShape(Circle())
+            .onTapGesture {
+                guard isTappable else { return }
+                onTap()
+            }
 
             Text("\(day)")
-                .font(.system(size: dayFontSize, design: .rounded))
-                .foregroundStyle(.black.opacity(0.9))
+                .font(.system(size: dayFontSize, weight: .regular, design: .rounded))
+                .foregroundStyle(isPastDisabled ? .black.opacity(0.42) : .black.opacity(0.75))
         }
         .frame(maxWidth: .infinity)
     }
 
-    private var showsPlus: Bool {
+    private var hasMarker: Bool {
         switch style {
-        case .mood(.plus):
-            return true
-        case .panic(.plus), .panic(.filled):
+        case .mood(.gradientA), .mood(.gradientB), .panic(.brokenHeart):
             return true
         default:
             return false
         }
     }
 
-    private var circleFill: AnyShapeStyle {
+    private var showsPlus: Bool {
         switch style {
         case .mood(.plus), .panic(.plus), .panic(.filled):
-            return AnyShapeStyle(Color.black.opacity(0.25))
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func circleFill(isPastDisabled: Bool) -> AnyShapeStyle {
+        if isPastDisabled {
+            // abgelaufen => dunkler grau
+            return AnyShapeStyle(Color.black.opacity(0.18))
+        }
+
+        switch style {
+        case .mood(.plus), .panic(.plus), .panic(.filled):
+            return AnyShapeStyle(Color.black.opacity(0.08))
 
         case .mood(.gradientA):
             return AnyShapeStyle(
                 LinearGradient(
-                    colors: [Color.red.opacity(0.9), Color.blue.opacity(0.9)],
+                    colors: [Color.green.opacity(0.70), Color.blue.opacity(0.80)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -253,14 +315,14 @@ private struct UnifiedDayCell: View {
         case .mood(.gradientB):
             return AnyShapeStyle(
                 LinearGradient(
-                    colors: [Color.green.opacity(0.9), Color.blue.opacity(0.9)],
+                    colors: [Color.orange.opacity(0.70), Color.yellow.opacity(0.70)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
 
         case .panic(.brokenHeart), .none:
-            return AnyShapeStyle(Color.black.opacity(0.06))
+            return AnyShapeStyle(Color.black.opacity(0.05))
         }
     }
 }
@@ -273,11 +335,11 @@ private struct BrokenHeartIcon: View {
         ZStack {
             Image(systemName: "heart")
                 .font(.system(size: size))
-                .foregroundStyle(.black.opacity(isActive ? 0.85 : 0.35))
+                .foregroundStyle(.black.opacity(isActive ? 0.78 : 0.35))
 
             Image(systemName: "bolt.fill")
                 .font(.system(size: size * 0.55, weight: .bold))
-                .foregroundStyle(.black.opacity(isActive ? 0.85 : 0.35))
+                .foregroundStyle(.black.opacity(isActive ? 0.78 : 0.35))
         }
     }
 }
