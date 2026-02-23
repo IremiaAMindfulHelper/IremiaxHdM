@@ -90,9 +90,10 @@ final class JournalMainViewModel: ObservableObject {
     private var isDemoMonth: Bool { currentYear == 2026 && currentMonth == 1 }
     private var todayStart: Date { calendar.startOfDay(for: Date()) }
 
-    private func isPastOrToday(year: Int, month: Int, day: Int) -> Bool {
+    /// Erlaubt Interaktionen nur für Heute und Zukunft (Vergangenheit ist gesperrt).
+    private func isTodayOrFuture(year: Int, month: Int, day: Int) -> Bool {
         guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return false }
-        return calendar.startOfDay(for: date) <= todayStart
+        return calendar.startOfDay(for: date) >= todayStart
     }
 
     private func dateForCell(_ cell: UnifiedCell) -> Date? {
@@ -127,7 +128,7 @@ final class JournalMainViewModel: ObservableObject {
 
         var result: [UnifiedCell] = []
 
-        // Leading
+        // Leading (Vormonat)
         if leading > 0 {
             let startDay = daysInPrevMonth - leading + 1
             let prevYM = cal.dateComponents([.year, .month], from: prevMonthDate)
@@ -135,7 +136,7 @@ final class JournalMainViewModel: ObservableObject {
             for d in startDay...daysInPrevMonth {
                 let y = prevYM.year ?? currentYear
                 let m = prevYM.month ?? currentMonth
-                let allowed = isPastOrToday(year: y, month: m, day: d)
+                let allowed = isTodayOrFuture(year: y, month: m, day: d)
 
                 result.append(
                     UnifiedCell(
@@ -153,7 +154,7 @@ final class JournalMainViewModel: ObservableObject {
 
         // Current month
         for d in 1...daysInMonth {
-            let allowed = isPastOrToday(year: currentYear, month: currentMonth, day: d)
+            let allowed = isTodayOrFuture(year: currentYear, month: currentMonth, day: d)
 
             let style: CellStyle
             if !allowed {
@@ -187,14 +188,14 @@ final class JournalMainViewModel: ObservableObject {
             )
         }
 
-        // Trailing
+        // Trailing (Folgemontag) bis 42
         let nextYM = cal.dateComponents([.year, .month], from: nextMonthDate)
         var nextDay = 1
 
         while result.count < 42 {
             let y = nextYM.year ?? currentYear
             let m = nextYM.month ?? currentMonth
-            let allowed = isPastOrToday(year: y, month: m, day: nextDay)
+            let allowed = isTodayOrFuture(year: y, month: m, day: nextDay)
 
             result.append(
                 UnifiedCell(
