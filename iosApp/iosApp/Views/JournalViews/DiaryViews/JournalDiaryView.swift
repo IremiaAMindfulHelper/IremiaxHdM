@@ -1,5 +1,9 @@
 import SwiftUI
 
+// Diese View zeigt die Tagebuch-Eingabe für ein bestimmtes Datum.
+// Sie baut mehrere aufklappbare Karten (Fragen + Eingaben) auf, bietet eine Stimmungs-Auswahl
+// und steuert Toolbar, Keyboard-Verhalten sowie einen einmaligen Tooltip am Stift-Button.
+
 struct JournalDiaryView: View {
     let onBack: () -> Void
     let onOpenQuestionCatalog: () -> Void
@@ -10,28 +14,22 @@ struct JournalDiaryView: View {
 
     @State private var pencilFrame: CGRect = .zero
 
-    // MARK: - Design-Konstanten
     private let headerBlue = Color(red: 0.38, green: 0.53, blue: 0.84)
     private let buttonBlue = Color(red: 0.38, green: 0.53, blue: 0.84)
-    
-    // Heller Hintergrund für sauberen Kontrast (wie in der Panik-Reflexion)
     private let pageBackground = Color(UIColor.systemGroupedBackground)
 
     private let pageSidePadding: CGFloat = 16
     private let sectionSpacing: CGFloat = 14
 
-    // Tooltip
     private let bubbleWidth: CGFloat = 280
     private let bubbleHeight: CGFloat = 150
 
     var body: some View {
         ZStack {
-            // Hintergrund
             pageBackground.ignoresSafeArea()
-            
+
             ScrollView {
                 VStack(spacing: sectionSpacing) {
-                    // Karten-Bereich
                     VStack(spacing: sectionSpacing) {
                         ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
                             TimelineCard(
@@ -41,14 +39,12 @@ struct JournalDiaryView: View {
                             ) {
                                 section.content
                             }
-                            // Nutzt die volle verfügbare Breite innerhalb des Paddings
                             .frame(maxWidth: .infinity)
                         }
                     }
                     .padding(.horizontal, pageSidePadding)
                     .padding(.top, 12)
 
-                    // Eintrag abschließen Button
                     Button { onBack() } label: {
                         Text("Eintrag abschließen")
                             .font(.system(size: 17, weight: .semibold, design: .rounded))
@@ -59,7 +55,7 @@ struct JournalDiaryView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 8)
                     }
-                    .padding(.horizontal, 50) // Vergrößerter Button (Abstand wie Panik-Reflexion)
+                    .padding(.horizontal, 50)
                     .padding(.top, 10)
                     .padding(.bottom, 30)
                 }
@@ -70,7 +66,6 @@ struct JournalDiaryView: View {
                     .ignoresSafeArea()
             )
 
-            // Tooltip Overlay
             if vm.showPencilTooltip {
                 Color.black.opacity(0.001)
                     .ignoresSafeArea()
@@ -98,8 +93,6 @@ struct JournalDiaryView: View {
         }
     }
 
-    // MARK: - Hilfsfunktionen
-    
     private func setupTooltip() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
@@ -107,7 +100,7 @@ struct JournalDiaryView: View {
             }
         }
     }
-    
+
     private func handleFrameChange(_ newValue: CGRect) {
         guard newValue != .zero else { return }
         if vm.showPencilTooltip == false {
@@ -119,23 +112,21 @@ struct JournalDiaryView: View {
         }
     }
 
-    // MARK: - Tooltip Bubble Logic
-
     private var tooltipBubble: some View {
         GeometryReader { geo in
             let screenW: CGFloat = geo.size.width
             let arrowTargetX: CGFloat = pencilFrame.midX
             let preferredArrowXInBubble: CGFloat = 0.84
-            
+
             var bubbleLeft: CGFloat = arrowTargetX - bubbleWidth * preferredArrowXInBubble
             let side: CGFloat = 14
             bubbleLeft = min(max(bubbleLeft, side), screenW - bubbleWidth - side)
             bubbleLeft += 12
-            
+
             let bubbleCenterX: CGFloat = bubbleLeft + bubbleWidth / 2
             let bubbleTopY: CGFloat = max(pencilFrame.maxY + 18, 102)
             let bubbleCenterY: CGFloat = bubbleTopY + bubbleHeight / 2
-            
+
             let rawArrowX: CGFloat = (arrowTargetX - bubbleLeft) / bubbleWidth
             let arrowX: CGFloat = min(max(rawArrowX, 0.12), 0.92)
 
@@ -154,8 +145,6 @@ struct JournalDiaryView: View {
         }
         .ignoresSafeArea()
     }
-
-    // MARK: - Toolbar
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
@@ -201,17 +190,36 @@ struct JournalDiaryView: View {
         }
     }
 
-    // MARK: - Sections
-
     private var sections: [SectionDefinition] {
         [
-            .init(title: vm.diaryQuestions[0], content: AnyView(DiaryContent(text: $vm.answer1, isKeyboardActive: $isKeyboardActive))),
-            .init(title: vm.diaryQuestions[1], content: AnyView(DiaryContent(text: $vm.answer2, isKeyboardActive: $isKeyboardActive))),
-            .init(title: vm.diaryQuestions[2], content: AnyView(DiaryContent(text: $vm.answer3, isKeyboardActive: $isKeyboardActive))),
-            .init(title: vm.diaryQuestions[3], content: AnyView(DiaryContent(text: $vm.answer4, isKeyboardActive: $isKeyboardActive))),
-            .init(title: vm.diaryQuestions[4], content: AnyView(moodPickerContent)),
-            .init(title: vm.diaryQuestions[5], content: AnyView(DiaryContent(text: $vm.answer6, isKeyboardActive: $isKeyboardActive))),
-            .init(title: vm.diaryQuestions[6], content: AnyView(DiaryContent(text: $vm.answer7, isKeyboardActive: $isKeyboardActive)))
+            .init(
+                title: vm.diaryQuestions[0],
+                content: AnyView(DiaryContent(text: $vm.answer1, isKeyboardActive: $isKeyboardActive))
+            ),
+            .init(
+                title: vm.diaryQuestions[1],
+                content: AnyView(DiaryContent(text: $vm.answer2, isKeyboardActive: $isKeyboardActive))
+            ),
+            .init(
+                title: vm.diaryQuestions[2],
+                content: AnyView(DiaryContent(text: $vm.answer3, isKeyboardActive: $isKeyboardActive))
+            ),
+            .init(
+                title: vm.diaryQuestions[3],
+                content: AnyView(DiaryContent(text: $vm.answer4, isKeyboardActive: $isKeyboardActive))
+            ),
+            .init(
+                title: vm.diaryQuestions[4],
+                content: AnyView(moodPickerContent)
+            ),
+            .init(
+                title: vm.diaryQuestions[5],
+                content: AnyView(DiaryContent(text: $vm.answer6, isKeyboardActive: $isKeyboardActive))
+            ),
+            .init(
+                title: vm.diaryQuestions[6],
+                content: AnyView(DiaryContent(text: $vm.answer7, isKeyboardActive: $isKeyboardActive))
+            )
         ]
     }
 
@@ -243,8 +251,6 @@ struct JournalDiaryView: View {
     }
 }
 
-// MARK: - Hilfs-Views
-
 private struct ToolbarCircleSF: View {
     let systemName: String
 
@@ -263,11 +269,10 @@ private struct ToolbarCircleSF: View {
     }
 }
 
-// MARK: - Done Logic Extension
-
 extension JournalDiaryViewModel {
     func isSectionDone(index: Int) -> Bool {
         func filled(_ s: String) -> Bool { !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
         switch index {
         case 0: return filled(answer1)
         case 1: return filled(answer2)

@@ -1,5 +1,10 @@
 import SwiftUI
 
+/*
+ Diese View zeigt die Hauptansicht des Journals mit einem Monatskalender.
+ Der Kalender kann zwischen Stimmungsmodus und Panikmodus umgeschaltet werden.
+ Beim Tippen auf einen Tag wird je nach Zustand ein Eintrag erstellt oder ein Popup geöffnet.
+*/
 struct JournalMainView: View {
     @Binding var rootMode: JournalRootMode
 
@@ -31,17 +36,16 @@ struct JournalMainView: View {
             calendarCard
                 .padding(.top, 14)
 
-            // bewusst kleiner Abstand, damit es nicht “bis unten” wirkt
             Spacer(minLength: 16)
         }
         .background(Color.white)
 
+        // Hält View-Mode und ViewModel-Mode synchron
         .onChange(of: rootMode) {
             if vm.rootMode != rootMode {
                 vm.setIsPanic(rootMode == .panicAttacks)
             }
         }
-
         .onChange(of: vm.rootMode) {
             if rootMode != vm.rootMode {
                 rootMode = vm.rootMode
@@ -49,8 +53,7 @@ struct JournalMainView: View {
         }
     }
 
-    // MARK: - Header (zarter)
-
+    // Zeigt den Titelbereich oben in der Ansicht
     private var headerRow: some View {
         HStack {
             Text("Journal")
@@ -63,8 +66,7 @@ struct JournalMainView: View {
         .safeAreaPadding(.top, 6)
     }
 
-    // MARK: - Controls Row
-
+    // Zeigt die Umschaltung zwischen Modi und die Monatsnavigation
     private var topControlsRow: some View {
         let isPanicBinding = Binding<Bool>(
             get: { vm.rootMode == .panicAttacks },
@@ -105,6 +107,7 @@ struct JournalMainView: View {
         .padding(.top, 8)
     }
 
+    // Einheitlicher Container für die kleinen UI-Elemente in der Control-Reihe
     private func chip<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         content()
             .padding(.horizontal, 14)
@@ -115,6 +118,7 @@ struct JournalMainView: View {
             )
     }
 
+    // Navigation zur Auswahl des vorherigen oder nächsten Monats
     private var monthNavCapsule: some View {
         HStack(spacing: 0) {
             Button {
@@ -145,8 +149,7 @@ struct JournalMainView: View {
         )
     }
 
-    // MARK: - Calendar Card (kompakt + zarte Schrift)
-
+    // Karte, die Monatsüberschrift, Wochentage und das Kalendergitter enthält
     private var calendarCard: some View {
         VStack(spacing: 0) {
             Text(vm.monthTitle)
@@ -179,6 +182,7 @@ struct JournalMainView: View {
         .padding(.horizontal, 20)
     }
 
+    // Zeigt die Wochentagskürzel oberhalb des Kalenders
     private var weekdayRow: some View {
         let labels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
         return HStack(spacing: 0) {
@@ -192,8 +196,8 @@ struct JournalMainView: View {
         .padding(.horizontal, 16)
     }
 
+    // Baut das Kalendergitter aus den Zellen des ViewModels
     private var calendarGrid: some View {
-        // >>> KOMPAKT wie Prototype <<<
         let circleSize: CGFloat = 34
         let plusSize: CGFloat = 14
         let dayFontSize: CGFloat = 13
@@ -218,6 +222,7 @@ struct JournalMainView: View {
         .padding(.horizontal, 16)
     }
 
+    // Übersetzt die Tap-Aktion des ViewModels in Navigation oder Popup-Callbacks
     private func handleTap(_ cell: UnifiedCell) {
         switch vm.handleTap(on: cell) {
         case .none:
@@ -232,8 +237,11 @@ struct JournalMainView: View {
     }
 }
 
-// MARK: - Cell
-
+/*
+ Eine einzelne Tageszelle im Kalender.
+ Sie zeigt je nach Stil ein neutrales Feld, ein Plus-Symbol oder einen Marker an
+ und ruft bei Tap die übergebene Aktion auf.
+*/
 private struct UnifiedDayCell: View {
     let day: Int
     let style: CellStyle
@@ -275,6 +283,7 @@ private struct UnifiedDayCell: View {
         .frame(maxWidth: .infinity)
     }
 
+    // Prüft, ob die Zelle bereits einen sichtbaren Marker trägt
     private var hasMarker: Bool {
         switch style {
         case .mood(.gradientA), .mood(.gradientB), .panic(.brokenHeart):
@@ -284,6 +293,7 @@ private struct UnifiedDayCell: View {
         }
     }
 
+    // Bestimmt, ob ein Plus-Symbol angezeigt werden soll
     private var showsPlus: Bool {
         switch style {
         case .mood(.plus), .panic(.plus), .panic(.filled):
@@ -293,9 +303,9 @@ private struct UnifiedDayCell: View {
         }
     }
 
+    // Legt die Hintergrundfüllung des Kreises abhängig vom Zustand fest
     private func circleFill(isPastDisabled: Bool) -> AnyShapeStyle {
         if isPastDisabled {
-            // abgelaufen => dunkler grau
             return AnyShapeStyle(Color.black.opacity(0.18))
         }
 
@@ -327,6 +337,10 @@ private struct UnifiedDayCell: View {
     }
 }
 
+/*
+ Kleines Icon, das ein Herz mit einem Blitz darüber kombiniert.
+ Wird genutzt, um den Panikmodus oder einen Panik-Marker darzustellen.
+*/
 private struct BrokenHeartIcon: View {
     let size: CGFloat
     let isActive: Bool

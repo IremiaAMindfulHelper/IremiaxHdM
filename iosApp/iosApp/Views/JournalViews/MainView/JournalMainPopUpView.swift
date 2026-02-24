@@ -1,16 +1,18 @@
 import SwiftUI
 
+// Diese View zeigt ein Bottom-Sheet Popup für einen Kalendertag.
+// Sie stellt das Datum, den Panik-Status und einen Mood-Chip dar und bietet einen Button zum Bearbeiten.
+// Das Sheet kann nach unten gezogen werden und schließt sich abhängig von der Drag-Strecke.
+
 struct JournalMainPopUpView: View {
 
     let onEintragBearbeiten: () -> Void
     let onDismiss: () -> Void
     let dateHeader: String
 
-    // Text und Gradient für den Mood-Chip auf der rechten Seite.
     let chipText: String
     let chipGradient: LinearGradient
 
-    // ViewModel hält Drag-State + Dismiss-Entscheidung
     @StateObject private var vm = JournalMainPopUpViewModel()
 
     private let sheetCornerRadius: CGFloat = 26
@@ -21,14 +23,12 @@ struct JournalMainPopUpView: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            // Oberer Drag-Handle-Indikator.
             Capsule()
                 .fill(Color.black.opacity(0.2))
                 .frame(width: handleWidth, height: handleHeight)
                 .padding(.top, 14)
                 .padding(.bottom, 10)
 
-            // Großes Datums-Label.
             Text(dateHeader)
                 .font(.system(size: 36, weight: .regular, design: .rounded))
                 .foregroundStyle(.black.opacity(0.9))
@@ -36,8 +36,6 @@ struct JournalMainPopUpView: View {
                 .padding(.bottom, 6)
 
             HStack(spacing: 18) {
-
-                // Linke Seite: Panik-Status mit Icon.
                 HStack(spacing: 8) {
                     BrokenHeartIcon(size: 20, isActive: true)
                     Text("Panik")
@@ -47,7 +45,6 @@ struct JournalMainPopUpView: View {
 
                 Spacer()
 
-                // Rechte Seite: Mood-Chip mit Farbverlauf.
                 HStack(spacing: 10) {
                     Circle()
                         .fill(chipGradient)
@@ -63,7 +60,6 @@ struct JournalMainPopUpView: View {
             .padding(.horizontal, 26)
             .padding(.top, 16)
 
-            // Button zum Bearbeiten des Eintrags.
             Button { onEintragBearbeiten() } label: {
                 Text("Eintrag bearbeiten")
                     .font(.system(size: 20, weight: .medium, design: .rounded))
@@ -84,8 +80,6 @@ struct JournalMainPopUpView: View {
                             )
                     )
             }
-            
-            
             .padding(.horizontal, 52)
             .padding(.top, 26)
             .padding(.bottom, 32)

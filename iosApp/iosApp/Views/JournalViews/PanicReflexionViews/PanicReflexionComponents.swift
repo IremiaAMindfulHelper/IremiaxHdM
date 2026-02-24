@@ -1,16 +1,26 @@
 import SwiftUI
 
+/*
+ Dieses Theme bündelt Farben, die in den Panik-Ansichten wiederverwendet werden.
+ Dadurch bleiben Farben konsistent und Änderungen sind zentral möglich.
+*/
 enum PanicTheme {
     static let yellow = Color(red: 0.98, green: 0.86, blue: 0.52)
     static let pageBG  = Color(red: 0.95, green: 0.95, blue: 0.95)
 }
 
+/*
+ Diese View ist eine aufklappbare Karte im Timeline-Stil.
+ Links wird ein Statusbereich mit Checkmark und vertikaler Linie angezeigt,
+ in der Mitte der Titel und optionaler Inhalt, rechts ein Streifen mit Pfeil zum Ein- und Ausklappen.
+*/
 struct PanicTimelineCard<Content: View>: View {
     let title: String
     @Binding var isExpanded: Bool
     let isDone: Bool
     @ViewBuilder var content: Content
 
+    // Layout-Konstanten für Breiten, Ecken und Abstände
     private let rightStripW: CGFloat = 50
     private let corner: CGFloat = 20
     private let stripYellow = PanicTheme.yellow
@@ -18,6 +28,8 @@ struct PanicTimelineCard<Content: View>: View {
 
     var body: some View {
         HStack(spacing: 0) {
+
+            // Linker Statusbereich: Checkmark-Icon oben und Linie nach unten
             VStack(spacing: 0) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 15, style: .continuous)
@@ -39,6 +51,7 @@ struct PanicTimelineCard<Content: View>: View {
             }
             .frame(width: 46)
 
+            // Hauptbereich: Titel und optionaler Inhalt, abhängig vom Expand-Status
             VStack(alignment: .leading, spacing: 10) {
                 Text(title)
                     .font(.system(size: 19, weight: .regular, design: .rounded))
@@ -48,12 +61,15 @@ struct PanicTimelineCard<Content: View>: View {
                 if isExpanded {
                     content.padding(.bottom, 12)
                 } else {
-                    Color.clear.frame(height: 8).padding(.bottom, 10)
+                    Color.clear
+                        .frame(height: 8)
+                        .padding(.bottom, 10)
                 }
             }
             .padding(.horizontal, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
 
+            // Rechter Streifen: Button zum Ein- und Ausklappen
             Button {
                 withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
                     isExpanded.toggle()
@@ -73,6 +89,8 @@ struct PanicTimelineCard<Content: View>: View {
             }
             .buttonStyle(.plain)
         }
+
+        // Kartenhintergrund mit abgerundeten Ecken und Schatten
         .background(
             RoundedRectangle(cornerRadius: corner, style: .continuous)
                 .fill(Color.white)
@@ -83,6 +101,11 @@ struct PanicTimelineCard<Content: View>: View {
     }
 }
 
+/*
+ Diese View ist ein dünner Wrapper um PanicTimelineCard.
+ Sie bietet denselben Aufbau, aber mit einem optionalen isDone-Parameter
+ und einem neutraleren Namen für Kategorien.
+*/
 struct PanicCategoryCard<Content: View>: View {
     let title: String
     @Binding var isExpanded: Bool

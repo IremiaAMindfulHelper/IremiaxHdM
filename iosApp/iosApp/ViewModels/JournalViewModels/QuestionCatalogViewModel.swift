@@ -2,21 +2,24 @@
 //  QuestionCatalogViewModel.swift
 //  iosApp
 //
-//  Created by Anke Raab on 23.02.26.
-//
+
 import Foundation
 
+/// ViewModel für einen Fragenkatalog.
+/// Verwaltet eine Liste verfügbarer Fragen,
+/// die Auswahl einzelner Fragen und das Hinzufügen neuer Fragen.
 final class QuestionCatalogViewModel: ObservableObject {
 
-    // Datenquelle der verfügbaren Fragen.
+    // Aktuelle Liste aller verfügbaren Fragen
     @Published private(set) var questions: [String]
 
-    // Speichert die aktuell ausgewählten Fragen.
+    // Menge der aktuell ausgewählten Fragen
     @Published var selectedQuestions: Set<String> = []
 
-    // Eingabetext für eine neue Frage.
+    // Textfeld-Inhalt für das Hinzufügen einer neuen Frage
     @Published var newQuestionText: String = ""
 
+    // Initialisiert das ViewModel mit einer Standardliste an Fragen
     init(questions: [String] = [
         "Gab es heute schwierige Momente für dich?",
         "Was ist heute gut gelaufen?",
@@ -29,7 +32,9 @@ final class QuestionCatalogViewModel: ObservableObject {
         self.questions = questions
     }
 
-    // Schaltet den Auswahlstatus einer Frage um.
+    // Wechselt den Auswahlstatus einer Frage:
+    // Wenn sie ausgewählt ist, wird sie entfernt,
+    // sonst wird sie zur Auswahl hinzugefügt.
     func toggleSelection(_ question: String) {
         if selectedQuestions.contains(question) {
             selectedQuestions.remove(question)
@@ -38,21 +43,33 @@ final class QuestionCatalogViewModel: ObservableObject {
         }
     }
 
-    // Fügt eine neue Frage hinzu (wenn sinnvoll) und leert das Feld.
+    // Fügt eine neue Frage zur Liste hinzu,
+    // wenn das Eingabefeld nicht leer ist
+    // und die Frage noch nicht existiert.
     func addQuestionIfPossible() {
+
+        // Entfernt Leerzeichen am Anfang und Ende
         let cleaned = newQuestionText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Abbrechen, wenn der Text leer ist
         guard cleaned.isEmpty == false else { return }
 
-        // Duplikate vermeiden (case-insensitive).
+        // Prüft, ob die Frage bereits existiert (Groß-/Kleinschreibung ignoriert)
         let exists = questions.contains { $0.lowercased() == cleaned.lowercased() }
+
+        // Wenn sie schon existiert, Eingabefeld leeren und abbrechen
         guard exists == false else {
             newQuestionText = ""
             return
         }
 
+        // Neue Frage zur Liste hinzufügen
         questions.append(cleaned)
-        selectedQuestions.insert(cleaned) // optional: direkt auswählen
+
+        // Optional: Neue Frage direkt als ausgewählt markieren
+        selectedQuestions.insert(cleaned)
+
+        // Eingabefeld zurücksetzen
         newQuestionText = ""
     }
 }
-

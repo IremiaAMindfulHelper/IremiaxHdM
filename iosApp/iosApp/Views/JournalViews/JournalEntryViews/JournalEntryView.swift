@@ -1,15 +1,21 @@
 import SwiftUI
 import UIKit
 
+// Diese View stellt einen täglichen Selbstcheck dar: Stimmung wird auf einem 2D-Feld gewählt, Aktivitäten (Symbole oder Freitext) erfasst,
+// Gesundheitswerte (Wasser, Schlaf) eingegeben und Notizen gespeichert. Unten führen Buttons zu Tagebuch und Panik-Reflexion für das Datum.
 struct JournalEntryView: View {
     let onBack: () -> Void
     let onOpenDiary: (_ date: Date) -> Void
     let onOpenPanicReflexion: (_ date: Date) -> Void
     let entryDate: Date
 
+    // ViewModel hält den Zustand (Stimmung/Lock, Aktivitäten, Texteingaben, etc.)
     @StateObject private var vm = JournalEntryViewModel()
+
+    // Fokussteuerung für Eingabefelder (z.B. um Tastatur zu schließen und Default-Werte zu setzen)
     @FocusState private var focusedField: Field?
 
+    // Identifikatoren für die fokussierbaren Felder
     enum Field: Hashable {
         case freeTextActivity
         case waterLiters
@@ -17,9 +23,11 @@ struct JournalEntryView: View {
         case notes
     }
 
+    // Kürzere Typnamen für Enums aus dem ViewModel
     private typealias ActivitySymbol = JournalEntryViewModel.ActivitySymbol
     private typealias ActivityMode = JournalEntryViewModel.ActivityMode
 
+    // Datum für die Anzeige formatieren
     private var formattedDate: String { Self.entryDateFormatter.string(from: entryDate) }
     private static let entryDateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -28,25 +36,28 @@ struct JournalEntryView: View {
         return f
     }()
 
+    // Layout-Konstanten
     private let screenHPadding: CGFloat = 20
     private let cardCorner: CGFloat = 18
 
+    // Farbschema
     private let primaryBlue = Color(red: 0.42, green: 0.56, blue: 0.85)
 
-    // Verlauf-Farben (wie Screenshot)
-    private let moodTop = Color(red: 0.55, green: 0.95, blue: 0.60)     // grün
-    private let moodLeft = Color(red: 0.98, green: 0.45, blue: 0.45)    // rot
-    private let moodRight = Color(red: 0.45, green: 0.60, blue: 1.00)   // blau
-    private let moodBottom = Color(red: 0.98, green: 0.93, blue: 0.50)  // gelb
+    // Farben für die Stimmungsfläche (oben/unten/links/rechts)
+    private let moodTop = Color(red: 0.55, green: 0.95, blue: 0.60)
+    private let moodLeft = Color(red: 0.98, green: 0.45, blue: 0.45)
+    private let moodRight = Color(red: 0.45, green: 0.60, blue: 1.00)
+    private let moodBottom = Color(red: 0.98, green: 0.93, blue: 0.50)
 
+    // Einheitliche Schrift für Abschnittsüberschriften
     private var sectionTitleFont: Font {
         .system(size: 20, weight: .semibold, design: .rounded)
     }
 
+    // Hauptlayout: scrollbarer Inhalt mit Topbar, Stimmung, Aktivitäten, Gesundheit, Notizen und Navigation
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
-
                 topBar
                     .padding(.horizontal, screenHPadding)
                     .padding(.top, 10)
@@ -77,7 +88,7 @@ struct JournalEntryView: View {
         .toolbar { keyboardToolbar }
     }
 
-    // MARK: - Top bar
+    // Kopfbereich: Zurück-Button links, Titel und Datum zentriert
     private var topBar: some View {
         ZStack {
             HStack {
@@ -105,7 +116,7 @@ struct JournalEntryView: View {
         }
     }
 
-    // MARK: - Mood Card
+    // Karte für die Stimmungs-Auswahl: Überschrift + Lock-Button + Koordinatensystem mit draggable Punkt
     private var moodCard: some View {
         VStack(spacing: 0) {
             HStack {
@@ -133,6 +144,7 @@ struct JournalEntryView: View {
         )
     }
 
+    // Sperrt/entsperrt das Verschieben des Mood-Balls
     private var lockButton: some View {
         Button {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -149,20 +161,22 @@ struct JournalEntryView: View {
         .accessibilityLabel(vm.isLocked ? "Stimmung gesperrt" : "Stimmung entsperrt")
     }
 
-    // ✅ UPDATED: kräftiger + echte 4 gleich große Quadranten (kein Gelb-Overkill)
+    // Koordinatensystem mit 4-Farben-Gradient, Achsen, Labels und dem Mood-Ball
     private var moodCoordinateSystem: some View {
         GeometryReader { geo in
             let centerX = geo.size.width / 2
             let centerY = geo.size.height / 2
+
+            // Abstand, den der Ball maximal in X/Y Richtung laufen darf (Padding für Rand/Labels)
             let maxDistanceX: CGFloat = centerX - 62
             let maxDistanceY: CGFloat = centerY - 62
 
             ZStack {
-                // ✅ 4-Farben-Verlauf: knalliger + ohne Rand (weich ausgeblendet per Maske)
+                // Hintergrundgradient wird weich über eine Maske in einen Kreis geschnitten
                 moodBackgroundGradientCircle
-                    .blur(radius: 10)          // weniger Blur = mehr “Power”
-                    .saturation(2.6)           // knalliger
-                    .contrast(1.35)            // mehr Punch
+                    .blur(radius: 10)
+                    .saturation(2.6)
+                    .contrast(1.35)
                     .brightness(0.04)
                     .opacity(1.0)
                     .mask {
@@ -190,21 +204,22 @@ struct JournalEntryView: View {
         }
     }
 
-    // ✅ UPDATED: AngularGradient => wirklich 1/4 je Farbe (oben grün / rechts blau / unten gelb / links rot)
+    // AngularGradient verteilt die 4 Stimmungsfarben gleichmäßig über die Quadranten
     private var moodBackgroundGradientCircle: some View {
         AngularGradient(
             stops: [
-                .init(color: moodTop,    location: 0.00), // oben (Start bei -90°)
-                .init(color: moodRight,  location: 0.25), // rechts
-                .init(color: moodBottom, location: 0.50), // unten
-                .init(color: moodLeft,   location: 0.75), // links
-                .init(color: moodTop,    location: 1.00)  // zurück zu oben
+                .init(color: moodTop,    location: 0.00),
+                .init(color: moodRight,  location: 0.25),
+                .init(color: moodBottom, location: 0.50),
+                .init(color: moodLeft,   location: 0.75),
+                .init(color: moodTop,    location: 1.00)
             ],
             center: .center,
             angle: .degrees(-90)
         )
     }
 
+    // Zeichnet die X- und Y-Achse im Koordinatensystem
     private func axes(centerX: CGFloat, centerY: CGFloat, size: CGSize) -> some View {
         Path { path in
             path.move(to: CGPoint(x: centerX, y: 48))
@@ -216,6 +231,7 @@ struct JournalEntryView: View {
         .stroke(Color.black.opacity(0.70), lineWidth: 1.4)
     }
 
+    // Beschriftungen an den vier Seiten: oben/unten Energie, links/rechts Stimmung
     private func moodLabels(centerX: CGFloat, centerY: CGFloat, size: CGSize) -> some View {
         ZStack {
             VStack(spacing: 4) {
@@ -256,6 +272,7 @@ struct JournalEntryView: View {
         }
     }
 
+    // Der Punkt, der die aktuelle Stimmung repräsentiert, inklusive Farbe und Drag-Geste
     private func moodBall(centerX: CGFloat, centerY: CGFloat, maxX: CGFloat, maxY: CGFloat) -> some View {
         let currentColor = moodColorAtPosition(vm.ballPosition)
 
@@ -274,6 +291,7 @@ struct JournalEntryView: View {
             .opacity(vm.isLocked ? 0.75 : 1.0)
     }
 
+    // Normalisiert Drag-Position auf Wertebereich [-1, 1] und speichert sie im ViewModel
     private func moodDragGesture(centerX: CGFloat, centerY: CGFloat, maxX: CGFloat, maxY: CGFloat) -> some Gesture {
         DragGesture().onChanged { value in
             let deltaX = value.location.x - centerX
@@ -287,6 +305,7 @@ struct JournalEntryView: View {
         }
     }
 
+    // Ermittelt aus der Ball-Position eine Mischfarbe zwischen den vier Randfarben
     private func moodColorAtPosition(_ p: CGPoint) -> Color {
         let tx = (p.x + 1) / 2
         let ty = (1 - p.y) / 2
@@ -296,7 +315,7 @@ struct JournalEntryView: View {
         return lr.mixed(with: tb, t: 0.5)
     }
 
-    // MARK: - Aktivitäten
+    // Aktivitäten: Umschalter zwischen Symbolauswahl und Freitext
     private var activitiesSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Deine Aktivitäten")
@@ -326,6 +345,7 @@ struct JournalEntryView: View {
         }
     }
 
+    // Grid mit auswählbaren Aktivitäts-Symbolen (plus-Kachel als Platzhalter für später)
     private var symbolsGrid: some View {
         LazyVGrid(
             columns: [
@@ -354,6 +374,7 @@ struct JournalEntryView: View {
         }
     }
 
+    // Freitext-Eingabe für Aktivitäten inkl. Placeholder
     private var freeTextEditor: some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: $vm.freeTextActivity)
@@ -380,7 +401,7 @@ struct JournalEntryView: View {
         }
     }
 
-    // MARK: - Gesundheitstracker (Unit unten)
+    // Gesundheitstracker: Wasser (dezimal) und Schlaf (ganzzahlig) als zwei Eingabespalten
     private var healthSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Gesundheitstracker")
@@ -412,7 +433,7 @@ struct JournalEntryView: View {
         }
     }
 
-    // MARK: - Notizen
+    // Notizen: kurzer Textbereich
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Notizen")
@@ -435,7 +456,7 @@ struct JournalEntryView: View {
         }
     }
 
-    // MARK: - Bottom Buttons
+    // Navigation: Buttons öffnen Tagebuch oder Panik-Reflexion für das aktuelle Datum
     private var bottomNavButtons: some View {
         HStack(spacing: 14) {
             Button { onOpenDiary(entryDate) } label: {
@@ -467,7 +488,7 @@ struct JournalEntryView: View {
         .padding(.horizontal, screenHPadding)
     }
 
-    // MARK: - Keyboard toolbar
+    // Toolbar über der Tastatur: schließt den Fokus (damit Tastatur verschwindet)
     @ToolbarContentBuilder
     private var keyboardToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .keyboard) {
@@ -476,6 +497,7 @@ struct JournalEntryView: View {
         }
     }
 
+    // Setzt Default-Werte für numerische Felder: beim Fokus "0" leeren, beim Verlassen leere Eingabe wieder zu "0"
     private func applyDefaultNumberBehavior() {
         if focusedField == .waterLiters, vm.waterLiters == "0" { vm.waterLiters = "" }
         if focusedField == .sleepHours, vm.sleepHours == "0" { vm.sleepHours = "" }
@@ -485,7 +507,7 @@ struct JournalEntryView: View {
     }
 }
 
-// MARK: - Custom Segmented (blau/weiß)
+// Segmented Control im Pill-Style: zwei Buttons, die einen generischen Selection-Wert umschalten
 private struct SegmentedPill<T: Hashable>: View {
     let leftTitle: String
     let rightTitle: String
@@ -506,6 +528,7 @@ private struct SegmentedPill<T: Hashable>: View {
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
+    // Einzelner Segment-Button, der je nach Aktivzustand anders eingefärbt wird
     private func segButton(title: String, isActive: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
@@ -522,6 +545,7 @@ private struct SegmentedPill<T: Hashable>: View {
     }
 }
 
+// Kachel für ein Aktivitäts-Symbol (auswählbar)
 private struct ActivityTile: View {
     let title: String
     let systemImage: String
@@ -556,6 +580,7 @@ private struct ActivityTile: View {
     }
 }
 
+// Spalte für eine Health-Eingabe: Icon, TextField, Einheit
 private struct HealthInputColumn: View {
     let icon: String
     @Binding var text: String
@@ -584,10 +609,12 @@ private struct HealthInputColumn: View {
     }
 }
 
+// Hilfsfunktion: Whitespace entfernen, um "leer" sauber prüfen zu können
 private extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
 }
 
+// Mischt zwei SwiftUI-Colors linear, indem beide in UIColor zerlegt und dann interpoliert werden
 private extension Color {
     func mixed(with other: Color, t: CGFloat) -> Color {
         let t = max(0, min(1, t))
@@ -603,6 +630,7 @@ private extension Color {
     }
 }
 
+// Hilfsfunktion: extrahiert RGBA-Komponenten aus UIColor
 private extension UIColor {
     var rgba: (r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0

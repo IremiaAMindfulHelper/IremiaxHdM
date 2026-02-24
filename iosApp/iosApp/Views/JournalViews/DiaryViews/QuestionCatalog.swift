@@ -1,12 +1,17 @@
 import SwiftUI
 
+/*
+ Diese View zeigt einen Fragenkatalog, in dem Fragen ausgewählt und neue Fragen hinzugefügt werden können.
+ Die Auswahl und das Hinzufügen werden über ein ViewModel gesteuert. Zusätzlich gibt es eine eigene Toolbar
+ mit Zurück-Button und einer Tastatur-Leiste zum Abschließen der Eingabe.
+*/
 struct QuestionCatalog: View {
     let onBack: () -> Void
 
-    // Steuert den Fokus der Texteingabe (UI-only -> bleibt in der View).
+    // Steuert, ob das Textfeld gerade den Fokus hat und die Tastatur sichtbar ist
     @FocusState private var isKeyboardActive: Bool
 
-    // ViewModel hält State + Logik.
+    // Verwaltet Fragenliste, Auswahl und Hinzufügen neuer Fragen
     @StateObject private var vm = QuestionCatalogViewModel()
 
     var body: some View {
@@ -25,14 +30,14 @@ struct QuestionCatalog: View {
         .onTapGesture { isKeyboardActive = false }
     }
 
-    // Überschrift der Ansicht.
+    // Kopfbereich mit Titeltext innerhalb des Scroll-Inhalts
     private var headerSection: some View {
         Text("Fragen auswählen")
             .font(.headline)
             .padding(.top, 12)
     }
 
-    // Liste aller Fragen mit Auswahl-Logik (delegiert ans VM).
+    // Zeigt alle Fragen an und delegiert Auswahländerungen an das ViewModel
     private var questionsSection: some View {
         VStack(spacing: 14) {
             ForEach(vm.questions, id: \.self) { question in
@@ -47,7 +52,7 @@ struct QuestionCatalog: View {
         .padding(.horizontal, 16)
     }
 
-    // Eingabebereich zum Hinzufügen einer neuen Frage.
+    // Textfeld zum Hinzufügen einer neuen Frage, inkl. Submit-Handling
     private var addQuestionSection: some View {
         TextField("Neue Frage hinzufügen", text: $vm.newQuestionText)
             .focused($isKeyboardActive)
@@ -68,7 +73,7 @@ struct QuestionCatalog: View {
             }
     }
 
-    // Toolbar mit Zurück-Button und Keyboard-Aktion.
+    // Toolbar mit eigenem Zurück-Button und einer Leiste über der Tastatur
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
@@ -81,7 +86,6 @@ struct QuestionCatalog: View {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
             Button("Fertig") {
-                // Wenn du beim "Fertig" auch direkt hinzufügen willst:
                 vm.addQuestionIfPossible()
                 isKeyboardActive = false
             }
@@ -89,6 +93,10 @@ struct QuestionCatalog: View {
     }
 }
 
+/*
+ Eine einzelne Zeile im Fragenkatalog.
+ Der Button zeigt die Frage an und markiert sie optisch, wenn sie ausgewählt ist.
+*/
 private struct QuestionRow: View {
     let title: String
     let isSelected: Bool
