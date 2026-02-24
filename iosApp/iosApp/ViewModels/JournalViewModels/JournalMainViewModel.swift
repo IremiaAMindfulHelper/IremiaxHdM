@@ -8,16 +8,19 @@ final class JournalMainViewModel: ObservableObject {
     @Published private(set) var cells: [UnifiedCell] = []
 
     // Gespeicherte Daten (später aus DB/Repository füllen)
-    // Stimmung: Datum -> MoodMark (A/B)
     private var moodByDate: [Date: MoodMark] = [:]
-
-    // Panik: Datum -> Anzahl (oder Intensität). > 0 => broken heart anzeigen
     private var panicCountByDate: [Date: Int] = [:]
 
-    init(rootMode: JournalRootMode = .emotions, year: Int = 2026, month: Int = 1) {
+    // ✅ FIX: Standard = aktueller Monat/Jahr
+    init(rootMode: JournalRootMode = .emotions, year: Int? = nil, month: Int? = nil) {
         self.rootMode = rootMode
-        self.currentYear = year
-        self.currentMonth = month
+
+        let cal = Self.makeCalendar()
+        let now = Date()
+        let comps = cal.dateComponents([.year, .month], from: now)
+
+        self.currentYear = year ?? (comps.year ?? 2026)
+        self.currentMonth = month ?? (comps.month ?? 1)
 
         // Demo: Marker für den 23. und 24. im aktuell angezeigten Monat
         seedDemoMarksFor23And24()
@@ -32,7 +35,6 @@ final class JournalMainViewModel: ObservableObject {
         case openPanicPopup(Date)
     }
 
-    // Wird vom Toggle genutzt
     func setIsPanic(_ isOn: Bool) {
         rootMode = isOn ? .panicAttacks : .emotions
         rebuildCells()
@@ -44,9 +46,6 @@ final class JournalMainViewModel: ObservableObject {
         let comps = calendar.dateComponents([.year, .month], from: newDate)
         currentYear = comps.year ?? currentYear
         currentMonth = comps.month ?? currentMonth
-
-        // Optional: Demo-Marks auch für neu angezeigten Monat setzen (nur wenn du es willst)
-        // seedDemoMarksFor23And24()
 
         rebuildCells()
     }
@@ -60,7 +59,6 @@ final class JournalMainViewModel: ObservableObject {
     }
 
     func handleTap(on cell: UnifiedCell) -> Action {
-        // Monat wechseln, wenn Zelle aus Vor-/Folgemontag ist
         if !cell.isInDisplayedMonth, let offset = cell.monthOffset {
             shiftMonth(by: offset)
         }
@@ -93,15 +91,13 @@ final class JournalMainViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Public Update Hooks (später vom Entry/DB aufrufen)
+    // MARK: - Public Update Hooks
 
-    /// Wenn ein Tagebucheintrag gespeichert wurde (Stimmung ausgewählt):
     func setMoodMark(for date: Date, mark: MoodMark) {
         moodByDate[normalized(date)] = mark
         rebuildCells()
     }
 
-    /// Wenn eine Panik-Reflexion gespeichert wurde (panicCount > 0):
     func setPanicCount(for date: Date, count: Int) {
         panicCountByDate[normalized(date)] = count
         rebuildCells()
@@ -109,16 +105,16 @@ final class JournalMainViewModel: ObservableObject {
 
     // MARK: - Calendar internals
 
-    private var calendar: Calendar {
+    private static func makeCalendar() -> Calendar {
         var cal = Calendar(identifier: .gregorian)
         cal.locale = Locale(identifier: "de_DE")
         cal.firstWeekday = 2
         return cal
     }
 
+    private var calendar: Calendar { Self.makeCalendar() }
     private var todayStart: Date { calendar.startOfDay(for: Date()) }
 
-    /// Nur heute und Zukunft dürfen einen neuen Eintrag erzeugen (Plus).
     private func isTodayOrFuture(_ date: Date) -> Bool {
         calendar.startOfDay(for: date) >= todayStart
     }
@@ -186,9 +182,6 @@ final class JournalMainViewModel: ObservableObject {
         return result
     }
 
-    /// Baut eine Zelle:
-    /// - Marker (Mood/Panik) haben PRIORITÄT und sind auch in der Vergangenheit tappbar.
-    /// - Plus nur für heute/zukunft und nur wenn kein Marker vorhanden ist.
     private func makeCell(
         day: Int,
         date: Date,
@@ -200,17 +193,14 @@ final class JournalMainViewModel: ObservableObject {
 
         let key = normalized(date)
 
-        // Gibt es gespeicherte Marker?
-        let storedMood = moodByDate[key]               // MoodMark? (A/B)
-        let storedPanic = (panicCountByDate[key] ?? 0) // Int
+        let storedMood = moodByDate[key]
+        let storedPanic = (panicCountByDate[key] ?? 0)
 
         let hasMoodMarker = (storedMood != nil)
         let hasPanicMarker = (storedPanic > 0)
 
-        // Darf Plus angezeigt werden?
         let canCreateNew = isTodayOrFuture(key)
 
-        // Style abhängig vom Mode, aber Marker haben Priorität
         let style: CellStyle
         switch rootMode {
         case .emotions:
@@ -232,9 +222,6 @@ final class JournalMainViewModel: ObservableObject {
             }
         }
 
-        // Tappbar:
-        // - heute/zukunft: ja (Plus)
-        // - vergangenheit: nur wenn Marker existiert (Popup öffnen)
         let isTappable = canCreateNew || hasMoodMarker || hasPanicMarker
 
         return UnifiedCell(
@@ -251,7 +238,6 @@ final class JournalMainViewModel: ObservableObject {
     // MARK: - Demo Seed (23/24)
 
     private func seedDemoMarksFor23And24() {
-        // Stimmung: 23 -> GradientA, 24 -> GradientB
         if let d23 = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 23)) {
             moodByDate[normalized(d23)] = .moodGradientA
         }
@@ -259,7 +245,6 @@ final class JournalMainViewModel: ObservableObject {
             moodByDate[normalized(d24)] = .moodGradientB
         }
 
-        // Panik: 23/24 -> count > 0 => broken heart
         if let d23 = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 23)) {
             panicCountByDate[normalized(d23)] = 1
         }
