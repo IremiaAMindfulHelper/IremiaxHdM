@@ -15,20 +15,19 @@ struct PencilFrameReader: View {
     }
 }
 
-// MARK: - Timeline Card (✅ schmaler, mehr Luft links/rechts)
+// MARK: - Timeline Card (✅ gleich breit + mehr Luft links/rechts)
 
 struct TimelineCard<Content: View>: View {
     let title: String
     @Binding var isExpanded: Bool
     let isDone: Bool
-    @ViewBuilder var content: Content
+    @ViewBuilder var content: () -> Content   // ✅ als closure (robuster)
 
     private let rightStripW: CGFloat = 50
     private let corner: CGFloat = 20
     private let stripBlue = Color(red: 0.55, green: 0.66, blue: 0.88)
 
-    // ✅ das ist der wichtigste Wert:
-    // je größer, desto weiter weg vom Rand.
+    // je größer, desto weiter weg vom Rand:
     private let cardHorizontalPadding: CGFloat = 12
 
     var body: some View {
@@ -65,8 +64,9 @@ struct TimelineCard<Content: View>: View {
                     .padding(.top, 14)
 
                 if isExpanded {
-                    content
+                    content()
                         .padding(.bottom, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading) // ✅ Content kann Breite nicht “kaputt machen”
                 } else {
                     Color.clear
                         .frame(height: 8)
@@ -74,7 +74,7 @@ struct TimelineCard<Content: View>: View {
                 }
             }
             .padding(.horizontal, 14)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading) // ✅ wichtig
 
             // Right strip
             Button {
@@ -96,6 +96,7 @@ struct TimelineCard<Content: View>: View {
             }
             .buttonStyle(.plain)
         }
+        .frame(maxWidth: .infinity) // ✅ DER Kern: alle Karten gleich breit
         .background(
             RoundedRectangle(cornerRadius: corner, style: .continuous)
                 .fill(Color.white)
@@ -103,7 +104,7 @@ struct TimelineCard<Content: View>: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
 
-        // ✅ DER FIX: Karte schmaler machen, damit sie nicht am Rand klebt
+        // ✅ Abstand zum Screen-Rand (alle Karten identisch)
         .padding(.horizontal, cardHorizontalPadding)
     }
 }
@@ -262,11 +263,12 @@ struct CategoryCard<Content: View>: View {
     let dateText: String?
     @Binding var isExpanded: Bool
     var isDone: Bool = false
-    @ViewBuilder var content: Content
+    @ViewBuilder var content: () -> Content   // ✅ als closure
 
     var body: some View {
         TimelineCard(title: title, isExpanded: $isExpanded, isDone: isDone) {
-            content
+            content()
         }
+        .frame(maxWidth: .infinity) // ✅ noch ein extra “Sicherheitsgurt”
     }
 }

@@ -10,11 +10,13 @@ struct JournalDiaryView: View {
 
     @State private var pencilFrame: CGRect = .zero
 
-    // Farben
+    // MARK: - Design-Konstanten
     private let headerBlue = Color(red: 0.38, green: 0.53, blue: 0.84)
     private let buttonBlue = Color(red: 0.38, green: 0.53, blue: 0.84)
+    
+    // Heller Hintergrund für sauberen Kontrast (wie in der Panik-Reflexion)
+    private let pageBackground = Color(UIColor.systemGroupedBackground)
 
-    // ✅ weniger Rand (wie Referenz)
     private let pageSidePadding: CGFloat = 16
     private let sectionSpacing: CGFloat = 14
 
@@ -24,8 +26,12 @@ struct JournalDiaryView: View {
 
     var body: some View {
         ZStack {
+            // Hintergrund
+            pageBackground.ignoresSafeArea()
+            
             ScrollView {
                 VStack(spacing: sectionSpacing) {
+                    // Karten-Bereich
                     VStack(spacing: sectionSpacing) {
                         ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
                             TimelineCard(
@@ -35,12 +41,14 @@ struct JournalDiaryView: View {
                             ) {
                                 section.content
                             }
+                            // Nutzt die volle verfügbare Breite innerhalb des Paddings
+                            .frame(maxWidth: .infinity)
                         }
                     }
                     .padding(.horizontal, pageSidePadding)
                     .padding(.top, 12)
 
-                    // ✅ Button blau
+                    // Eintrag abschließen Button
                     Button { onBack() } label: {
                         Text("Eintrag abschließen")
                             .font(.system(size: 17, weight: .semibold, design: .rounded))
@@ -51,18 +59,18 @@ struct JournalDiaryView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 8)
                     }
-                    .padding(.horizontal, 70)
-                    .padding(.top, 6)
-                    .padding(.bottom, 18)
+                    .padding(.horizontal, 50) // Vergrößerter Button (Abstand wie Panik-Reflexion)
+                    .padding(.top, 10)
+                    .padding(.bottom, 30)
                 }
             }
-            .background(Color(.systemGray6))
             .blur(radius: vm.showPencilTooltip ? 2 : 0)
             .overlay(
                 Color.black.opacity(vm.showPencilTooltip ? 0.10 : 0)
                     .ignoresSafeArea()
             )
 
+            // Tooltip Overlay
             if vm.showPencilTooltip {
                 Color.black.opacity(0.001)
                     .ignoresSafeArea()
@@ -80,51 +88,54 @@ struct JournalDiaryView: View {
         }
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
-
         .toolbarBackground(headerBlue, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-
         .toolbar { toolbarContent }
         .onTapGesture { isKeyboardActive = false }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-                withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
-                    if pencilFrame != .zero { vm.showTooltipOnce() }
-                }
+        .onAppear { setupTooltip() }
+        .onChange(of: pencilFrame) { _, newValue in
+            handleFrameChange(newValue)
+        }
+    }
+
+    // MARK: - Hilfsfunktionen
+    
+    private func setupTooltip() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                if pencilFrame != .zero { vm.showTooltipOnce() }
             }
         }
-        .onChange(of: pencilFrame) { _, newValue in
-            guard newValue != .zero else { return }
-            if vm.showPencilTooltip == false {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
-                        vm.showTooltipOnce()
-                    }
+    }
+    
+    private func handleFrameChange(_ newValue: CGRect) {
+        guard newValue != .zero else { return }
+        if vm.showPencilTooltip == false {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+                    vm.showTooltipOnce()
                 }
             }
         }
     }
 
-    // MARK: - Tooltip
+    // MARK: - Tooltip Bubble Logic
 
     private var tooltipBubble: some View {
         GeometryReader { geo in
             let screenW: CGFloat = geo.size.width
             let arrowTargetX: CGFloat = pencilFrame.midX
-
             let preferredArrowXInBubble: CGFloat = 0.84
+            
             var bubbleLeft: CGFloat = arrowTargetX - bubbleWidth * preferredArrowXInBubble
-
             let side: CGFloat = 14
             bubbleLeft = min(max(bubbleLeft, side), screenW - bubbleWidth - side)
-
-            // wie vorher: leicht nach rechts + etwas runter
             bubbleLeft += 12
+            
             let bubbleCenterX: CGFloat = bubbleLeft + bubbleWidth / 2
-
             let bubbleTopY: CGFloat = max(pencilFrame.maxY + 18, 102)
             let bubbleCenterY: CGFloat = bubbleTopY + bubbleHeight / 2
-
+            
             let rawArrowX: CGFloat = (arrowTargetX - bubbleLeft) / bubbleWidth
             let arrowX: CGFloat = min(max(rawArrowX, 0.12), 0.92)
 
@@ -232,7 +243,7 @@ struct JournalDiaryView: View {
     }
 }
 
-// MARK: - Toolbar look
+// MARK: - Hilfs-Views
 
 private struct ToolbarCircleSF: View {
     let systemName: String
@@ -252,7 +263,7 @@ private struct ToolbarCircleSF: View {
     }
 }
 
-// MARK: - Done logic
+// MARK: - Done Logic Extension
 
 extension JournalDiaryViewModel {
     func isSectionDone(index: Int) -> Bool {

@@ -1,10 +1,3 @@
-//
-//  JournalDiaryViewModel.swift
-//  iosApp
-//
-//  Created by Anke Raab on 23.02.26.
-//
-
 import Foundation
 
 final class JournalDiaryViewModel: ObservableObject {
@@ -41,7 +34,8 @@ final class JournalDiaryViewModel: ObservableObject {
     let moodEmojis: [String] = ["😢", "🙁", "😐", "😊", "😄"]
 
     init(sectionCount: Int = 7) {
-        self.expanded = Array(repeating: true, count: sectionCount)
+        // ✅ Start: alle Karten eingeklappt
+        self.expanded = Array(repeating: false, count: sectionCount)
     }
 
     func showTooltipOnce() {
