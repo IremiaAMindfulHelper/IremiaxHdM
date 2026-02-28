@@ -1,9 +1,12 @@
 import SwiftUI
 import Shared
 
+/// The main entry point of the application.
+/// Displays categorized wellness content including exercises, mantras, and sounds.
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @State private var selectedFilter = "Alle"
+    
     @Binding var showSoundPlayer: Bool
     @Binding var currentSoundTitle: String
     
@@ -12,19 +15,30 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 25) {
+                // MARK: - HEADER
                 HStack {
-                    Text("Hi User!").font(.system(size: 34, weight: .bold, design: .rounded))
+                    Text("Hi User!")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
                     Spacer()
-                    Image(systemName: "phone.circle.fill").font(.system(size: 30)).foregroundColor(petrol.opacity(0.6))
-                }.padding(.top, 10)
+                    Image(systemName: "phone.circle.fill")
+                        .font(.system(size: 30))
+                        .foregroundColor(petrol.opacity(0.6))
+                }
+                .padding(.top, 10)
                 
-                FilterBar(selectedFilter: $selectedFilter, showSoundPlayer: $showSoundPlayer, currentSoundTitle: $currentSoundTitle)
+                FilterBar(
+                    selectedFilter: $selectedFilter,
+                    showSoundPlayer: $showSoundPlayer,
+                    currentSoundTitle: $currentSoundTitle
+                )
 
-                // Übungen Sektion
+                // MARK: - EXERCISES SECTION
                 if selectedFilter == "Alle" || selectedFilter == "Übungen" {
                     VStack(alignment: .leading, spacing: 15) {
                         sectionHeader(title: "Übungen", category: "Übungen")
+                        
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
+                            // NOTE: Only showing the first 4 items as a preview on the home screen.
                             ForEach(viewModel.exercises.prefix(4), id: \.id) { item in
                                 ExerciseCard(exercise: item)
                             }
@@ -32,10 +46,11 @@ struct HomeView: View {
                     }
                 }
 
-                // Mantras Sektion
+                // MARK: - MANTRAS SECTION
                 if selectedFilter == "Alle" || selectedFilter == "Mantras" {
                     VStack(alignment: .leading, spacing: 15) {
                         Text("Mantras").font(.title2).bold()
+                        
                         VStack(spacing: 12) {
                             ForEach(viewModel.mantras, id: \.id) { item in
                                 MantraCard(mantra: item)
@@ -44,30 +59,40 @@ struct HomeView: View {
                     }
                 }
 
-                // Sounds Sektion
+                // MARK: - SOUNDS SECTION
                 if selectedFilter == "Alle" || selectedFilter == "Sounds" {
                     VStack(alignment: .leading, spacing: 15) {
                         Text("Sounds").font(.title2).bold()
+                        
                         VStack(spacing: 15) {
                             ForEach(viewModel.sounds, id: \.id) { item in
-                                SoundCard(sound: item, currentSoundTitle: $currentSoundTitle, showSoundPlayer: $showSoundPlayer)
+                                SoundCard(
+                                    sound: item,
+                                    currentSoundTitle: $currentSoundTitle,
+                                    showSoundPlayer: $showSoundPlayer
+                                )
                             }
                         }
                     }
                 }
 
+                // NOTE: Adding bottom padding to ensure content is not obscured by the persistent sound player.
                 Color.clear.frame(height: 150)
             }
             .padding(.horizontal)
         }
     }
 
+    /// Creates a standardized section header with a navigation link to the full category list.
     private func sectionHeader(title: String, category: String) -> some View {
         HStack(alignment: .lastTextBaseline) {
             Text(title).font(.title2).bold()
             Spacer()
             NavigationLink(destination: CategoryDetailView(category: category, showSoundPlayer: $showSoundPlayer, currentSoundTitle: $currentSoundTitle)) {
-                Text("Alle anzeigen").font(.system(size: 14, weight: .semibold)).foregroundColor(petrol).underline()
+                Text("Alle anzeigen")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(petrol)
+                    .underline()
             }
         }
     }
@@ -79,7 +104,6 @@ struct HomeView: View {
 }
 
 #Preview("Home Inhalt") {
-    // Da HomeView Bindings braucht, nutzen wir .constant
     HomeView(
         showSoundPlayer: .constant(false),
         currentSoundTitle: .constant("")
@@ -87,7 +111,6 @@ struct HomeView: View {
 }
 
 #Preview("Übungs-Karte") {
-    // Wir ziehen uns eine Beispiel-Übung aus dem Shared Repository
     if let exampleExercise = WellnessRepository.shared.exercises.first {
         ExerciseCard(exercise: exampleExercise)
             .padding()
