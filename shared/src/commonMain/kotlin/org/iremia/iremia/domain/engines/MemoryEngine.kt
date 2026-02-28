@@ -1,5 +1,8 @@
 package org.iremia.iremia.domain.engines
 
+/**
+ * Data model for a single memory card.
+ */
 data class WellnessMemoryCard(
     val id: Int,
     val content: String,
@@ -7,6 +10,10 @@ data class WellnessMemoryCard(
     var isMatched: Boolean = false
 )
 
+/**
+ * Logic engine for the Memory matching game.
+ * Manages card shuffling, selection validation, and game-over states.
+ */
 class MemoryEngine {
     private val emojis = listOf("🧠", "☀️", "🌿", "🧘", "💧", "☁️")
     var cards = mutableListOf<WellnessMemoryCard>()
@@ -18,6 +25,9 @@ class MemoryEngine {
         setupGame()
     }
 
+    /**
+     * Initializes a new game session with shuffled emoji pairs.
+     */
     fun setupGame() {
         val gameContent = (emojis + emojis).shuffled()
         cards = gameContent.mapIndexed { index, emoji ->
@@ -27,34 +37,40 @@ class MemoryEngine {
         isGameOver = false
     }
 
+    /**
+     * Logic for card selection.
+     * @return True if a matching pair was found.
+     */
     fun handleSelection(index: Int): Boolean {
         val card = cards[index]
         if (card.isFaceUp || card.isMatched || firstSelectedIndex == index) return false
 
-        // Wenn noch keine Karte umgedreht wurde
         val firstIndex = firstSelectedIndex
         if (firstIndex == null) {
-            // Alle nicht gematchten Karten erst mal wieder zudecken
+            // NOTE: Automatically close any previously unmatched cards before starting a new turn.
             cards.forEach { if (!it.isMatched) it.isFaceUp = false }
             card.isFaceUp = true
             firstSelectedIndex = index
             return false
         } else {
-            // Zweite Karte wird gewählt
             card.isFaceUp = true
             val firstCard = cards[firstIndex]
 
-            if (firstCard.content == card.content) {
-                firstCard.isMatched = true
-                card.isMatched = true
-                firstSelectedIndex = null
-                checkWin()
-                return true // Match gefunden!
+            return if (firstCard.content == card.content) {
+                markAsMatched(firstCard, card)
+                true
             } else {
                 firstSelectedIndex = null
-                return false // Kein Match
+                false
             }
         }
+    }
+
+    private fun markAsMatched(card1: WellnessMemoryCard, card2: WellnessMemoryCard) {
+        card1.isMatched = true
+        card2.isMatched = true
+        firstSelectedIndex = null
+        checkWin()
     }
 
     private fun checkWin() {
@@ -63,6 +79,9 @@ class MemoryEngine {
         }
     }
 
+    /**
+     * Updates the game timer. Should be called every second.
+     */
     fun updateTimer() {
         if (secondsRemaining > 0 && !isGameOver) {
             secondsRemaining -= 1
@@ -73,12 +92,12 @@ class MemoryEngine {
 
     fun getMatchedPairsCount(): Int = cards.count { it.isMatched } / 2
     fun getTotalPairsCount(): Int = emojis.size
+
+    /**
+     * Resets the visual state of unmatched cards.
+     */
     fun clearNonMatchedCards() {
-        cards.forEach { card ->
-            if (!card.isMatched) {
-                card.isFaceUp = false
-            }
-        }
+        cards.forEach { if (!it.isMatched) it.isFaceUp = false }
         firstSelectedIndex = null
     }
 }
