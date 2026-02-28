@@ -15,8 +15,7 @@ struct BreathingExerciseView: View {
     @StateObject private var viewModel = BreathingViewModel()
     @State private var cloudOffset: CGFloat = 0
     
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
+    private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     private let totalTime = 180.0
 
     var body: some View {
@@ -38,7 +37,7 @@ struct BreathingExerciseView: View {
                                 .fill(Color.gray.opacity(0.15))
                                 .frame(height: 8)
                             RoundedRectangle(cornerRadius: 10)
-                                .fill(petrolColor)
+                                .fill(AppTheme.primary)
                                 .frame(width: geo.size.width * progress, height: 8)
                         }
                     }
@@ -46,7 +45,7 @@ struct BreathingExerciseView: View {
                     
                     Image(systemName: "phone.circle.fill")
                         .font(.system(size: 30))
-                        .foregroundColor(petrolColor.opacity(0.6))
+                        .foregroundColor(AppTheme.primary.opacity(0.6))
                 }
                 .padding(.horizontal)
                 .padding(.top, 20)
@@ -57,7 +56,7 @@ struct BreathingExerciseView: View {
                         HStack(alignment: .lastTextBaseline, spacing: 4) {
                             Text(viewModel.timeString())
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                                .foregroundColor(petrolColor)
+                                .foregroundColor(AppTheme.primary)
                             Text("Min")
                                 .font(.system(size: 16))
                                 .foregroundColor(.gray)
@@ -69,11 +68,11 @@ struct BreathingExerciseView: View {
                     HStack(alignment: .lastTextBaseline, spacing: 6) {
                         Text("\(viewModel.points)")
                             .font(.system(size: 24, weight: .bold, design: .rounded))
-                            .foregroundColor(petrolColor)
+                            .foregroundColor(AppTheme.primary)
                             .contentTransition(.numericText())
                         Text("Punkt\(viewModel.points == 1 ? "" : "e")")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(petrolColor)
+                            .foregroundColor(AppTheme.primary)
                     }
                 }
                 .padding(.horizontal, 25)
@@ -86,7 +85,7 @@ struct BreathingExerciseView: View {
                     if !viewModel.isIntroActive {
                         Text("Einatmen")
                             .font(.system(size: 28, weight: .light, design: .rounded))
-                            .foregroundColor(petrolColor)
+                            .foregroundColor(AppTheme.primary)
                             .offset(y: -240)
                             // NOTE: Fade out text when the cloud enters the text area to prevent overlap.
                             .opacity(cloudOffset < -30 ? 0 : 1)
@@ -97,7 +96,7 @@ struct BreathingExerciseView: View {
                             .font(.system(size: 22, weight: .medium, design: .rounded))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
-                            .foregroundColor(petrolColor)
+                            .foregroundColor(AppTheme.primary)
                             .offset(y: -140)
                     }
                     
@@ -128,7 +127,7 @@ struct BreathingExerciseView: View {
                     if !viewModel.isIntroActive {
                         Text("Ausatmen")
                             .font(.system(size: 28, weight: .light, design: .rounded))
-                            .foregroundColor(petrolColor)
+                            .foregroundColor(AppTheme.primary)
                             .offset(y: 240)
                             .opacity(cloudOffset > 30 ? 0 : 1)
                     }
