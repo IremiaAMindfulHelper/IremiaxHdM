@@ -47,8 +47,8 @@ struct CheckpointView: View {
                     Image("Cloud")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 160)
-                        .offset(y: isFloating ? -10 : 10)
+                        .frame(width: 240)
+                        .offset(y: isFloating ? -12 : 12)
                         .onAppear {
                             // NOTE: Forever-looping animation to create a calming, living UI effect.
                             withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
@@ -86,10 +86,10 @@ struct CheckpointView: View {
                         }
                     } else {
                         Button(action: { withAnimation { isShowing = false } }) {
-                            Text("Übungen beenden")
+                            Text("Beenden")
                                 .font(.headline).foregroundColor(.white)
                                 .frame(maxWidth: .infinity).frame(height: 62)
-                                .background(Color.green).cornerRadius(31)
+                                .background(petrolColor).cornerRadius(31)
                         }
                     }
                     

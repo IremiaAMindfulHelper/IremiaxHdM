@@ -1,7 +1,10 @@
 import SwiftUI
 import Shared
 
+/// The root view of the Iremia application.
+/// Manages the primary navigation via a TabView and handles global overlays like the SOS system and Mini Player.
 struct IremiaMainView: View {
+    // MARK: - Navigation State
     @State private var selectedTab = 0
     @State private var showingEmergencyOverlay = false
     @State private var showSoundPlayer = false
@@ -9,7 +12,7 @@ struct IremiaMainView: View {
 
     var body: some View {
         ZStack {
-            // MARK: - TABS (DIE HAUPTSEITEN)
+            // MARK: - MAIN TAB NAVIGATION
             TabView(selection: $selectedTab) {
                 NavigationStack {
                     HomeView(showSoundPlayer: $showSoundPlayer, currentSoundTitle: $currentSoundTitle)
@@ -21,7 +24,8 @@ struct IremiaMainView: View {
                 .tabItem { Label("Tagebuch", systemImage: "book.closed") }
                 .tag(1)
                 
-                Color.clear.tabItem { Text("") }.tag(99) // Platzhalter für SOS
+                // Placeholder for the central SOS button alignment
+                Color.clear.tabItem { Text("") }.tag(99)
                 
                 NavigationStack { Text("Mein Plan") }
                 .tabItem { Label("Mein Plan", systemImage: "checklist") }
@@ -33,11 +37,12 @@ struct IremiaMainView: View {
             }
             .accentColor(Color(red: 0.2, green: 0.45, blue: 0.55))
 
-            // MARK: - MINI PLAYER
+            // MARK: - GLOBAL MINI PLAYER
             VStack {
                 Spacer()
                 if showSoundPlayer {
                     HStack {
+                        // NOTE: Floating mini player providing persistent audio controls across all tabs.
                         SoundPlayerMini(title: currentSoundTitle) {
                             withAnimation { showSoundPlayer = false }
                         }
@@ -49,27 +54,37 @@ struct IremiaMainView: View {
                 }
             }
 
-            // MARK: - SOS BUTTON
+            // MARK: - PERSISTENT SOS BUTTON
             VStack {
                 Spacer()
                 Button {
+                    // Trigger the emergency intervention flow with a spring animation.
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                         showingEmergencyOverlay = true
                     }
                 } label: {
                     VStack(spacing: 4) {
                         ZStack {
-                            Circle().fill(Color.white).frame(width: 60, height: 60).shadow(radius: 6)
-                            Image("NotfallButton").resizable().scaledToFit().frame(width: 50, height: 50)
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 60, height: 60)
+                                .shadow(radius: 6)
+                            Image("NotfallButton")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 50, height: 50)
                         }
-                        Text("SOS").font(.system(size: 12, weight: .bold)).foregroundColor(Color(red: 0.2, green: 0.45, blue: 0.55))
+                        Text("SOS")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Color(red: 0.2, green: 0.45, blue: 0.55))
                     }
                 }
                 .offset(y: +5)
             }.zIndex(5)
 
-            // MARK: - SOS OVERLAY
+            // MARK: - EMERGENCY INTERVENTION OVERLAY
             if showingEmergencyOverlay {
+                // NOTE: Full-screen overlay providing immediate assistance when the SOS button is pressed.
                 EmergencyPlanView(isShowing: $showingEmergencyOverlay)
                     .transition(.move(edge: .bottom))
                     .zIndex(10)
