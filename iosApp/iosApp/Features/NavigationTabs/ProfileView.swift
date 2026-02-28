@@ -1,12 +1,12 @@
 
 import SwiftUI
-
+/// Filler View
 struct ProfileView: View {
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Profilbild Header
+                    
                     VStack {
                         Image(systemName: "person.circle.fill")
                             .resizable()
@@ -30,10 +30,6 @@ struct ProfileView: View {
             .navigationTitle("Mein Profil")
         }
     }
-
-
-// Hilfs-View für die kleine Statistik-Karten
-
 
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {

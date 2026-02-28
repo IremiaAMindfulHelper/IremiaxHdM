@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - NEU: Einstellungen Ansicht
+/// Filler view
 struct SettingsView: View {
     var body: some View {
         NavigationView {
