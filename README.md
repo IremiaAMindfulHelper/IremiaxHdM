@@ -10,7 +10,6 @@
 
 **Betreuung:** Prof. Dr. Ansgar Gerlicher
 
----
 
 ##  Setup und Installation
 
@@ -41,9 +40,8 @@ pod install
 * Wählen Sie einen iOS-Simulator (z. B. iPhone 15) aus.
 * Starten Sie die App mit `Cmd + R` oder über den "Run"-Button.
 
----
 
-## 📂 Projektstruktur
+##  Projektstruktur
 
 Das Projekt nutzt **Kotlin Multiplatform (KMP)**, um Code zwischen Android und iOS zu teilen.
 
