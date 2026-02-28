@@ -1,8 +1,9 @@
 import SwiftUI
-import Shared // Wichtig, damit WellnessMantra erkannt wird
+import Shared
 
+/// A view that displays a daily mantra or affirmation.
 struct MantraView: View {
-    // Hier die Änderung: WellnessMantra statt Mantra
+    /// The mantra data object fetched from the Shared Kotlin module.
     let mantra: WellnessMantra
     
     @Binding var isShowing: Bool
@@ -17,6 +18,7 @@ struct MantraView: View {
     
     var body: some View {
         ZStack {
+            // MARK: - BACKGROUND
             LinearGradient(
                 gradient: Gradient(colors: [petrolColor.opacity(0.1), .white]),
                 startPoint: .topLeading,
@@ -24,7 +26,7 @@ struct MantraView: View {
             ).ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Header
+                // MARK: - HEADER
                 HStack(spacing: 20) {
                     Button(action: { isShowing = false }) {
                         Image(systemName: "xmark").font(.title2).foregroundColor(.gray)
@@ -37,20 +39,21 @@ struct MantraView: View {
                 
                 Spacer()
                 
-                // Mantra Content
+                // MARK: - MANTRA CONTENT
                 VStack(spacing: 40) {
                     Image(systemName: "quote.opening").font(.system(size: 40))
                         .foregroundColor(petrolColor.opacity(0.3))
                     
                     VStack(spacing: 20) {
+                        // NOTE: 'titel' and 'spruch' are properties defined in the Kotlin WellnessMantra class.
                         Text(mantra.titel).font(.system(size: 14, weight: .bold))
                             .textCase(.uppercase).tracking(3).foregroundColor(.gray)
                         
-                        // Hier nutzen wir mantra.spruch (wie in Kotlin definiert)
                         Text(mantra.spruch)
                             .font(.system(size: 28, weight: .medium, design: .rounded))
                             .multilineTextAlignment(.center).padding(.horizontal, 30)
-                            .opacity(opacity).scaleEffect(scale)
+                            .opacity(opacity)
+                            .scaleEffect(scale)
                     }
                     
                     Image(systemName: "quote.closing").font(.system(size: 40))
@@ -59,11 +62,12 @@ struct MantraView: View {
                 
                 Spacer()
                 
-                // Hinweis: ExerciseFooter muss in deinem Projekt existieren
+                // NOTE: ExerciseFooter is a shared component used across all wellness modules.
                 ExerciseFooter { goToNextStep() }
             }
         }
         .onAppear {
+            // NOTE: A slow ease-out animation is used here to match the calm nature of the content.
             withAnimation(.easeOut(duration: 1.2)) {
                 opacity = 1.0
                 scale = 1.0
@@ -74,6 +78,7 @@ struct MantraView: View {
         }
     }
     
+    /// Handles the transition to the next step or dismisses the exercise.
     private func goToNextStep() {
         if isStandalone {
             withAnimation { isShowing = false }
@@ -87,7 +92,6 @@ struct MantraView: View {
 struct MantraView_Previews: PreviewProvider {
     static var previews: some View {
         MantraView(
-            // Hier nutzen wir jetzt die Daten aus dem Shared WellnessRepository
             mantra: WellnessRepository.shared.mantras[0],
             isShowing: .constant(true),
             currentStep: .constant(2)
