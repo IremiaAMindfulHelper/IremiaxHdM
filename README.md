@@ -37,7 +37,7 @@ pod install
 
 ### 4. Projekt öffnen und Ausführen
 * Öffnen Sie die Datei **`iosApp.xcworkspace`** in Xcode (wichtig: nicht die `.xcodeproj` Datei öffnen!).
-* Wählen Sie einen iOS-Simulator (z. B. iPhone 15) aus.
+* Wählen Sie einen iOS-Simulator (z. B. iPhone 16) aus.
 * Starten Sie die App mit `Cmd + R` oder über den "Run"-Button.
 
 
