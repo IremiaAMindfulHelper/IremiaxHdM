@@ -1,14 +1,18 @@
 package org.iremia.iremia.domain.engines
 
-// MARK: - IMPORTS
 import org.iremia.iremia.domain.models.MathOperation
 import org.iremia.iremia.domain.models.QuestionData
 import kotlin.random.Random
 
-// MARK: - ENGINE
+/**
+ * Generates randomized mathematical problems for cognitive grounding.
+ */
 class CalculationEngine {
     val totalQuestions = 3
 
+    /**
+     * Creates a new question with one correct answer and three plausible distractors.
+     */
     fun generateQuestion(): QuestionData {
         val op = MathOperation.random()
         val a = Random.nextInt(5, 21)
@@ -17,6 +21,7 @@ class CalculationEngine {
 
         val options = mutableSetOf(correct)
         while (options.size < 4) {
+            // NOTE: Using a small offset to create distractors close to the correct answer.
             val offset = Random.nextInt(-5, 6)
             if (offset != 0) {
                 options.add(correct + offset)
