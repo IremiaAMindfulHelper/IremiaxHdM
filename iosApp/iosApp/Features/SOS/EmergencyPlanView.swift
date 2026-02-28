@@ -1,26 +1,33 @@
 import SwiftUI
 import Shared
 
-// --- VIEW ---
+/// The entry point for the SOS workflow.
+/// Guides the user through an initial breathing exercise and features a high-intent cancel slider.
 struct EmergencyPlanView: View {
     @Binding var isShowing: Bool
+    
     @StateObject private var viewModel = EmergencyPlanViewModel()
     @State private var sliderOffset: CGFloat = 0
+    
+    /// Internal step tracker for the subsequent exercise flow.
     @State private var internalStep: Int = 0
     
     private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
-    let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    
+    /// Timer for smooth breathing animations.
+    private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
             Color.white.ignoresSafeArea()
             
             VStack(spacing: 30) {
-                // MARK: - PROGRESS BAR (Einheitlich mit CheckpointView)
+                // MARK: - PROGRESS BAR
                 HStack(spacing: 0) {
                     ForEach(0..<viewModel.sosSteps.count, id: \.self) { index in
                         let step = viewModel.sosSteps[index]
                         
+                        // NOTE: Icons are displayed in a neutral state as this is the lead-in phase.
                         VStack(spacing: 8) {
                             ZStack {
                                 Circle()
@@ -44,9 +51,9 @@ struct EmergencyPlanView: View {
                 }
                 .padding(.horizontal, 20).padding(.top, 60)
                 
-                // MARK: - ATEM BEREICH
+                // MARK: - BREATHING ANIMATION
                 VStack(spacing: 20) {
-                    // Nutzt das Suffix ("ein"/"aus") direkt aus Kotlin
+                    // NOTE: 'getImageNameSuffix' determines if the 'Inhale' or 'Exhale' asset is shown.
                     Image("Wolke\(viewModel.engine.getImageNameSuffix())")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -67,21 +74,29 @@ struct EmergencyPlanView: View {
                 
                 Spacer()
                 
-                // MARK: - SLIDER
+                // MARK: - CANCEL SLIDER
                 cancelSlider
                     .padding(.bottom, 60)
             }
         }
         .fullScreenCover(isPresented: $viewModel.startFirstExercise) {
-            // Übergang zur nächsten Übung
+            // NOTE: Transitioning directly to the calculation phase after intro breathing.
             CalculationExerciseView(isShowing: $isShowing, currentStep: $internalStep, isStandalone: false)
         }
     }
     
+    /// A slider component that requires a full horizontal swipe to dismiss the view.
+    /// This prevents accidental exits during high-stress situations.
     private var cancelSlider: some View {
         ZStack(alignment: .leading) {
-            Capsule().fill(petrolColor).frame(width: 300, height: 64)
-            Text("Abbrechen").font(.headline).foregroundColor(.white).frame(width: 300)
+            Capsule()
+                .fill(petrolColor)
+                .frame(width: 300, height: 64)
+            
+            Text("Abbrechen")
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(width: 300)
             
             ZStack {
                 Circle().fill(.white).frame(width: 56, height: 56)
@@ -95,8 +110,11 @@ struct EmergencyPlanView: View {
                         sliderOffset = g.translation.width
                     }
                 }.onEnded { _ in
-                    if sliderOffset > 200 { isShowing = false }
-                    else { withAnimation { sliderOffset = 0 } }
+                    if sliderOffset > 200 {
+                        isShowing = false
+                    } else {
+                        withAnimation { sliderOffset = 0 }
+                    }
                 }
             )
         }
