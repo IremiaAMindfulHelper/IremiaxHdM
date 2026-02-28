@@ -1,6 +1,9 @@
 package org.iremia.iremia.domain.data
 
 import org.iremia.iremia.domain.models.*
+/**
+ * Central data repository for all wellness and SOS content.
+ */
 
 object WellnessRepository {
     val exercises = listOf(
