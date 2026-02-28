@@ -1,6 +1,8 @@
 import SwiftUI
 import Shared
 
+/// An interactive view that guides the user through a breathing exercise.
+/// The exercise is controlled by dragging a cloud in sync with the breathing rhythm.
 struct BreathingExerciseView: View {
     // MARK: - Bindings & Properties
     @Binding var isShowing: Bool
@@ -9,22 +11,16 @@ struct BreathingExerciseView: View {
     
     @Environment(\.dismiss) var dismiss
     
-    // MARK: - ViewModel & State
-    //ViewModel als Brücke zur Kotlin-Logik
+    // MARK: - State
     @StateObject private var viewModel = BreathingViewModel()
-    
-    
     @State private var cloudOffset: CGFloat = 0
     
-    // Timer für den visuellen Refresh
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
-    let totalTime = 180.0
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let petrolColor = Color(red: 0.2, green: 0.45, blue: 0.55)
+    private let totalTime = 180.0
 
     var body: some View {
         ZStack {
-
-            
             VStack(spacing: 0) {
                 // MARK: - HEADER
                 HStack(spacing: 20) {
@@ -35,7 +31,7 @@ struct BreathingExerciseView: View {
                     }
                     
                     GeometryReader { geo in
-                        // Fortschrittsberechnung basierend auf Kotlin-Daten
+                        // NOTE: Progress is calculated locally to ensure smooth UI transitions.
                         let progress = CGFloat((totalTime - Double(viewModel.timeLeft)) / totalTime)
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 10)
@@ -55,11 +51,10 @@ struct BreathingExerciseView: View {
                 .padding(.horizontal)
                 .padding(.top, 20)
                 
-                // MARK: - TIMER & PUNKTE
+                // MARK: - TIMER & POINTS
                 HStack(alignment: .lastTextBaseline) {
                     if !viewModel.isIntroActive {
                         HStack(alignment: .lastTextBaseline, spacing: 4) {
-                            // Zeit-String kommt direkt aus der Kotlin-Logik
                             Text(viewModel.timeString())
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundColor(petrolColor)
@@ -86,13 +81,14 @@ struct BreathingExerciseView: View {
                 
                 Spacer()
                 
-                // MARK: - CLOUD & TEXT
+                // MARK: - INTERACTION AREA
                 ZStack {
                     if !viewModel.isIntroActive {
                         Text("Einatmen")
                             .font(.system(size: 28, weight: .light, design: .rounded))
                             .foregroundColor(petrolColor)
                             .offset(y: -240)
+                            // NOTE: Fade out text when the cloud enters the text area to prevent overlap.
                             .opacity(cloudOffset < -30 ? 0 : 1)
                     }
                     
@@ -109,6 +105,7 @@ struct BreathingExerciseView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 180, height: 180)
+                        // OPTIMIZE: Consider moving scaleEffect to a drawingGroup if performance drops during heavy animations.
                         .scaleEffect(1.0 + (abs(cloudOffset) / 800))
                         .offset(y: cloudOffset)
                         .gesture(
@@ -117,13 +114,10 @@ struct BreathingExerciseView: View {
                                     if !viewModel.isIntroActive {
                                         let limit: CGFloat = 180
                                         self.cloudOffset = min(max(value.translation.height, -limit), limit)
-                                        
-                                        // Logik-Check in Kotlin triggern
                                         viewModel.processMovement(offset: cloudOffset)
                                     }
                                 }
                                 .onEnded { _ in
-                                    // Reset der Atem-Flags in Kotlin
                                     viewModel.resetGesture()
                                     withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
                                         self.cloudOffset = 0
@@ -146,7 +140,7 @@ struct BreathingExerciseView: View {
             }
         }
         .onAppear {
-            // Intro-Timer
+            // TODO: Control intro duration dynamically via Shared logic instead of hardcoded 3 seconds.
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 withAnimation {
                     viewModel.endIntro()
@@ -154,7 +148,6 @@ struct BreathingExerciseView: View {
             }
         }
         .onReceive(timer) { _ in
-            // Kotlin-Timer aktualisieren
             viewModel.tick()
         }
         .fullScreenCover(isPresented: $viewModel.showCheckpoint) {
@@ -162,7 +155,7 @@ struct BreathingExerciseView: View {
         }
     }
     
-    // MARK: - Helper Functions
+    /// Navigates to the next step or closes the view if in standalone mode.
     private func goToNextStep() {
         if isStandalone {
             withAnimation { isShowing = false }
@@ -173,7 +166,6 @@ struct BreathingExerciseView: View {
         }
     }
 }
-
 // MARK: - Preview
 struct BreathingExerciseView_Previews: PreviewProvider {
     static var previews: some View {
