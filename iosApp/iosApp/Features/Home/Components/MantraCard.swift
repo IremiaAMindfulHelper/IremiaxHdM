@@ -1,7 +1,8 @@
 import SwiftUI
 import Shared
 
-// MARK: - 4. MANTRA ROW
+/// A card component that displays a specific mantra.
+/// Used within lists to show the mantra's title and its inspirational quote.
 struct MantraCard: View {
     let mantra: WellnessMantra
     
@@ -9,7 +10,7 @@ struct MantraCard: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(mantra.titel).font(.headline)
-                Text("\"\(mantra.spruch)\"") // .spruch aus Kotlin
+                Text("\"\(mantra.spruch)\"")
                     .font(.subheadline).italic().foregroundColor(.gray)
             }
             Spacer()
@@ -19,4 +20,3 @@ struct MantraCard: View {
         .padding().background(Color.white).cornerRadius(18).shadow(color: .black.opacity(0.05), radius: 5)
     }
 }
-

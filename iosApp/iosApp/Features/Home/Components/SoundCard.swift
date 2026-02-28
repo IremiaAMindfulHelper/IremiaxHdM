@@ -1,8 +1,10 @@
 import SwiftUI
 import Shared
 
+/// A row component representing an audio track.
+/// Allows the user to trigger a sound and displays its title and short description.
 struct SoundCard: View {
-    let sound: WellnessSound // NEUER TYP
+    let sound: WellnessSound
     @Binding var currentSoundTitle: String
     @Binding var showSoundPlayer: Bool
     

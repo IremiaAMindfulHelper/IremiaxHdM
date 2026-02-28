@@ -15,7 +15,10 @@ object WellnessRepository {
 
     val mantras = listOf(
         WellnessMantra(0, "Innere Ruhe", "Ich bin ganz bei mir und finde Frieden."),
-        WellnessMantra(1, "Selbstvertrauen", "Ich vertraue meinen Fähigkeiten.")
+        WellnessMantra(1, "Selbstvertrauen", "Ich vertraue meinen Fähigkeiten."),
+        WellnessMantra(2, "Gelassenheit", "Ich lasse los, was ich nicht kontrollieren kann."),
+        WellnessMantra(3, "Stärke", "Jeder Atemzug schenkt mir neue Kraft und Ruhe."),
+        WellnessMantra(4, "Gegenwart", "Ich bin hier, ich bin sicher und ich bin wertvoll.")
     )
 
     val sounds = listOf(

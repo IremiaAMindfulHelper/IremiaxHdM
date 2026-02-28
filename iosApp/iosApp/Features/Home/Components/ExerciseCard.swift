@@ -1,8 +1,10 @@
 import SwiftUI
 import Shared
-// MARK: - 3. EXERCISE CARD
+
+/// A grid-based card representing a single wellness exercise.
+/// Handles the navigation logic to different exercise types like breathing, calculation, or memory.
 struct ExerciseCard: View {
-    let exercise: WellnessExercise // NEUER TYP
+    let exercise: WellnessExercise
     @State private var showExercise = false
     @State private var dummyStep = 0
     
@@ -45,10 +47,7 @@ struct ExerciseCard: View {
             case .memory:
                 MemoryExerciseView(isShowing: $showExercise, currentStep: $dummyStep, isStandalone: true)
             case .mantra:
-                // Hier WellnessMantra nutzen
-                if let firstMantra = WellnessRepository.shared.mantras.first {
-                    MantraView(mantra: firstMantra, isShowing: $showExercise, currentStep: $dummyStep, isStandalone: true)
-                }
+                MantraView(isShowing: $showExercise, currentStep: $dummyStep, isStandalone: true)
             default:
                 EmptyView()
             }

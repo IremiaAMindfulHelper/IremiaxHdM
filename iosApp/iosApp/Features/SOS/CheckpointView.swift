@@ -121,12 +121,7 @@ struct CheckpointView: View {
         case .memory:
             MemoryExerciseView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
         case .mantra:
-            // NOTE: Using the first mantra from the repository as a fallback.
-            if let mantra = WellnessRepository.shared.mantras.first {
-                MantraView(mantra: mantra, isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
-            } else {
-                EmptyView()
-            }
+            MantraView(isShowing: $isShowing, currentStep: $currentStep, isStandalone: false)
         default:
             EmptyView()
         }

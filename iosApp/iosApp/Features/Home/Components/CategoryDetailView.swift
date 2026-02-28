@@ -1,7 +1,8 @@
 import SwiftUI
 import Shared
 
-// MARK: - CATEGORY DETAIL VIEW
+/// A detailed list view for a specific wellness category.
+/// Filters and displays exercises, sounds, or mantras based on the selected category title.
 struct CategoryDetailView: View {
     let category: String
     @Binding var showSoundPlayer: Bool
