@@ -1,32 +1,31 @@
 import SwiftUI
 import Shared
 
-// MARK: - VIEW MODEL
+/// Manages the state of the Memory game, bridging the Swift UI with the Kotlin `MemoryEngine`.
+/// Handles card selection logic, mismatch timeouts, and game timer synchronization.
 class MemoryViewModel: ObservableObject {
     @Published var engine = MemoryEngine()
     
-    // Hilfs-Property für Swift-Array Zugriff
+    /// Provides a Swift-compatible array of card objects for easier view iteration.
     var cards: [WellnessMemoryCard] {
         return engine.cards as? [WellnessMemoryCard] ?? []
     }
     
+    /// Processes card selection and handles matching logic via the Kotlin engine.
+    /// - Parameter index: The position of the selected card in the grid.
     func selectCard(at index: Int) {
-        // Sicherstellen, dass nicht mehr als 2 Karten gleichzeitig "offen" (aber nicht gematcht) sind
+        // NOTE: Preventing further selection if two cards are already visible to avoid logic conflicts.
         let faceUpCount = cards.filter { $0.isFaceUp && !$0.isMatched }.count
         if faceUpCount >= 2 { return }
 
         let isMatch = engine.handleSelection(index: Int32(index))
         
-        // UI sofort aktualisieren (Karte wird aufgedeckt)
         objectWillChange.send()
         
-        // Wenn kein Match gefunden wurde und es die zweite Karte war
+        // NOTE: If no match is found, we provide a short delay.
         if !isMatch && engine.firstSelectedIndex == nil {
-            // Warte kurz, damit der User sich die Karte merken kann
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                // Karten in Kotlin wieder zudecken
                 self.engine.clearNonMatchedCards()
-                // UI mit Animation aktualisieren
                 withAnimation(.easeInOut(duration: 0.3)) {
                     self.objectWillChange.send()
                 }
@@ -34,11 +33,14 @@ class MemoryViewModel: ObservableObject {
         }
     }
     
+    /// Synchronizes the local UI state with the Kotlin engine's internal timer.
     func tick() {
         engine.updateTimer()
         objectWillChange.send()
     }
     
+    /// Formats the remaining time for the UI.
+    /// - Returns: A string in "M:SS" format.
     func timeString() -> String {
         let seconds = engine.secondsRemaining
         return String(format: "%d:%02d", seconds / 60, seconds % 60)

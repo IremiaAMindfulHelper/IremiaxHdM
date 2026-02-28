@@ -1,7 +1,8 @@
 import SwiftUI
 import Shared
 
-// MARK: - MAIN VIEW
+/// A view that presents a 3-column memory card matching game.
+/// The game progress is tracked via matched pairs and a countdown timer.
 struct MemoryExerciseView: View {
     @Binding var isShowing: Bool
     @Binding var currentStep: Int
@@ -22,6 +23,7 @@ struct MemoryExerciseView: View {
                 }
                 
                 GeometryReader { geo in
+                    // NOTE: Progress is derived from the engine's matched pair count.
                     let progress = CGFloat(Double(viewModel.engine.getMatchedPairsCount()) / Double(viewModel.engine.getTotalPairsCount()))
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 10).fill(Color.gray.opacity(0.1)).frame(height: 12)
@@ -35,7 +37,7 @@ struct MemoryExerciseView: View {
             }
             .padding(.horizontal).padding(.top, 20)
             
-            // TIMER
+            // MARK: - TIMER
             HStack(alignment: .lastTextBaseline, spacing: 4) {
                 Text(viewModel.timeString()).font(.system(size: 24, weight: .bold, design: .rounded))
                 Text("Min").font(.system(size: 16)).foregroundColor(.gray)
@@ -45,17 +47,15 @@ struct MemoryExerciseView: View {
             
             Spacer()
             
-            // MARK: - GRID (Altes Design)
+            // MARK: - CARD GRID
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
                 ForEach(0..<viewModel.cards.count, id: \.self) { index in
                     let card = viewModel.cards[index]
                     
                     ZStack {
-                        // Die Karten-Fläche
                         RoundedRectangle(cornerRadius: 12)
                             .fill(card.isFaceUp || card.isMatched ? Color.white : Color(red: 0.9, green: 0.93, blue: 0.94))
                         
-                        // Der Inhalt (nur wenn aufgedeckt oder gematcht)
                         if card.isFaceUp || card.isMatched {
                             Text(card.content)
                                 .font(.system(size: 35))
@@ -75,7 +75,6 @@ struct MemoryExerciseView: View {
             
             Spacer()
             
-            // Footer
             ExerciseFooter { goToNextStep() }
         }
         .background(Color.white.ignoresSafeArea())
