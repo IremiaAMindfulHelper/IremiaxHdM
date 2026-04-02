@@ -6,9 +6,9 @@
 #import <Foundation/NSString.h>
 #import <Foundation/NSValue.h>
 
-@class Interop, KmpCancelable, Mantra, MantrasController, MantrasState, NSBundle, SharedDatabase, SharedDatabaseProvider, SharedDriverFactory, SharedFactory, SharedKotlinAbstractCoroutineContextElement, SharedKotlinAbstractCoroutineContextKey<B, E>, SharedKotlinArray<T>, SharedKotlinByteArray, SharedKotlinByteIterator, SharedKotlinCancellationException, SharedKotlinException, SharedKotlinIllegalStateException, SharedKotlinRuntimeException, SharedKotlinThrowable, SharedKotlinUnit, SharedKotlinx_coroutines_coreCoroutineDispatcher, SharedKotlinx_coroutines_coreCoroutineDispatcherKey, SharedMantra, SharedMantraDao, SharedMantraQueries, SharedMantraRepository, SharedNavigationState, SharedNavigationTarget, SharedNavigationTargetContacts, SharedNavigationTargetHome, SharedNavigationTargetProfile, SharedNavigationTargetReflection, SharedNavigationTargetSOS, SharedResourcesColorResource, SharedResourcesImageResource, SharedResourcesResourcePlatformDetails, SharedResourcesStringResource, SharedRuntimeAfterVersion, SharedRuntimeBaseTransacterImpl, SharedRuntimeExecutableQuery<__covariant RowType>, SharedRuntimeQuery<__covariant RowType>, SharedRuntimeTransacterImpl, SharedRuntimeTransacterTransaction, SharedSharedColors, SharedSharedRes, SharedSharedResColors, SharedSharedResImages, SharedSharedResStrings, SharedUserDataCompanion, UIColor, UIImage;
+@class Interop, KmpCancelable, Mantra, MantrasController, MantrasState, NSBundle, SharedBreathingPhase, SharedBreathingType, SharedDatabase, SharedDatabaseProvider, SharedDriverFactory, SharedFactory, SharedKotlinAbstractCoroutineContextElement, SharedKotlinAbstractCoroutineContextKey<B, E>, SharedKotlinArray<T>, SharedKotlinByteArray, SharedKotlinByteIterator, SharedKotlinCancellationException, SharedKotlinEnum<E>, SharedKotlinEnumCompanion, SharedKotlinException, SharedKotlinIllegalStateException, SharedKotlinRuntimeException, SharedKotlinThrowable, SharedKotlinUnit, SharedKotlinx_coroutines_coreCoroutineDispatcher, SharedKotlinx_coroutines_coreCoroutineDispatcherKey, SharedMantra, SharedMantraDao, SharedMantraQueries, SharedMantraRepository, SharedMathOperation, SharedMathOperationCompanion, SharedNavigationState, SharedNavigationTarget, SharedNavigationTargetContacts, SharedNavigationTargetHome, SharedNavigationTargetProfile, SharedNavigationTargetReflection, SharedNavigationTargetSOS, SharedQuestionData, SharedResourcesColorResource, SharedResourcesImageResource, SharedResourcesResourcePlatformDetails, SharedResourcesStringResource, SharedRuntimeAfterVersion, SharedRuntimeBaseTransacterImpl, SharedRuntimeExecutableQuery<__covariant RowType>, SharedRuntimeQuery<__covariant RowType>, SharedRuntimeTransacterImpl, SharedRuntimeTransacterTransaction, SharedSOSFlowData, SharedSOSStep, SharedSharedColors, SharedSharedRes, SharedSharedResColors, SharedSharedResImages, SharedSharedResStrings, SharedStepType, SharedUserDataCompanion, SharedWellnessExercise, SharedWellnessExerciseType, SharedWellnessMantra, SharedWellnessMemoryCard, SharedWellnessRepository, SharedWellnessSound, UIColor, UIImage;
 
-@protocol SharedKotlinContinuation, SharedKotlinContinuationInterceptor, SharedKotlinCoroutineContext, SharedKotlinCoroutineContextElement, SharedKotlinCoroutineContextKey, SharedKotlinIterator, SharedKotlinSequence, SharedKotlinx_coroutines_coreChildHandle, SharedKotlinx_coroutines_coreChildJob, SharedKotlinx_coroutines_coreCoroutineScope, SharedKotlinx_coroutines_coreDisposableHandle, SharedKotlinx_coroutines_coreFlow, SharedKotlinx_coroutines_coreFlowCollector, SharedKotlinx_coroutines_coreJob, SharedKotlinx_coroutines_coreParentJob, SharedKotlinx_coroutines_coreRunnable, SharedKotlinx_coroutines_coreSelectClause, SharedKotlinx_coroutines_coreSelectClause0, SharedKotlinx_coroutines_coreSelectInstance, SharedKotlinx_coroutines_coreSharedFlow, SharedKotlinx_coroutines_coreStateFlow, SharedResourcesResourceContainer, SharedResourcesStringDesc, SharedRuntimeCloseable, SharedRuntimeQueryListener, SharedRuntimeQueryResult, SharedRuntimeSqlCursor, SharedRuntimeSqlDriver, SharedRuntimeSqlPreparedStatement, SharedRuntimeSqlSchema, SharedRuntimeTransacter, SharedRuntimeTransacterBase, SharedRuntimeTransactionCallbacks, SharedRuntimeTransactionWithReturn, SharedRuntimeTransactionWithoutReturn, SharedUserData;
+@protocol SharedKotlinComparable, SharedKotlinContinuation, SharedKotlinContinuationInterceptor, SharedKotlinCoroutineContext, SharedKotlinCoroutineContextElement, SharedKotlinCoroutineContextKey, SharedKotlinIterator, SharedKotlinSequence, SharedKotlinx_coroutines_coreChildHandle, SharedKotlinx_coroutines_coreChildJob, SharedKotlinx_coroutines_coreCoroutineScope, SharedKotlinx_coroutines_coreDisposableHandle, SharedKotlinx_coroutines_coreFlow, SharedKotlinx_coroutines_coreFlowCollector, SharedKotlinx_coroutines_coreJob, SharedKotlinx_coroutines_coreParentJob, SharedKotlinx_coroutines_coreRunnable, SharedKotlinx_coroutines_coreSelectClause, SharedKotlinx_coroutines_coreSelectClause0, SharedKotlinx_coroutines_coreSelectInstance, SharedKotlinx_coroutines_coreSharedFlow, SharedKotlinx_coroutines_coreStateFlow, SharedResourcesResourceContainer, SharedResourcesStringDesc, SharedRuntimeCloseable, SharedRuntimeQueryListener, SharedRuntimeQueryResult, SharedRuntimeSqlCursor, SharedRuntimeSqlDriver, SharedRuntimeSqlPreparedStatement, SharedRuntimeSqlSchema, SharedRuntimeTransacter, SharedRuntimeTransacterBase, SharedRuntimeTransactionCallbacks, SharedRuntimeTransactionWithReturn, SharedRuntimeTransactionWithoutReturn, SharedUserData;
 
 NS_ASSUME_NONNULL_BEGIN
 #pragma clang diagnostic push
@@ -341,6 +341,133 @@ __attribute__((swift_name("DriverFactory")))
 @end
 
 __attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("WellnessRepository")))
+@interface SharedWellnessRepository : SharedBase
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
++ (instancetype)wellnessRepository __attribute__((swift_name("init()")));
+@property (class, readonly, getter=shared) SharedWellnessRepository *shared __attribute__((swift_name("shared")));
+@property (readonly) NSArray<SharedWellnessExercise *> *exercises __attribute__((swift_name("exercises")));
+@property (readonly) NSArray<SharedWellnessMantra *> *mantras __attribute__((swift_name("mantras")));
+@property (readonly) NSArray<SharedWellnessSound *> *sounds __attribute__((swift_name("sounds")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("BreathingEngine")))
+@interface SharedBreathingEngine : SharedBase
+- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer));
++ (instancetype)new __attribute__((availability(swift, unavailable, message="use object initializers instead")));
+- (SharedBreathingPhase *)getCurrentPhase __attribute__((swift_name("getCurrentPhase()")));
+- (NSString *)getImageNameSuffix __attribute__((swift_name("getImageNameSuffix()")));
+- (double)getScaleFactor __attribute__((swift_name("getScaleFactor()")));
+- (BOOL)handleGestureOffset:(float)offset __attribute__((swift_name("handleGesture(offset:)")));
+- (void)resetFlags __attribute__((swift_name("resetFlags()")));
+- (void)updateTimerOnIntroFinished:(void (^)(void))onIntroFinished __attribute__((swift_name("updateTimer(onIntroFinished:)")));
+@property int32_t currentPhaseIndex __attribute__((swift_name("currentPhaseIndex")));
+@property double currentPhaseTime __attribute__((swift_name("currentPhaseTime")));
+@property BOOL isIntroActive __attribute__((swift_name("isIntroActive")));
+@property (readonly) NSArray<SharedBreathingPhase *> *phases __attribute__((swift_name("phases")));
+@property int32_t points __attribute__((swift_name("points")));
+@property int32_t timeLeft __attribute__((swift_name("timeLeft")));
+@property (readonly) int32_t totalTime __attribute__((swift_name("totalTime")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("BreathingPhase")))
+@interface SharedBreathingPhase : SharedBase
+- (instancetype)initWithTitle:(NSString *)title duration:(double)duration type:(SharedBreathingType *)type __attribute__((swift_name("init(title:duration:type:)"))) __attribute__((objc_designated_initializer));
+- (SharedBreathingPhase *)doCopyTitle:(NSString *)title duration:(double)duration type:(SharedBreathingType *)type __attribute__((swift_name("doCopy(title:duration:type:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) double duration __attribute__((swift_name("duration")));
+@property (readonly) NSString *title __attribute__((swift_name("title")));
+@property (readonly) SharedBreathingType *type __attribute__((swift_name("type")));
+@end
+
+__attribute__((swift_name("KotlinComparable")))
+@protocol SharedKotlinComparable
+@required
+- (int32_t)compareToOther:(id _Nullable)other __attribute__((swift_name("compareTo(other:)")));
+@end
+
+__attribute__((swift_name("KotlinEnum")))
+@interface SharedKotlinEnum<E> : SharedBase <SharedKotlinComparable>
+- (instancetype)initWithName:(NSString *)name ordinal:(int32_t)ordinal __attribute__((swift_name("init(name:ordinal:)"))) __attribute__((objc_designated_initializer));
+@property (class, readonly, getter=companion) SharedKotlinEnumCompanion *companion __attribute__((swift_name("companion")));
+- (int32_t)compareToOther:(E)other __attribute__((swift_name("compareTo(other:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) NSString *name __attribute__((swift_name("name")));
+@property (readonly) int32_t ordinal __attribute__((swift_name("ordinal")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("BreathingType")))
+@interface SharedBreathingType : SharedKotlinEnum<SharedBreathingType *>
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
+- (instancetype)initWithName:(NSString *)name ordinal:(int32_t)ordinal __attribute__((swift_name("init(name:ordinal:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
+@property (class, readonly) SharedBreathingType *in __attribute__((swift_name("in")));
+@property (class, readonly) SharedBreathingType *hold __attribute__((swift_name("hold")));
+@property (class, readonly) SharedBreathingType *out __attribute__((swift_name("out")));
++ (SharedKotlinArray<SharedBreathingType *> *)values __attribute__((swift_name("values()")));
+@property (class, readonly) NSArray<SharedBreathingType *> *entries __attribute__((swift_name("entries")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("CalculationEngine")))
+@interface SharedCalculationEngine : SharedBase
+- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer));
++ (instancetype)new __attribute__((availability(swift, unavailable, message="use object initializers instead")));
+- (SharedQuestionData *)generateQuestion __attribute__((swift_name("generateQuestion()")));
+@property (readonly) int32_t totalQuestions __attribute__((swift_name("totalQuestions")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("MemoryEngine")))
+@interface SharedMemoryEngine : SharedBase
+- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer));
++ (instancetype)new __attribute__((availability(swift, unavailable, message="use object initializers instead")));
+- (void)clearNonMatchedCards __attribute__((swift_name("clearNonMatchedCards()")));
+- (int32_t)getMatchedPairsCount __attribute__((swift_name("getMatchedPairsCount()")));
+- (int32_t)getTotalPairsCount __attribute__((swift_name("getTotalPairsCount()")));
+- (BOOL)handleSelectionIndex:(int32_t)index __attribute__((swift_name("handleSelection(index:)")));
+- (void)setupGame __attribute__((swift_name("setupGame()")));
+- (void)updateTimer __attribute__((swift_name("updateTimer()")));
+@property NSMutableArray<SharedWellnessMemoryCard *> *cards __attribute__((swift_name("cards")));
+@property SharedInt * _Nullable firstSelectedIndex __attribute__((swift_name("firstSelectedIndex")));
+@property BOOL isGameOver __attribute__((swift_name("isGameOver")));
+@property int32_t secondsRemaining __attribute__((swift_name("secondsRemaining")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("SOSFlowData")))
+@interface SharedSOSFlowData : SharedBase
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
++ (instancetype)sOSFlowData __attribute__((swift_name("init()")));
+@property (class, readonly, getter=shared) SharedSOSFlowData *shared __attribute__((swift_name("shared")));
+- (int32_t)getNextStepIndexCurrentIndex:(int32_t)currentIndex __attribute__((swift_name("getNextStepIndex(currentIndex:)")));
+@property (readonly) NSArray<SharedSOSStep *> *steps __attribute__((swift_name("steps")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("WellnessMemoryCard")))
+@interface SharedWellnessMemoryCard : SharedBase
+- (instancetype)initWithId:(int32_t)id content:(NSString *)content isFaceUp:(BOOL)isFaceUp isMatched:(BOOL)isMatched __attribute__((swift_name("init(id:content:isFaceUp:isMatched:)"))) __attribute__((objc_designated_initializer));
+- (SharedWellnessMemoryCard *)doCopyId:(int32_t)id content:(NSString *)content isFaceUp:(BOOL)isFaceUp isMatched:(BOOL)isMatched __attribute__((swift_name("doCopy(id:content:isFaceUp:isMatched:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) NSString *content __attribute__((swift_name("content")));
+@property (readonly) int32_t id __attribute__((swift_name("id")));
+@property BOOL isFaceUp __attribute__((swift_name("isFaceUp")));
+@property BOOL isMatched __attribute__((swift_name("isMatched")));
+@end
+
+__attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("Mantra_")))
 @interface Mantra : SharedBase
 - (instancetype)initWithId:(int64_t)id text:(NSString *)text __attribute__((swift_name("init(id:text:)"))) __attribute__((objc_designated_initializer));
@@ -350,6 +477,131 @@ __attribute__((swift_name("Mantra_")))
 - (NSString *)description __attribute__((swift_name("description()")));
 @property (readonly) int64_t id __attribute__((swift_name("id")));
 @property (readonly) NSString *text __attribute__((swift_name("text")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("MathOperation")))
+@interface SharedMathOperation : SharedKotlinEnum<SharedMathOperation *>
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
+- (instancetype)initWithName:(NSString *)name ordinal:(int32_t)ordinal __attribute__((swift_name("init(name:ordinal:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
+@property (class, readonly, getter=companion) SharedMathOperationCompanion *companion __attribute__((swift_name("companion")));
+@property (class, readonly) SharedMathOperation *plus __attribute__((swift_name("plus")));
+@property (class, readonly) SharedMathOperation *minus __attribute__((swift_name("minus")));
++ (SharedKotlinArray<SharedMathOperation *> *)values __attribute__((swift_name("values()")));
+@property (class, readonly) NSArray<SharedMathOperation *> *entries __attribute__((swift_name("entries")));
+- (int32_t)computeA:(int32_t)a b:(int32_t)b __attribute__((swift_name("compute(a:b:)")));
+@property (readonly) NSString *symbol __attribute__((swift_name("symbol")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("MathOperation.Companion")))
+@interface SharedMathOperationCompanion : SharedBase
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
++ (instancetype)companion __attribute__((swift_name("init()")));
+@property (class, readonly, getter=shared) SharedMathOperationCompanion *shared __attribute__((swift_name("shared")));
+- (SharedMathOperation *)random __attribute__((swift_name("random()")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("QuestionData")))
+@interface SharedQuestionData : SharedBase
+- (instancetype)initWithA:(int32_t)a b:(int32_t)b operation:(SharedMathOperation *)operation answerOptions:(NSArray<SharedInt *> *)answerOptions correctAnswer:(int32_t)correctAnswer __attribute__((swift_name("init(a:b:operation:answerOptions:correctAnswer:)"))) __attribute__((objc_designated_initializer));
+- (SharedQuestionData *)doCopyA:(int32_t)a b:(int32_t)b operation:(SharedMathOperation *)operation answerOptions:(NSArray<SharedInt *> *)answerOptions correctAnswer:(int32_t)correctAnswer __attribute__((swift_name("doCopy(a:b:operation:answerOptions:correctAnswer:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) int32_t a __attribute__((swift_name("a")));
+@property (readonly) NSArray<SharedInt *> *answerOptions __attribute__((swift_name("answerOptions")));
+@property (readonly) int32_t b __attribute__((swift_name("b")));
+@property (readonly) int32_t correctAnswer __attribute__((swift_name("correctAnswer")));
+@property (readonly) SharedMathOperation *operation __attribute__((swift_name("operation")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("SOSStep")))
+@interface SharedSOSStep : SharedBase
+- (instancetype)initWithId:(int32_t)id name:(NSString *)name icon:(NSString *)icon type:(SharedStepType *)type __attribute__((swift_name("init(id:name:icon:type:)"))) __attribute__((objc_designated_initializer));
+- (SharedSOSStep *)doCopyId:(int32_t)id name:(NSString *)name icon:(NSString *)icon type:(SharedStepType *)type __attribute__((swift_name("doCopy(id:name:icon:type:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) NSString *icon __attribute__((swift_name("icon")));
+@property (readonly) int32_t id __attribute__((swift_name("id")));
+@property (readonly) NSString *name __attribute__((swift_name("name")));
+@property (readonly) SharedStepType *type __attribute__((swift_name("type")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("StepType")))
+@interface SharedStepType : SharedKotlinEnum<SharedStepType *>
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
+- (instancetype)initWithName:(NSString *)name ordinal:(int32_t)ordinal __attribute__((swift_name("init(name:ordinal:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
+@property (class, readonly) SharedStepType *calculation __attribute__((swift_name("calculation")));
+@property (class, readonly) SharedStepType *breathing __attribute__((swift_name("breathing")));
+@property (class, readonly) SharedStepType *memory __attribute__((swift_name("memory")));
+@property (class, readonly) SharedStepType *mantra __attribute__((swift_name("mantra")));
++ (SharedKotlinArray<SharedStepType *> *)values __attribute__((swift_name("values()")));
+@property (class, readonly) NSArray<SharedStepType *> *entries __attribute__((swift_name("entries")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("WellnessExercise")))
+@interface SharedWellnessExercise : SharedBase
+- (instancetype)initWithId:(int32_t)id kategorie:(NSString *)kategorie titel:(NSString *)titel dauer:(NSString *)dauer beschreibung:(NSString *)beschreibung imageName:(NSString *)imageName type:(SharedWellnessExerciseType *)type __attribute__((swift_name("init(id:kategorie:titel:dauer:beschreibung:imageName:type:)"))) __attribute__((objc_designated_initializer));
+- (SharedWellnessExercise *)doCopyId:(int32_t)id kategorie:(NSString *)kategorie titel:(NSString *)titel dauer:(NSString *)dauer beschreibung:(NSString *)beschreibung imageName:(NSString *)imageName type:(SharedWellnessExerciseType *)type __attribute__((swift_name("doCopy(id:kategorie:titel:dauer:beschreibung:imageName:type:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) NSString *beschreibung __attribute__((swift_name("beschreibung")));
+@property (readonly) NSString *dauer __attribute__((swift_name("dauer")));
+@property (readonly) int32_t id __attribute__((swift_name("id")));
+@property (readonly) NSString *imageName __attribute__((swift_name("imageName")));
+@property (readonly) NSString *kategorie __attribute__((swift_name("kategorie")));
+@property (readonly) NSString *titel __attribute__((swift_name("titel")));
+@property (readonly) SharedWellnessExerciseType *type __attribute__((swift_name("type")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("WellnessExerciseType")))
+@interface SharedWellnessExerciseType : SharedKotlinEnum<SharedWellnessExerciseType *>
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
+- (instancetype)initWithName:(NSString *)name ordinal:(int32_t)ordinal __attribute__((swift_name("init(name:ordinal:)"))) __attribute__((objc_designated_initializer)) __attribute__((unavailable));
+@property (class, readonly) SharedWellnessExerciseType *calculation __attribute__((swift_name("calculation")));
+@property (class, readonly) SharedWellnessExerciseType *breathing __attribute__((swift_name("breathing")));
+@property (class, readonly) SharedWellnessExerciseType *memory __attribute__((swift_name("memory")));
+@property (class, readonly) SharedWellnessExerciseType *mantra __attribute__((swift_name("mantra")));
++ (SharedKotlinArray<SharedWellnessExerciseType *> *)values __attribute__((swift_name("values()")));
+@property (class, readonly) NSArray<SharedWellnessExerciseType *> *entries __attribute__((swift_name("entries")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("WellnessMantra")))
+@interface SharedWellnessMantra : SharedBase
+- (instancetype)initWithId:(int32_t)id titel:(NSString *)titel spruch:(NSString *)spruch __attribute__((swift_name("init(id:titel:spruch:)"))) __attribute__((objc_designated_initializer));
+- (SharedWellnessMantra *)doCopyId:(int32_t)id titel:(NSString *)titel spruch:(NSString *)spruch __attribute__((swift_name("doCopy(id:titel:spruch:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) int32_t id __attribute__((swift_name("id")));
+@property (readonly) NSString *spruch __attribute__((swift_name("spruch")));
+@property (readonly) NSString *titel __attribute__((swift_name("titel")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("WellnessSound")))
+@interface SharedWellnessSound : SharedBase
+- (instancetype)initWithId:(int32_t)id titel:(NSString *)titel beschreibung:(NSString *)beschreibung __attribute__((swift_name("init(id:titel:beschreibung:)"))) __attribute__((objc_designated_initializer));
+- (SharedWellnessSound *)doCopyId:(int32_t)id titel:(NSString *)titel beschreibung:(NSString *)beschreibung __attribute__((swift_name("doCopy(id:titel:beschreibung:)")));
+- (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
+- (NSUInteger)hash __attribute__((swift_name("hash()")));
+- (NSString *)description __attribute__((swift_name("description()")));
+@property (readonly) NSString *beschreibung __attribute__((swift_name("beschreibung")));
+@property (readonly) int32_t id __attribute__((swift_name("id")));
+@property (readonly) NSString *titel __attribute__((swift_name("titel")));
 @end
 
 __attribute__((objc_subclassing_restricted))
@@ -795,6 +1047,27 @@ __attribute__((swift_name("Kotlinx_coroutines_coreCoroutineDispatcher")))
 - (NSString *)description __attribute__((swift_name("description()")));
 @end
 
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("KotlinEnumCompanion")))
+@interface SharedKotlinEnumCompanion : SharedBase
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
++ (instancetype)companion __attribute__((swift_name("init()")));
+@property (class, readonly, getter=shared) SharedKotlinEnumCompanion *shared __attribute__((swift_name("shared")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("KotlinArray")))
+@interface SharedKotlinArray<T> : SharedBase
++ (instancetype)arrayWithSize:(int32_t)size init:(T _Nullable (^)(SharedInt *))init __attribute__((swift_name("init(size:init:)")));
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
+- (T _Nullable)getIndex:(int32_t)index __attribute__((swift_name("get(index:)")));
+- (id<SharedKotlinIterator>)iterator __attribute__((swift_name("iterator()")));
+- (void)setIndex:(int32_t)index value:(T _Nullable)value __attribute__((swift_name("set(index:value:)")));
+@property (readonly) int32_t size __attribute__((swift_name("size")));
+@end
+
 __attribute__((swift_name("Kotlinx_coroutines_coreJob")))
 @protocol SharedKotlinx_coroutines_coreJob <SharedKotlinCoroutineContextElement>
 @required
@@ -883,18 +1156,6 @@ __attribute__((swift_name("ResourcesStringDesc")))
 @protocol SharedResourcesStringDesc
 @required
 - (NSString *)localized __attribute__((swift_name("localized()")));
-@end
-
-__attribute__((objc_subclassing_restricted))
-__attribute__((swift_name("KotlinArray")))
-@interface SharedKotlinArray<T> : SharedBase
-+ (instancetype)arrayWithSize:(int32_t)size init:(T _Nullable (^)(SharedInt *))init __attribute__((swift_name("init(size:init:)")));
-+ (instancetype)alloc __attribute__((unavailable));
-+ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
-- (T _Nullable)getIndex:(int32_t)index __attribute__((swift_name("get(index:)")));
-- (id<SharedKotlinIterator>)iterator __attribute__((swift_name("iterator()")));
-- (void)setIndex:(int32_t)index value:(T _Nullable)value __attribute__((swift_name("set(index:value:)")));
-@property (readonly) int32_t size __attribute__((swift_name("size")));
 @end
 
 __attribute__((swift_name("RuntimeQueryListener")))
@@ -992,6 +1253,13 @@ __attribute__((swift_name("Kotlinx_coroutines_coreRunnable")))
 - (void)run __attribute__((swift_name("run()")));
 @end
 
+__attribute__((swift_name("KotlinIterator")))
+@protocol SharedKotlinIterator
+@required
+- (BOOL)hasNext __attribute__((swift_name("hasNext()")));
+- (id _Nullable)next __attribute__((swift_name("next()")));
+@end
+
 __attribute__((swift_name("Kotlinx_coroutines_coreDisposableHandle")))
 @protocol SharedKotlinx_coroutines_coreDisposableHandle
 @required
@@ -1059,13 +1327,6 @@ __attribute__((swift_name("Kotlinx_coroutines_coreSelectClause")))
 __attribute__((swift_name("Kotlinx_coroutines_coreSelectClause0")))
 @protocol SharedKotlinx_coroutines_coreSelectClause0 <SharedKotlinx_coroutines_coreSelectClause>
 @required
-@end
-
-__attribute__((swift_name("KotlinIterator")))
-@protocol SharedKotlinIterator
-@required
-- (BOOL)hasNext __attribute__((swift_name("hasNext()")));
-- (id _Nullable)next __attribute__((swift_name("next()")));
 @end
 
 __attribute__((objc_subclassing_restricted))
