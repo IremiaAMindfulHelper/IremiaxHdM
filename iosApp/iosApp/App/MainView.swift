@@ -4,46 +4,120 @@ import Shared
 struct MainView: View {
     @StateObject private var vm = MainViewModelWrapper()
 
+    // Student-style tab selection (0..3 + 99 placeholder)
+    @State private var selectedTab: Int = 0
+
+    @State private var showSoundPlayer = false
+    @State private var currentSoundTitle = ""
+
+    @State private var showingEmergencyOverlay = false
+
     var body: some View {
-        TabView(selection: Binding(
-            get: { vm.currentTarget.route },
-            set: { route in
-                switch route {
-                case NavigationTarget.Home().route: vm.onTabSelected(NavigationTarget.Home())
-                case NavigationTarget.Reflection().route: vm.onTabSelected(NavigationTarget.Reflection())
-                case NavigationTarget.SOS().route: vm.onTabSelected(NavigationTarget.SOS())
-                case NavigationTarget.Contacts().route: vm.onTabSelected(NavigationTarget.Contacts())
-                case NavigationTarget.Profile().route: vm.onTabSelected(NavigationTarget.Profile())
-                default: break
+        ZStack {
+            if #available(iOS 17.0, *) {
+                TabView(selection: $selectedTab) {
+                    
+                    // 0) Start
+                    NavigationStack {
+                        HomeView(
+                            showSoundPlayer: $showSoundPlayer,
+                            currentSoundTitle: $currentSoundTitle
+                        )
+                    }
+                    .tabItem { Label("Start", systemImage: "house.fill") }
+                    .tag(0)
+                    
+                    // 1) Tagebuch (bei euch aktuell: Reflection/Journal)
+                    NavigationStack {
+                        ReflectionView()
+                    }
+                    .tabItem { Label("Tagebuch", systemImage: "book.closed") }
+                    .tag(1)
+                    
+                    // 99) Center placeholder for floating SOS button
+                    Color.clear
+                        .tabItem { Text("") }
+                        .tag(99)
+                    
+                    // 2) Mein Plan (bei euch könnte das später der SOS-Plan/Config sein)
+                    NavigationStack {
+                        // falls ihr schon einen Plan-Screen habt: hier rein
+                        SosView()
+                    }
+                    .tabItem { Label("Mein Plan", systemImage: "checklist") }
+                    .tag(2)
+                    
+                    // 3) Profil
+                    NavigationStack {
+                        ProfileView()
+                    }
+                    .tabItem { Label("Profil", systemImage: "person") }
+                    .tag(3)
                 }
-            })
-        ) {
-            HomeView()
-                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().home).localized(), systemImage: "house") }
-                .tag(NavigationTarget.Home().route)
+                .accentColor(Color.primary500)
+                .onChange(of: selectedTab) { _, newValue in
+                    // verhindert, dass man den leeren Platzhalter "anwählt"
+                    if newValue == 99 {
+                        selectedTab = 0
+                    }
+                }
+            } else {
+                // Fallback on earlier versions
+            }
 
-            ReflectionView()
-                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().reflection).localized(), systemImage: "book") }
-                .tag(NavigationTarget.Reflection().route)
+            // MARK: - Global Mini Player (wie zuvor)
+            VStack {
+                Spacer()
+                if showSoundPlayer {
+                    HStack {
+                        SoundPlayerMini(title: currentSoundTitle) {
+                            withAnimation { showSoundPlayer = false }
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 75)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                }
+            }
 
-            SosView()
-                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().sos).localized(), systemImage: "sos.circle.fill") }
-                .tag(NavigationTarget.SOS().route)
+            // MARK: - Floating SOS Button (centered)
+            VStack {
+                Spacer()
+                Button {
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                        showingEmergencyOverlay = true
+                    }
+                } label: {
+                    VStack(spacing: 4) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 60, height: 60)
+                                .shadow(radius: 6)
 
-            ContactView()
-                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().contacts).localized(), systemImage: "person.2") }
-                .tag(NavigationTarget.Contacts().route)
+                            Image("NotfallButton")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 50, height: 50)
+                        }
 
-            ProfileView()
-                .tabItem { Label(StringsKt.localized(res: SharedRes.strings().profile).localized(), systemImage: "person.circle") }
-                .tag(NavigationTarget.Profile().route)
+                        Text("SOS")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Color.primary500)
+                    }
+                }
+                .buttonStyle(.plain)
+                .offset(y: 5)
+            }
+            .zIndex(5)
+
+            // MARK: - Student Emergency Overlay
+            if showingEmergencyOverlay {
+                EmergencyPlanView(isShowing: $showingEmergencyOverlay)
+                    .transition(.move(edge: .bottom))
+                    .zIndex(10)
+            }
         }
-    }
-}
-
-
-struct MainView_Previews: PreviewProvider {
-    static var previews: some View {
-        MainView()
     }
 }

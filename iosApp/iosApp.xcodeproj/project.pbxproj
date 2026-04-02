@@ -7,10 +7,29 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		29CE79E52F7ED63700586B9C /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 29CE79E42F7ED62700586B9C /* libsqlite3.tbd */; };
+		29CE79E72F7ED7BA00586B9C /* Shared.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29CE79E62F7ED7BA00586B9C /* Shared.xcframework */; };
+		29CE79E82F7ED7BA00586B9C /* Shared.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 29CE79E62F7ED7BA00586B9C /* Shared.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6B2AF0487EB38DCF8D9A6DF9 /* Pods_iosApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9B9B93F52B3950D8A3341AA /* Pods_iosApp.framework */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		29CE79E92F7ED7BA00586B9C /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				29CE79E82F7ED7BA00586B9C /* Shared.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		29CE79E42F7ED62700586B9C /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		29CE79E62F7ED7BA00586B9C /* Shared.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Shared.xcframework; sourceTree = "<group>"; };
 		3501FDB58A000EBC5793B538 /* Pods-iosApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.release.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.release.xcconfig"; sourceTree = "<group>"; };
 		4C7053E52F47B8F600A8280D /* IreamiaApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IreamiaApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9B9B93F52B3950D8A3341AA /* Pods_iosApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iosApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -48,7 +67,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29CE79E52F7ED63700586B9C /* libsqlite3.tbd in Frameworks */,
 				6B2AF0487EB38DCF8D9A6DF9 /* Pods_iosApp.framework in Frameworks */,
+				29CE79E72F7ED7BA00586B9C /* Shared.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -69,7 +90,6 @@
 			children = (
 				B9DA98002DC14AA900A4DA20 /* Configuration */,
 				B9DA97B32DC1472C00A4DA20 /* iosApp */,
-				299B4EB22E7C37FA00A788A0 /* Frameworks */,
 				B9DA97B22DC1472C00A4DA20 /* Products */,
 				AB52A0D13BBCB3FBC5D97EF9 /* Pods */,
 				EA6DDC552F8D46BFB4FB8344 /* Frameworks */,
@@ -87,6 +107,8 @@
 		EA6DDC552F8D46BFB4FB8344 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				29CE79E62F7ED7BA00586B9C /* Shared.xcframework */,
+				29CE79E42F7ED62700586B9C /* libsqlite3.tbd */,
 				C9B9B93F52B3950D8A3341AA /* Pods_iosApp.framework */,
 			);
 			name = Frameworks;
@@ -104,7 +126,7 @@
 				B9DA97AD2DC1472C00A4DA20 /* Sources */,
 				B9DA97AE2DC1472C00A4DA20 /* Frameworks */,
 				B9DA97AF2DC1472C00A4DA20 /* Resources */,
-				299B4EB12E7BFE2A00A788A0 /* Copy moko-resources bundle */,
+				29CE79E92F7ED7BA00586B9C /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -350,6 +372,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+				DEVELOPMENT_TEAM = 4BRM6GNQ75;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -385,6 +408,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+				DEVELOPMENT_TEAM = 4BRM6GNQ75;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

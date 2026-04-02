@@ -1,66 +1,109 @@
 import SwiftUI
 import Shared
 
-/// This view demonstrates how to use shared Kotlin Multiplatform resources
-/// (`SharedRes`) from SwiftUI. It mirrors the behavior of the Android `App()`
-/// composable by toggling visibility of localized text and shared images.
-///
-/// - Features:
-///   - Integration of shared strings and images generated via moko-resources.
-///   - Example of localized text retrieval through `StringsKt.localized`.
-///   - Animated show/hide transition using SwiftUI’s `withAnimation`.
-///
-/// - Design:
-///   The structure uses a vertical stack with a toggle button and conditional
-///   sub-content that animates from the top edge.
-///
-/// - Note: This file serves as an example for future feature screens
-///   (SOS-plan, Skills, Reflections) and how shared logic is accessed on iOS.
 struct HomeView: View {
-    /// Tracks whether the secondary content (image + texts) is visible.
-    @State private var showContent = false
+    @StateObject private var viewModel = HomeViewModel()
+    @State private var selectedFilter = "Alle"
+
+    @Binding var showSoundPlayer: Bool
+    @Binding var currentSoundTitle: String
+
+    init(
+        showSoundPlayer: Binding<Bool> = .constant(false),
+        currentSoundTitle: Binding<String> = .constant("")
+    ) {
+        self._showSoundPlayer = showSoundPlayer
+        self._currentSoundTitle = currentSoundTitle
+    }
+
+    private let petrol = Color(red: 0.2, green: 0.45, blue: 0.55)
 
     var body: some View {
-        VStack {
-            // NOTE: Toggle visibility with animation to demonstrate reactive UI updates.
-            Button("Click me!") {
-                withAnimation {
-                    showContent.toggle()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 25) {
+
+                HStack {
+                    Text("Hi User!")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                    Spacer()
+                    Image(systemName: "phone.circle.fill")
+                        .font(.system(size: 30))
+                        .foregroundColor(petrol.opacity(0.6))
                 }
+                .padding(.top, 10)
+
+                FilterBar(
+                    selectedFilter: $selectedFilter,
+                    showSoundPlayer: $showSoundPlayer,
+                    currentSoundTitle: $currentSoundTitle
+                )
+
+                if selectedFilter == "Alle" || selectedFilter == "Übungen" {
+                    VStack(alignment: .leading, spacing: 15) {
+                        sectionHeader(title: "Übungen", category: "Übungen")
+
+                        LazyVGrid(
+                            columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)],
+                            spacing: 20
+                        ) {
+                            ForEach(viewModel.exercises.prefix(4), id: \.id) { item in
+                                ExerciseCard(exercise: item)
+                            }
+                        }
+                    }
+                }
+
+                if selectedFilter == "Alle" || selectedFilter == "Mantras" {
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("Mantras").font(.title2).bold()
+
+                        VStack(spacing: 12) {
+                            ForEach(viewModel.mantras, id: \.id) { item in
+                                MantraCard(mantra: item)
+                            }
+                        }
+                    }
+                }
+
+                if selectedFilter == "Alle" || selectedFilter == "Sounds" {
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("Sounds").font(.title2).bold()
+
+                        VStack(spacing: 15) {
+                            ForEach(viewModel.sounds, id: \.id) { item in
+                                SoundCard(
+                                    sound: item,
+                                    currentSoundTitle: $currentSoundTitle,
+                                    showSoundPlayer: $showSoundPlayer
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Color.clear.frame(height: 150)
             }
+            .padding(.horizontal)
+        }
+    }
 
-            // Conditionally show localized shared resources.
-            if showContent {
-                VStack(spacing: 16) {
-                    // SwiftUI system icon (for demo purposes)
-                    Image(systemName: "swift")
-                        .font(.system(size: 200))
-                        .foregroundColor(.accentColor)
+    private func sectionHeader(title: String, category: String) -> some View {
+        HStack(alignment: .lastTextBaseline) {
+            Text(title).font(.title2).bold()
+            Spacer()
 
-                    // NOTE: Text values pulled from shared string resources (moko-resources)
-                    Text(Strings.welcome_title)
-                    Text(Strings.sos_button)
-                    Text(Strings.test_string)
-
-                    // Shared image example (onboarding illustration)
-                    let res = SharedRes.images().onboarding_2
-                    Image(res.assetImageName, bundle: res.bundle)
-                        .resizable()
-                        .scaledToFit()
-                }
-                    // Smooth slide-and-fade transition when content toggles
-                .transition(.move(edge: .top).combined(with: .opacity))
+            NavigationLink(
+                destination: CategoryDetailView(
+                    category: category,
+                    showSoundPlayer: $showSoundPlayer,
+                    currentSoundTitle: $currentSoundTitle
+                )
+            ) {
+                Text("Alle anzeigen")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(petrol)
+                    .underline()
             }
         }
-            // Stretch to fill safe area and align at top
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding()
-    }
-}
-
-/// Xcode canvas preview.
-struct HomeView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeView()
     }
 }
