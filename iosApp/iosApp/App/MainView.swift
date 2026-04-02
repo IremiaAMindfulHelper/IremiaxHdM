@@ -2,70 +2,78 @@ import SwiftUI
 import Shared
 
 struct MainView: View {
+    // Falls du das Wrapper-VM noch brauchst (z.B. später), lassen wir es drin,
+    // aber wir syncen die Tab-Auswahl NICHT über route.
     @StateObject private var vm = MainViewModelWrapper()
 
-    // Student-style tab selection (0..3 + 99 placeholder)
-    @State private var selectedTab: Int = 0
-
+    // Mini player (falls genutzt)
     @State private var showSoundPlayer = false
     @State private var currentSoundTitle = ""
 
+    // SOS overlay (student style)
     @State private var showingEmergencyOverlay = false
+
+    // Student tab layout uses Int tags
+    @State private var selectedTab: Int = 0
 
     var body: some View {
         ZStack {
-            if #available(iOS 17.0, *) {
-                TabView(selection: $selectedTab) {
-                    
-                    // 0) Start
-                    NavigationStack {
-                        HomeView(
-                            showSoundPlayer: $showSoundPlayer,
-                            currentSoundTitle: $currentSoundTitle
-                        )
-                    }
-                    .tabItem { Label("Start", systemImage: "house.fill") }
-                    .tag(0)
-                    
-                    // 1) Tagebuch (bei euch aktuell: Reflection/Journal)
-                    NavigationStack {
-                        ReflectionView()
-                    }
-                    .tabItem { Label("Tagebuch", systemImage: "book.closed") }
-                    .tag(1)
-                    
-                    // 99) Center placeholder for floating SOS button
-                    Color.clear
-                        .tabItem { Text("") }
-                        .tag(99)
-                    
-                    // 2) Mein Plan (bei euch könnte das später der SOS-Plan/Config sein)
-                    NavigationStack {
-                        // falls ihr schon einen Plan-Screen habt: hier rein
-                        SosView()
-                    }
-                    .tabItem { Label("Mein Plan", systemImage: "checklist") }
-                    .tag(2)
-                    
-                    // 3) Profil
-                    NavigationStack {
-                        ProfileView()
-                    }
-                    .tabItem { Label("Profil", systemImage: "person") }
-                    .tag(3)
+            TabView(selection: $selectedTab) {
+
+                // 0) Start
+                NavigationStack {
+                    HomeView(
+                        showSoundPlayer: $showSoundPlayer,
+                        currentSoundTitle: $currentSoundTitle
+                    )
                 }
-                .accentColor(Color.primary500)
-                .onChange(of: selectedTab) { _, newValue in
-                    // verhindert, dass man den leeren Platzhalter "anwählt"
-                    if newValue == 99 {
-                        selectedTab = 0
-                    }
+                .tabItem {
+                    Label(
+                        StringsKt.localized(res: SharedRes.strings().home).localized(),
+                        systemImage: "house.fill"
+                    )
                 }
-            } else {
-                // Fallback on earlier versions
+                .tag(0)
+
+                // 1) Journal (wichtig: JournalNavigationView beibehalten)
+                NavigationStack {
+                    JournalNavigationView()
+                }
+                .tabItem {
+                    Label("Journal", systemImage: "book.closed")
+                }
+                .tag(1)
+
+                // 99) Center placeholder (für den mittigen SOS Button)
+                Color.clear
+                    .tabItem { Text("") }
+                    .tag(99)
+
+                // 2) Mein Plan (hier ggf. euren echten View einsetzen)
+                NavigationStack {
+                    Text("Mein Plan")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.background)
+                }
+                .tabItem {
+                    Label("Mein Plan", systemImage: "checklist")
+                }
+                .tag(2)
+
+                // 3) Profil
+                NavigationStack {
+                    ProfileView()
+                }
+                .tabItem {
+                    Label(
+                        StringsKt.localized(res: SharedRes.strings().profile).localized(),
+                        systemImage: "person"
+                    )
+                }
+                .tag(3)
             }
 
-            // MARK: - Global Mini Player (wie zuvor)
+            // Mini Player
             VStack {
                 Spacer()
                 if showSoundPlayer {
@@ -81,7 +89,7 @@ struct MainView: View {
                 }
             }
 
-            // MARK: - Floating SOS Button (centered)
+            // Floating SOS Button (mittig)
             VStack {
                 Spacer()
                 Button {
@@ -101,7 +109,6 @@ struct MainView: View {
                                 .scaledToFit()
                                 .frame(width: 50, height: 50)
                         }
-
                         Text("SOS")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(Color.primary500)
@@ -112,12 +119,18 @@ struct MainView: View {
             }
             .zIndex(5)
 
-            // MARK: - Student Emergency Overlay
+            // SOS Overlay (student EmergencyPlanView)
             if showingEmergencyOverlay {
                 EmergencyPlanView(isShowing: $showingEmergencyOverlay)
                     .transition(.move(edge: .bottom))
                     .zIndex(10)
             }
         }
+    }
+}
+
+struct MainView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainView()
     }
 }

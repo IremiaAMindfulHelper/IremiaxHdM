@@ -24,7 +24,7 @@ mokoResourcesPlugin = "0.25.1"
 resourcesCompose = "0.25.1"
 
 # Kotlin & Test
-kotlin = "2.2.0"
+kotlin = "2.1.10"
 junit = "4.13.2"
 kotlinxCoroutinesCore = "1.10.2"
 
