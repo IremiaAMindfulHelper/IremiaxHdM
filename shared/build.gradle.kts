@@ -170,11 +170,10 @@ multiplatformResources {
 
 }
 
-// macOS-specific setup for copying moko-resources bundles into XCFrameworks
-if (OperatingSystem.current().isMacOsX) {
-    multiplatformResources {
-        // NOTE: This ensures the Shared.xcframework includes the resource bundle
-        // used by iOS apps consuming the static framework
-        configureCopyXCFrameworkResources("Shared")
-    }
-}
+//macOS-specific setup for copying moko-resources bundles into XCFrameworks
+//TODO: Temporarily disabled due to moko-resources ClassCastException (icerockdev/moko-resources#784)
+//if (OperatingSystem.current().isMacOsX) {
+//    multiplatformResources {
+//        configureCopyXCFrameworkResources("Shared")
+//    }
+//}

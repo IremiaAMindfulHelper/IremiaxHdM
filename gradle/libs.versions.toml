@@ -1,6 +1,6 @@
 [versions]
 # Android + Build Tools
-agp = "8.12.3"
+agp = "9.1.0"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "35"
@@ -19,12 +19,12 @@ composeMultiplatform = "1.9.1"
 
 # moko libraries
 graphics = "0.10.1"
-resources = "0.25.1"
-mokoResourcesPlugin = "0.25.1"
-resourcesCompose = "0.25.1"
+resources = "0.26.2"
+mokoResourcesPlugin = "0.26.2"
+resourcesCompose = "0.26.2"
 
 # Kotlin & Test
-kotlin = "2.1.10"
+kotlin = "2.2.10"
 junit = "4.13.2"
 kotlinxCoroutinesCore = "1.10.2"
 
