@@ -14,10 +14,9 @@ pluginManagement {
         gradlePluginPortal()
     }
     plugins {
-        id("org.jetbrains.kotlin.multiplatform") version "2.1.10"
-        id("org.jetbrains.kotlin.native.cocoapods") version "2.1.10"
-        id("com.android.library") version "9.1.0"
-        id("app.cash.sqldelight") version "2.1.0"
+        id("org.jetbrains.kotlin.multiplatform") version "2.3.20"
+        id("com.android.library") version "8.5.2"
+        id("app.cash.sqldelight") version "2.2.1"
     }
 }
 

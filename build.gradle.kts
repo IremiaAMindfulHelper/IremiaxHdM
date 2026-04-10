@@ -6,20 +6,9 @@ plugins {
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
+    alias(libs.plugins.mokoResources) apply false
+    alias(libs.plugins.sqldelight) apply false
 }
-
-buildscript {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath("dev.icerock.moko:resources-generator:0.25.0")
-    }
-}
-
 allprojects {
     repositories {
         google()

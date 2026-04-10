@@ -78,7 +78,7 @@ struct CalculationExerciseView: View {
     /// Determines the button color based on the current interaction state.
     /// - Parameter option: The answer value associated with the button.
     /// - Returns: A Color representing the state (Error, Success, Inactive, or Default).
-    private func buttonColor(for option: Int) -> Color {
+    private func buttonColor(for option: Int) -> SwiftUI.Color {
         if viewModel.wrongFlashAnswer == option { return .red }
         if viewModel.eliminatedOptions.contains(option) { return Color.gray.opacity(0.3) }
         if viewModel.selectedAnswer == option { return .green }

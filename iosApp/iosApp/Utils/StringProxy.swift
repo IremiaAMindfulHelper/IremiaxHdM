@@ -34,7 +34,7 @@ struct StringProxy<Root> {
     ///
     /// - Parameter keyPath: Key path to a `ResourcesStringResource` on `root`.
     /// - Returns: Localized Swift `String` for the current system locale.
-    subscript(dynamicMember keyPath: KeyPath<Root, ResourcesStringResource>) -> String {
+    subscript(dynamicMember keyPath: KeyPath<Root, StringResource>) -> String {
         let res = root[keyPath: keyPath]
         let desc = StringsKt.localized(res: res)
         return desc.localized()

@@ -1,6 +1,6 @@
 [versions]
 # Android + Build Tools
-agp = "9.1.0"
+agp = "8.13.2"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "35"
@@ -19,9 +19,9 @@ composeMultiplatform = "1.9.1"
 
 # moko libraries
 graphics = "0.10.1"
-resources = "0.26.2"
-mokoResourcesPlugin = "0.26.2"
-resourcesCompose = "0.26.2"
+resources = "0.26.1"
+mokoResourcesPlugin = "0.26.1"
+resourcesCompose = "0.26.1"
 
 # Kotlin & Test
 kotlin = "2.2.10"
@@ -29,7 +29,7 @@ junit = "4.13.2"
 kotlinxCoroutinesCore = "1.10.2"
 
 # SQLDelight
-sqldelight = "2.1.0"
+sqldelight = "2.2.1"
 
 [libraries]
 # Kotlin / Test
