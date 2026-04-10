@@ -11,7 +11,7 @@ struct StepIconView: View {
     /// Indicates if this step has already been finished.
     let isCompleted: Bool
     /// The primary theme color for the branding.
-    let petrolColor: Color
+    let petrolColor: SwiftUI.Color
     
     var body: some View {
         VStack(spacing: 8) {
@@ -53,7 +53,7 @@ struct StepIconView: View {
 struct ProgressConnector: View {
     /// Indicates if the step preceding this connector is finished.
     let isCompleted: Bool
-    let petrolColor: Color
+    let petrolColor: SwiftUI.Color
     
     var body: some View {
         ZStack(alignment: .leading) {
