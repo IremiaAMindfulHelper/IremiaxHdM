@@ -88,15 +88,10 @@ kotlin {
             implementation(libs.sqldelight.androidDriver)
         }
 
-        // Shared iOS source set – both arm64 targets depend on this
-        val iosMain by creating {
-            dependsOn(commonMain.get())
-            dependencies {
-                implementation(libs.sqldelight.nativeDriver)
-            }
+        // iosMain is created automatically by the default Kotlin hierarchy template
+        iosMain.dependencies {
+            implementation(libs.sqldelight.nativeDriver)
         }
-        val iosArm64Main by getting          { dependsOn(iosMain) }
-        val iosSimulatorArm64Main by getting  { dependsOn(iosMain) }
     }
 }
 
