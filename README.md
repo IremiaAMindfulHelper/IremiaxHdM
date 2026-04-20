@@ -1,47 +1,51 @@
-# Iremia MobileApp (Open-Source Basis)
+# Iremia Lambda 
 
-## Overview
+**Iremia Lambda** ist ein interdisziplinäres Semesterprojekt an der Hochschule der Medien (Wintersemester 2025/26). Im Rahmen der Lehrveranstaltung bei Prof. Dr. Ansgar Gerlicher wurde die bestehende Gesundheits-App „Iremia“ gezielt weiterentwickelt. Der Fokus lag auf der konzeptionellen und technischen Optimierung der Notfallfunktion für Menschen in akuten psychischen Belastungssituationen.
 
-_Iremia MobileApp_ serves as the foundational reference implementation for the Iremia project. This repository contains the student-developed core functionality and user interface components, released under the Apache License 2.0. Its sole purpose is to support academic collaboration, reproducibility, and third-party contributions up to the code freeze date.
+##  Projektmitglieder
+* **Michael Jaufmann** (45045)
+* **Manuel Veit** (45260)
+* **Anna-Maria Schwoch** (43707)
+* **Jan Hübner** (45204)
 
-
-## Purpose and Scope
-
-- Provide a stable, open-source baseline for educational use and community review.  
-- Enable transparent inspection of the core panic-detection algorithms and UI workflows.  
-- Facilitate academic validation studies on physiological data processing methods.
-
-
-## License
-
-This code is made available under the terms of the **Apache License, Version 2.0**.  
-See the [LICENSE](./LICENSE) file for details.  
-**Note:** No trademark rights are granted by this license.
+**Betreuung:** Prof. Dr. Ansgar Gerlicher
 
 
-## Code Freeze Notice
+##  Setup und Installation
 
-All development on this repository ceased on **January 31, 2026**  
-(tag: `v1.0-freeze-2026-01-31`).  
-After this date, no further commits will be accepted.  
-This repository remains unchanged for historical and compliance purposes.
+Da es sich um ein **Kotlin Multiplatform (KMP)** Projekt handelt, ist die Einrichtung für die iOS-Umgebung in zwei Schritte unterteilt: das Bauen der geteilten Logik (Kotlin) und das Installieren der Abhängigkeiten (Swift/CocoaPods).
+
+### 1. Repository klonen
+Öffnen Sie Ihr Terminal, klonen Sie den spezifischen Branch und navigieren Sie in das Verzeichnis.
+```bash
+git clone -b lambda-branch https://github.com/IremiaAMindfulHelper/IremiaxHdM.git
+```
+
+### 2. Gemeinsamen Code (Shared Logic) bauen
+Das KMP-Framework muss generiert werden, damit Xcode darauf zugreifen kann.
+```bash
+./gradlew :shared:assembleRelease
+```
+
+### 3. iOS Abhängigkeiten installieren (CocoaPods)
+Navigieren Sie in den iOS-Ordner (`iosApp`) und installieren Sie die Pods.
+
+```bash
+cd iosApp
+pod install
+```
+
+### 4. Projekt öffnen und Ausführen
+* Öffnen Sie die Datei **`iosApp.xcworkspace`** in Xcode (wichtig: nicht die `.xcodeproj` Datei öffnen!).
+* Wählen Sie einen iOS-Simulator (z. B. iPhone 16) aus.
+* Starten Sie die App mit `Cmd + R` oder über den "Run"-Button.
 
 
-## Proprietary Development
+##  Projektstruktur
 
-Active development of premium features, advanced detection algorithms, and integration modules continues in a **separate, private repository** named `Iremia-Core`.
+Das Projekt nutzt **Kotlin Multiplatform (KMP)**, um Code zwischen Android und iOS zu teilen.
 
-All improvements, bug fixes, and clinically validated enhancements from this open-source basis were merged into `Iremia-Core` until the freeze date.
-
-
-## No Warranty & Liability
-
-This software is provided **“as is”**, without warranty of any kind.  
-The contributors and maintainers disclaim all liability for damages arising from its use.  
-For warranty terms, liability coverage, and support, please refer to the proprietary **Iremia-Core** project's End-User License Agreement (EULA).
-
-
-## Contact & Contributions
-
-- Bug reports and documentation suggestions are welcome via **GitHub Issues**.  
-- All feature development and support requests should be directed to the private `Iremia-Core` repository.
+* **`/shared`**: Enthält die Kernlogik (Business Logic), die auf beiden Plattformen genutzt wird.
+    * `commonMain`: Plattformunabhängiger Code (Repositories, Models, Engines).
+* **`/iosApp`**: Die native iOS-App. Beinhaltet den Entry Point und SwiftUI-Code, der auf den Shared-Code zugreift.
+* **`/composeApp`**: Enthält den Shared-UI-Code (Compose Multiplatform) für Android und potenziell weitere Plattformen.
