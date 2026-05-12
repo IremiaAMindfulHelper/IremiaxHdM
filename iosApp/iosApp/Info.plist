@@ -9,5 +9,9 @@
 		<string>en</string>
 		<string>de</string>
 	</array>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Iremia transkribiert deine Sprache, um dir in Panikmomenten zu helfen.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Iremia benötigt das Mikrofon für die Spracherkennung.</string>
 </dict>
 </plist>

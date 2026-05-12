@@ -1,0 +1,248 @@
+[
+  {
+    "id": "PA001",
+    "category": "Panikattacke – Grundlagen",
+    "title": "Was ist eine Panikattacke?",
+    "text": "Eine Panikattacke ist eine plötzliche Episode intensiver Angst, die starke körperliche Reaktionen auslöst, obwohl keine reale Gefahr besteht. Sie beginnt abrupt, erreicht ihren Höhepunkt typischerweise innerhalb von 10 Minuten und klingt danach meist wieder ab. Panikattacken sind nicht lebensbedrohlich."
+  },
+  {
+    "id": "PA002",
+    "category": "Panikattacke – Grundlagen",
+    "title": "Wie lange dauert eine Panikattacke?",
+    "text": "Die intensivste Phase einer Panikattacke dauert in der Regel 5 bis 10 Minuten. Die Gesamtdauer beträgt selten mehr als 20 bis 30 Minuten. Das Wissen, dass die Attacke von selbst endet, kann helfen, die Situation erträglicher zu machen."
+  },
+  {
+    "id": "PA003",
+    "category": "Panikattacke – Grundlagen",
+    "title": "Sind Panikattacken gefährlich?",
+    "text": "Panikattacken sind medizinisch nicht gefährlich. Obwohl sie sich lebensbedrohlich anfühlen können, ist kein Mensch jemals an einer Panikattacke gestorben. Die körperlichen Symptome wie Herzrasen oder Atemnot sind Ausdruck einer übersteuerten Stressreaktion, nicht eines medizinischen Notfalls."
+  },
+  {
+    "id": "PA005",
+    "category": "Panikattacke – Grundlagen",
+    "title": "Was löst eine Panikattacke aus?",
+    "text": "Panikattacken können durch Stress, Schlafmangel, Koffein, bestimmte Medikamente oder auch ohne erkennbaren Auslöser auftreten. Sie entstehen durch eine Fehlinterpretation körperlicher Empfindungen als bedrohlich, was einen Teufelskreis aus Angst und körperlicher Reaktion in Gang setzt."
+  },
+  {
+    "id": "PA006",
+    "category": "Panikattacke – Symptome",
+    "title": "Herzrasen bei Panikattacken",
+    "text": "Herzrasen oder Herzstolpern ist eines der häufigsten Symptome einer Panikattacke. Es entsteht durch die Ausschüttung von Adrenalin, das das Herz schneller schlagen lässt. Dies ist eine normale Schutzreaktion des Körpers und kein Zeichen einer Herzerkrankung."
+  },
+  {
+    "id": "PA007",
+    "category": "Panikattacke – Symptome",
+    "title": "Atemnot bei Panikattacken",
+    "text": "Das Gefühl, nicht genug Luft zu bekommen, entsteht bei Panikattacken oft durch Hyperventilation. Paradoxerweise atmen Betroffene zu viel, was den CO2-Spiegel im Blut senkt und Kribbeln, Schwindel und das Gefühl von Atemnot verstärkt. Der Körper hört nicht auf zu atmen."
+  },
+  {
+    "id": "PA008",
+    "category": "Panikattacke – Symptome",
+    "title": "Derealisation bei Panikattacken",
+    "text": "Derealisation ist das Gefühl, die Umgebung sei unwirklich, fremd oder traumartig. Sie tritt bei bis zu 74% aller Panikattacken auf. Neurobiologisch entsteht sie durch erhöhte Amygdala-Aktivität, die die normale Wahrnehmungsverarbeitung vorübergehend verändert. Sie ist vollständig harmlos."
+  },
+  {
+    "id": "PA009",
+    "category": "Panikattacke – Symptome",
+    "title": "Depersonalisation bei Panikattacken",
+    "text": "Depersonalisation bezeichnet das Gefühl, sich von sich selbst entfremdet zu fühlen, als würde man sich von außen beobachten. Sie ist eng mit Derealisation verwandt und tritt als normales Symptom bei Panikattacken auf. Sie ist kein Zeichen psychotischer Erkrankungen."
+  },
+  {
+    "id": "PA011",
+    "category": "Panikattacke – Symptome",
+    "title": "Schwindel bei Panikattacken",
+    "text": "Schwindel entsteht bei Panikattacken durch Hyperventilation und den damit verbundenen CO2-Abfall im Blut. Dieser verändert die Durchblutung im Gehirn vorübergehend. Der Schwindel ist unangenehm, aber harmlos und verschwindet mit der Normalisierung der Atmung."
+  },
+  {
+    "id": "PA016",
+    "category": "Panikattacke – Symptome",
+    "title": "Todesangst bei Panikattacken",
+    "text": "Die Überzeugung zu sterben ist eines der häufigsten kognitiven Symptome einer Panikattacke. Diese Überzeugung ist ein Symptom der Panik selbst – nicht eine Realitätsbeschreibung. Kein Mensch ist jemals an den körperlichen Symptomen einer Panikattacke gestorben."
+  },
+  {
+    "id": "PA017",
+    "category": "Panikattacke – Symptome",
+    "title": "Angst vor Kontrollverlust",
+    "text": "Viele Betroffene fürchten während einer Panikattacke, die Kontrolle zu verlieren, ohnmächtig zu werden oder verrückt zu werden. Diese Ängste sind Symptome der Panik. Eine Ohnmacht tritt bei Panikattacken typischerweise nicht auf, da der Blutdruck erhöht, nicht erniedrigt ist."
+  },
+  {
+    "id": "PA020",
+    "category": "Panikattacke – Neurobiologie",
+    "title": "Der Teufelskreis der Panik",
+    "text": "Der Teufelskreis der Panik beschreibt, wie körperliche Empfindungen als bedrohlich interpretiert werden, was mehr Angst erzeugt, was wiederum die körperlichen Symptome verstärkt. Das Durchbrechen dieses Kreislaufs durch Akzeptanz der Empfindungen ist ein zentrales Therapieziel."
+  },
+  {
+    "id": "AT001",
+    "category": "Atemtechniken",
+    "title": "Box Breathing – Quadratisches Atmen",
+    "text": "Box Breathing: 4 Sekunden einatmen, 4 Sekunden halten, 4 Sekunden ausatmen, 4 Sekunden halten. Diese Technik aktiviert den Parasympathikus und senkt nachweislich Herzrate und Cortisolspiegel. Sie wird auch von Eliteeinheiten wie Navy SEALs zur Stressregulation eingesetzt."
+  },
+  {
+    "id": "AT002",
+    "category": "Atemtechniken",
+    "title": "4-7-8 Atemtechnik",
+    "text": "Die 4-7-8 Methode: 4 Sekunden durch die Nase einatmen, 7 Sekunden Atem anhalten, 8 Sekunden durch den Mund ausatmen. Die verlängerte Ausatmung stimuliert den Vagusnerv und fördert die parasympathische Entspannungsreaktion. Täglich 2x geübt reduziert chronische Angst."
+  },
+  {
+    "id": "AT003",
+    "category": "Atemtechniken",
+    "title": "Physiologisches Seufzen",
+    "text": "Das physiologische Seufzen besteht aus zwei kurzen Einatemzügen durch die Nase, gefolgt von einem langen Ausatmen durch den Mund. Eine Stanford-Studie (2023) zeigte, dass diese Technik Stress schneller reduziert als Box Breathing oder Meditation. Sie ist einfach, schnell und hochwirksam."
+  },
+  {
+    "id": "AT005",
+    "category": "Atemtechniken",
+    "title": "Verlängerte Ausatmung",
+    "text": "Eine einfache Faustregel: Atme doppelt so lange aus wie du einatmest. Zum Beispiel 4 Sekunden ein, 8 Sekunden aus. Die verlängerte Ausatmung aktiviert direkt den Vagusnerv und signalisiert dem Gehirn Sicherheit. Diese Technik kann jederzeit und überall diskret angewendet werden."
+  },
+  {
+    "id": "AT006",
+    "category": "Atemtechniken",
+    "title": "Warum Ausatmen beruhigt",
+    "text": "Einatmen aktiviert den Sympathikus (Stressreaktion), Ausatmen den Parasympathikus (Entspannung). Durch bewusst verlängertes Ausatmen kann der Herzschlag aktiv gesenkt werden – dieser Mechanismus ist neurophysiologisch gut belegt und sofort anwendbar."
+  },
+  {
+    "id": "GR001",
+    "category": "Grounding-Techniken",
+    "title": "5-4-3-2-1 Grounding",
+    "text": "Die 5-4-3-2-1 Methode: Benenne 5 Dinge die du siehst, 4 die du hörst, 3 die du berühren kannst, 2 die du riechst, 1 das du schmeckst. Diese Technik lenkt die Aufmerksamkeit auf den gegenwärtigen Moment und unterbricht den Gedankenstrudel der Panik."
+  },
+  {
+    "id": "GR002",
+    "category": "Grounding-Techniken",
+    "title": "Körpergrounding – Füße auf dem Boden",
+    "text": "Stelle oder setze dich mit beiden Füßen fest auf den Boden. Spüre den Kontakt zwischen deinen Füßen und dem Boden. Drücke bewusst die Fußsohlen in den Boden und nimm wahr, wie der Boden dich trägt. Diese Technik signalisiert dem Nervensystem physische Sicherheit."
+  },
+  {
+    "id": "GR003",
+    "category": "Grounding-Techniken",
+    "title": "Kaltes Wasser als Grounding",
+    "text": "Kaltes Wasser auf Handgelenke, Nacken oder Gesicht aktiviert den Tauchreflex des Körpers, der reflexartig den Herzschlag verlangsamt. Dies ist eine der schnellsten physiologischen Methoden zur Deeskalation einer Panikreaktion."
+  },
+  {
+    "id": "GR005",
+    "category": "Grounding-Techniken",
+    "title": "Mentales Grounding – Kategorisieren",
+    "text": "Nenne mental Gegenstände einer Kategorie: alle roten Dinge im Raum, Ländernamen mit A, Tierarten. Diese kognitive Aufgabe beansprucht den präfrontalen Kortex und schwächt die Amygdala-Aktivierung. Das Gehirn kann nicht gleichzeitig effektiv Angst verarbeiten und konzentriert denken."
+  },
+  {
+    "id": "GR008",
+    "category": "Grounding-Techniken",
+    "title": "Progressive Muskelentspannung (PMR)",
+    "text": "Die Progressive Muskelentspannung nach Jacobson umfasst das gezielte Anspannen und Entspannen von Muskelgruppen. Durch den Kontrast zwischen Anspannung und Entspannung wird tiefe körperliche Entspannung erreicht. PMR ist klinisch belegt für die Reduktion von Angst und Panik."
+  },
+  {
+    "id": "CB002",
+    "category": "Kognitive Techniken (CBT)",
+    "title": "Gedanken sind keine Fakten",
+    "text": "Gedanken wie 'Ich sterbe' oder 'Ich verliere die Kontrolle' bei einer Panikattacke fühlen sich absolut wahr an, sind aber keine Fakten. Die CBT lehrt, Gedanken als mentale Ereignisse zu betrachten, die kommen und gehen, nicht als Abbild der Realität."
+  },
+  {
+    "id": "CB005",
+    "category": "Kognitive Techniken (CBT)",
+    "title": "Exposition und Angstreduktion",
+    "text": "Vermeidung von angstauslösenden Situationen verstärkt Angststörungen langfristig. Die schrittweise Konfrontation mit angstbesetzten Reizen (Exposition) führt zur Habituation – das Gehirn lernt, dass die Situation nicht gefährlich ist. Exposition ist die wirksamste Technik gegen Vermeidungsverhalten."
+  },
+  {
+    "id": "CB007",
+    "category": "Kognitive Techniken (CBT)",
+    "title": "Akzeptanz statt Kontrolle",
+    "text": "Der Versuch, Angstgefühle zu kontrollieren oder zu unterdrücken, verstärkt sie oft. Die Akzeptanz von Angstempfindungen – sie wahrzunehmen ohne gegen sie anzukämpfen – reduziert paradoxerweise ihre Intensität. Akzeptanz bedeutet nicht Kapitulation, sondern den Kampf aufzugeben."
+  },
+  {
+    "id": "CB008",
+    "category": "Kognitive Techniken (CBT)",
+    "title": "Gedanken-Defusion (ACT)",
+    "text": "Die Acceptance and Commitment Therapy (ACT) lehrt, Gedanken zu defusionieren: statt 'Ich sterbe' zu denken, formuliere 'Ich bemerke den Gedanken, dass ich sterbe.' Diese sprachliche Distanzierung reduziert die emotionale Wirkung von Angstgedanken erheblich."
+  },
+  {
+    "id": "PH001",
+    "category": "Physiologie der Angst",
+    "title": "Kampf-oder-Flucht-Reaktion",
+    "text": "Die Kampf-oder-Flucht-Reaktion ist eine evolutionäre Überlebensreaktion. Bei wahrgenommener Gefahr aktiviert das Gehirn das sympathische Nervensystem: Herzschlag und Atemfrequenz steigen, Muskeln spannen sich an, Sinne werden geschärft. Bei Angststörungen wird sie fehlerhaft ausgelöst."
+  },
+  {
+    "id": "PH003",
+    "category": "Physiologie der Angst",
+    "title": "Der Vagusnerv und Entspannung",
+    "text": "Der Vagusnerv ist der wichtigste Nerv des parasympathischen Nervensystems. Er verbindet Gehirn, Herz, Lunge und Verdauung. Stimulation durch tiefes Atmen, Summen oder kaltes Wasser aktiviert den Vagusnerv und senkt Herzrate und Stressreaktion direkt."
+  },
+  {
+    "id": "PH006",
+    "category": "Physiologie der Angst",
+    "title": "Hyperventilation – was passiert im Körper?",
+    "text": "Bei Hyperventilation wird zu viel CO2 abgeatmet, was den Blut-pH-Wert erhöht. Dies verändert die Erregbarkeit von Nervenzellen und führt zu Kribbeln, Schwindel, Taubheit und Muskelzuckungen. Verlangsamtes Atmen normalisiert den CO2-Spiegel rasch und beendet diese Symptome."
+  },
+  {
+    "id": "PH007",
+    "category": "Physiologie der Angst",
+    "title": "Ohnmacht bei Panikattacken – warum sie selten ist",
+    "text": "Ohnmacht tritt auf, wenn der Blutdruck stark abfällt. Bei Panikattacken ist der Blutdruck jedoch typischerweise erhöht. Daher ist echte Ohnmacht bei Panikattacken sehr selten. Das Gefühl, ohnmächtig zu werden, ist fast immer nur ein Symptom, keine reale Gefahr."
+  },
+  {
+    "id": "SC001",
+    "category": "Schlaf und Angst",
+    "title": "Schlafmangel und Angst",
+    "text": "Schlafmangel erhöht die Aktivität der Amygdala um bis zu 60% und schwächt die regulierende Wirkung des präfrontalen Kortex. Schon eine Nacht schlechten Schlafs erhöht messbar die Angstbereitschaft. Ausreichender Schlaf (7–9 Stunden) ist eine der wichtigsten Maßnahmen zur Angstprävention."
+  },
+  {
+    "id": "BE001",
+    "category": "Bewegung und Angst",
+    "title": "Sport als Angstbehandlung",
+    "text": "Regelmäßige körperliche Bewegung ist eine der wirksamsten Maßnahmen gegen Angststörungen. Aerobe Ausdauerbelastung (30 Minuten, 3–5x pro Woche) reduziert Angst vergleichbar mit Antidepressiva. Bewegung baut Stresshormone ab und fördert die Ausschüttung von Endorphinen und BDNF."
+  },
+  {
+    "id": "ER001",
+    "category": "Ernährung und Angst",
+    "title": "Koffein und Angst",
+    "text": "Koffein aktiviert das sympathische Nervensystem. Hohe Koffeinmengen können Angstsymptome verstärken und Panikattacken begünstigen, besonders bei bestehender Angststörung. Bei Angstneigung empfiehlt sich eine deutliche Reduktion des Koffeinkonsums."
+  },
+  {
+    "id": "AC002",
+    "category": "Achtsamkeit und Meditation",
+    "title": "Was ist Achtsamkeit?",
+    "text": "Achtsamkeit bedeutet, den gegenwärtigen Moment bewusst und ohne Bewertung wahrzunehmen. Bei Angst hilft Achtsamkeit, aus dem automatischen Katastrophendenken herauszutreten und Empfindungen und Gedanken als vorübergehende Ereignisse zu beobachten, nicht als absolute Wahrheiten."
+  },
+  {
+    "id": "AC004",
+    "category": "Achtsamkeit und Meditation",
+    "title": "RAIN-Technik",
+    "text": "RAIN ist eine Achtsamkeitstechnik für schwierige Emotionen: Recognize (erkennen), Allow (erlauben), Investigate (untersuchen), Nurture (mit Selbstmitgefühl begegnen). Sie hilft, Angst nicht zu bekämpfen, sondern neugierig und mitfühlend zu beobachten."
+  },
+  {
+    "id": "AN009",
+    "category": "Angststörungen – Überblick",
+    "title": "Angst als evolutionäres Schutzprogramm",
+    "text": "Angst ist keine Fehlfunktion, sondern ein evolutionär wichtiges Schutzprogramm. Bei Angststörungen ist dieses System lediglich zu sensitiv eingestellt – es reagiert auf nicht-bedrohliche Reize als wären sie gefährlich. Das Verstehen dieser Ursache ist ein erster Schritt zur Entkatastrophisierung."
+  },
+  {
+    "id": "AN010",
+    "category": "Angststörungen – Überblick",
+    "title": "Angst ist nicht gleich Gefahr",
+    "text": "Das Fühlen von Angst bedeutet nicht, dass eine reale Gefahr besteht. Das Gehirn kann Bedrohungen auch dort wahrnehmen, wo keine sind. Die Empfindung von Angst und das tatsächliche Vorhandensein von Gefahr sind zwei vollständig getrennte Dinge."
+  },
+  {
+    "id": "GE002",
+    "category": "Neuroplastizität",
+    "title": "Neuroplastizität – Das Gehirn kann sich verändern",
+    "text": "Das Gehirn ist zeitlebens plastisch – es kann sich durch Erfahrungen, Therapie und gezielte Übungen verändern. Erfolgreiche Angsttherapie führt zu messbaren Veränderungen in der Hirnstruktur und -aktivität. Neuroplastizität ist die biologische Grundlage für Erholung von Angststörungen."
+  },
+  {
+    "id": "SE001",
+    "category": "Selbstfürsorge",
+    "title": "Selbstmitgefühl bei Angst",
+    "text": "Selbstkritik und Scham verstärken Angststörungen. Selbstmitgefühl – sich selbst gegenüber so fürsorglich zu sein wie gegenüber einem guten Freund – ist ein wirksames Gegenmittel. Studien zeigen, dass Selbstmitgefühl die emotionale Resilienz stärkt und Angst reduziert."
+  },
+  {
+    "id": "NO001",
+    "category": "Notfallsituationen",
+    "title": "Wann ist ein Notruf angebracht?",
+    "text": "Bei echten körperlichen Notfällen wie anhaltenden starken Brustschmerzen, Lähmungserscheinungen, Sprachverlust oder Bewusstlosigkeit sollte sofort der Notruf 112 gewählt werden. Panikattacken erzeugen ähnliche Symptome, sind aber medizinisch ungefährlich. Im Zweifel immer ärztliche Hilfe suchen."
+  },
+  {
+    "id": "NO002",
+    "category": "Notfallsituationen",
+    "title": "Krisentelefon Deutschland",
+    "text": "Bei Suizidgedanken oder dem Wunsch, sich selbst zu verletzen, ist sofortige Hilfe wichtig. In Deutschland steht die Telefonseelsorge kostenlos und rund um die Uhr zur Verfügung: 0800 111 0 111 oder 0800 111 0 222. Diese Angebote sind anonym und kostenfrei."
+  }
+]
