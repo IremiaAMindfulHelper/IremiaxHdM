@@ -89,6 +89,9 @@ struct ContactView: View {
             .navigationTitle("Notfallkontakte")
             .toolbar {
                 if !store.contacts.isEmpty {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        EditButton()
+                    }
                     ToolbarItem(placement: .primaryAction) {
                         Button { showingPicker = true } label: {
                             Image(systemName: "plus")
