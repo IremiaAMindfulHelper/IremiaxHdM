@@ -18,8 +18,11 @@ struct ContactsListView: View {
             } else {
                 List(connectivity.contacts) { contact in
                     Button {
-                        if let url = URL(string: "tel://\(contact.phoneNumber)") {
-                            WKExtension.shared().openSystemURL(url)
+                        let hasPlus = contact.phoneNumber.trimmingCharacters(in: .whitespaces).hasPrefix("+")
+                        let digits = contact.phoneNumber.filter { $0.isNumber }
+                        let dialString = hasPlus ? "+\(digits)" : digits
+                        if !dialString.isEmpty, let url = URL(string: "tel:\(dialString)") {
+                            WKApplication.shared().openSystemURL(url)
                         }
                     } label: {
                         VStack(alignment: .leading, spacing: 2) {
