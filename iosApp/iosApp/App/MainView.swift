@@ -49,14 +49,10 @@ struct MainView: View {
                     .tabItem { Text("") }
                     .tag(99)
 
-                // 2) Mein Plan (hier ggf. euren echten View einsetzen)
-                NavigationStack {
-                    Text("Mein Plan")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.background)
-                }
+                // 2) Notfallkontakte
+                ContactView()
                 .tabItem {
-                    Label("Mein Plan", systemImage: "checklist")
+                    Label("Kontakte", systemImage: "person.2")
                 }
                 .tag(2)
 
