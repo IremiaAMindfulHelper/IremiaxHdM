@@ -1,0 +1,382 @@
+@startuml Iremia Architecture
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 40
+
+' ─── Color theme ───
+skinparam class {
+    BackgroundColor<<view>> #E8F5E9
+    BorderColor<<view>> #4CAF50
+    BackgroundColor<<viewmodel>> #E3F2FD
+    BorderColor<<viewmodel>> #1976D2
+    BackgroundColor<<service>> #FFF3E0
+    BorderColor<<service>> #EF6C00
+    BackgroundColor<<kmp>> #F3E5F5
+    BorderColor<<kmp>> #7B1FA2
+    BackgroundColor<<protocol>> #FFFDE7
+    BorderColor<<protocol>> #F9A825
+    BackgroundColor<<util>> #ECEFF1
+    BorderColor<<util>> #607D8B
+    BackgroundColor<<watch>> #FCE4EC
+    BorderColor<<watch>> #C62828
+}
+
+' ════════════════════════════════════════════
+'  KMP SHARED MODULE
+' ════════════════════════════════════════════
+package "Shared (KMP)" as KMP #F3E5F5 {
+    class WellnessRepository <<kmp>> {
+        {static} shared
+        + exercises: [WellnessExercise]
+        + mantras: [WellnessMantra]
+        + sounds: [WellnessSound]
+    }
+    class MainViewModel <<kmp>> {
+        + onTabSelected(_:)
+        + navigationState: StateFlow
+    }
+    class NavigationTarget <<kmp>> {
+        HOME, JOURNAL, PLAN, PROFILE
+    }
+    class BreathingEngine <<kmp>> {
+        + handleGesture()
+        + tick()
+    }
+    class CalculationEngine <<kmp>> {
+        + generateQuestion(): QuestionData
+    }
+    class MemoryEngine <<kmp>> {
+        + cards: [WellnessMemoryCard]
+        + selectCard(at:)
+        + tick()
+    }
+    class SOSFlowData <<kmp>> {
+        {static} shared
+        + steps: [SOSStep]
+        + getNextStepIndex()
+    }
+    class MantrasController <<kmp>> {
+        + state: Flow<MantrasState>
+        + addAsync(text:)
+        + removeAsync(id:)
+    }
+    class SharedFactory <<kmp>> {
+        + createMantrasController()
+    }
+}
+
+' ════════════════════════════════════════════
+'  iOS APP ENTRY
+' ════════════════════════════════════════════
+package "iOS App" {
+
+    class iOSApp <<view>> {
+        «App»
+        + body: WindowGroup
+    }
+
+    class MainView <<view>> {
+        «View»
+        - vm: MainViewModelWrapper
+        - selectedTab: Int
+        - showingEmergencyOverlay: Bool
+        - showSoundPlayer: Bool
+    }
+
+    ' ── ViewModels ──
+    package "ViewModels" {
+        class MainViewModelWrapper <<viewmodel>> {
+            «ObservableObject»
+            - viewModel: MainViewModel
+            + currentTarget: NavigationTarget
+            + onTabSelected(_:)
+        }
+
+        class HomeViewModel <<viewmodel>> {
+            «ObservableObject»
+            + exercises: [WellnessExercise]
+            + mantras: [WellnessMantra]
+            + sounds: [WellnessSound]
+        }
+
+        class MantrasObservable <<viewmodel>> {
+            «ObservableObject»
+            + items: [MantraUI]
+            + inputText: String
+            + add()
+            + remove(id:)
+        }
+
+        package "Journal ViewModels" {
+            class JournalMainViewModel <<viewmodel>> {
+                «ObservableObject»
+                + rootMode: JournalRootMode
+                + cells: [UnifiedCell]
+                + handleTap(on:): Action
+                + shiftMonth(by:)
+            }
+            class JournalDiaryViewModel <<viewmodel>> {
+                «ObservableObject»
+                + answer1..7: String
+                + moodSelections: [String]
+                + expanded: [Bool]
+            }
+            class JournalEntryViewModel <<viewmodel>> {
+                «ObservableObject»
+                + ballPosition: CGPoint
+                + selectedActivities: Set<ActivitySymbol>
+                + activityMode: ActivityMode
+            }
+            class PanicReflexionViewModel <<viewmodel>> {
+                «ObservableObject»
+                + intensity: Double
+                + selectedSymptoms: Set<String>
+                + selectedFeelings: Set<String>
+            }
+        }
+
+        package "Exercise ViewModels" {
+            class BreathingViewModel <<viewmodel>> {
+                «ObservableObject»
+                - engine: BreathingEngine
+                + timeLeft: Int
+                + points: Int
+                + tick()
+                + processMovement(offset:)
+            }
+            class CalculationViewModel <<viewmodel>> {
+                «ObservableObject»
+                - engine: CalculationEngine
+                + currentQuestion: QuestionData?
+                + processTap(_:onComplete:)
+            }
+            class MemoryViewModel <<viewmodel>> {
+                «ObservableObject»
+                - engine: MemoryEngine
+                + cards: [WellnessMemoryCard]
+                + selectCard(at:)
+            }
+        }
+
+        package "SOS ViewModels" {
+            class CheckpointViewModel <<viewmodel>> {
+                «ObservableObject»
+                + sosSteps: [SOSStep]
+                + prepareNextStep(currentStep:)
+            }
+            class EmergencyPlanViewModel <<viewmodel>> {
+                «ObservableObject»
+                - engine: BreathingEngine
+                + startFirstExercise: Bool
+                + sosSteps: [SOSStep]
+            }
+        }
+    }
+
+    ' ── Views ──
+    package "Views" {
+        class HomeView <<view>> {
+            «View»
+            - vm: HomeViewModel
+        }
+        class ProfileView <<view>> {
+            «View»
+        }
+        class SosView <<view>> {
+            «View» (stub)
+        }
+
+        package "Journal Views" {
+            class JournalNavigationView <<view>>
+            class JournalMainView <<view>>
+            class JournalDiaryView <<view>>
+            class JournalEntryView <<view>>
+            class PanicReflexion <<view>>
+        }
+
+        package "Exercise Views" {
+            class BreathingExerciseView <<view>>
+            class CalculationExerciseView <<view>>
+            class MemoryExerciseView <<view>>
+            class MantraView <<view>>
+        }
+
+        package "SOS Views" {
+            class EmergencyPlanView <<view>>
+            class CheckpointView <<view>>
+        }
+    }
+
+    ' ── Emergency Voice ──
+    package "Emergency Voice" {
+        interface EmergencyResponder <<protocol>> {
+            + respond(to: String) async -> String
+        }
+        class EmergencyVoiceCoordinator <<service>> {
+            {static} shared
+            - speech: SpeechRecognitionService
+            - tts: TTSService
+            - responder: EmergencyResponder
+            + startRecording()
+            + stopRecordingAndRespond() async -> String
+        }
+        class CohereRAGService <<service>> {
+            - documents: [CohereDocument]
+            - model: String
+            + respond(to:) async -> String
+        }
+        class SpeechRecognitionService <<service>> {
+            - recognizer: SFSpeechRecognizer
+            - audioEngine: AVAudioEngine
+            + start()
+            + stop() -> String
+        }
+        class TTSService <<service>> {
+            - synth: AVSpeechSynthesizer
+            + speak(_:)
+            + stop()
+        }
+    }
+
+    ' ── Connectivity ──
+    class PhoneConnectivityManager <<service>> {
+        «WCSessionDelegate»
+        {static} shared
+        + sendPartialTranscript(_:)
+        + sendContacts(_:)
+    }
+
+    ' ── Utilities ──
+    class KeychainHelper <<util>> {
+        «enum»
+        {static} + get(_:) -> String?
+        {static} + set(_:service:)
+        {static} + seedCohereKeyFromBundleIfNeeded()
+    }
+}
+
+' ════════════════════════════════════════════
+'  watchOS APP
+' ════════════════════════════════════════════
+package "watchOS App" #FCE4EC {
+    class IremiaWatchApp <<watch>> {
+        «App»
+        + body: WindowGroup
+    }
+    class ContentView <<watch>> {
+        «View»
+        Talk / Contacts / Breathe
+    }
+    class EmergencyVoiceView <<watch>> {
+        «View»
+    }
+    class ContactsListView <<watch>> {
+        «View»
+    }
+    class EmergencyWatchViewModel <<watch>> {
+        «ObservableObject»
+        + state: EmergencyState
+        + tapped()
+    }
+    class WatchConnectivityManager <<watch>> {
+        «WCSessionDelegate»
+        {static} shared
+        + contacts: [WatchContact]
+        + liveTranscript: String
+    }
+}
+
+' ════════════════════════════════════════════
+'  RELATIONSHIPS
+' ════════════════════════════════════════════
+
+' App entry → main views
+iOSApp --> MainView : creates
+MainView --> MainViewModelWrapper : @StateObject
+MainView --> HomeView : tab 0
+MainView --> JournalNavigationView : tab 1
+MainView --> EmergencyPlanView : tab 2 (SOS)
+MainView --> ProfileView : tab 3
+
+IremiaWatchApp --> ContentView : creates
+ContentView --> EmergencyVoiceView
+ContentView --> ContactsListView
+
+' View → ViewModel
+HomeView --> HomeViewModel : @StateObject
+JournalMainView --> JournalMainViewModel : @StateObject
+JournalDiaryView --> JournalDiaryViewModel : @StateObject
+JournalEntryView --> JournalEntryViewModel : @StateObject
+PanicReflexion --> PanicReflexionViewModel : @StateObject
+BreathingExerciseView --> BreathingViewModel : @StateObject
+CalculationExerciseView --> CalculationViewModel : @StateObject
+MemoryExerciseView --> MemoryViewModel : @StateObject
+MantraView --> MantrasObservable : @StateObject
+EmergencyPlanView --> EmergencyPlanViewModel : @StateObject
+CheckpointView --> CheckpointViewModel : @StateObject
+EmergencyVoiceView --> EmergencyWatchViewModel : @StateObject
+
+' ViewModel → KMP
+MainViewModelWrapper --> MainViewModel : wraps
+MainViewModelWrapper --> NavigationTarget
+HomeViewModel --> WellnessRepository
+BreathingViewModel --> BreathingEngine
+CalculationViewModel --> CalculationEngine
+MemoryViewModel --> MemoryEngine
+CheckpointViewModel --> SOSFlowData
+EmergencyPlanViewModel --> BreathingEngine
+EmergencyPlanViewModel --> SOSFlowData
+MantrasObservable --> MantrasController
+MantrasObservable --> SharedFactory
+
+' Emergency Voice internals
+EmergencyVoiceCoordinator --> SpeechRecognitionService
+EmergencyVoiceCoordinator --> TTSService
+EmergencyVoiceCoordinator --> EmergencyResponder
+CohereRAGService ..|> EmergencyResponder : implements
+CohereRAGService --> KeychainHelper : reads API key
+
+' Connectivity: iOS ↔ watchOS
+PhoneConnectivityManager <-[#C62828,bold]-> WatchConnectivityManager : WCSession\n(bidirectional)
+PhoneConnectivityManager --> EmergencyVoiceCoordinator : delegates\nrecording actions
+EmergencyWatchViewModel --> WatchConnectivityManager : sends actions
+ContactsListView --> WatchConnectivityManager : reads contacts
+EmergencyVoiceCoordinator --> PhoneConnectivityManager : sends transcript
+
+' SOS flow
+CheckpointView --> BreathingExerciseView : step factory
+CheckpointView --> CalculationExerciseView : step factory
+CheckpointView --> MemoryExerciseView : step factory
+CheckpointView --> MantraView : step factory
+
+' App init
+iOSApp --> KeychainHelper : seeds API key
+iOSApp --> PhoneConnectivityManager : activates
+
+' Journal navigation
+JournalNavigationView --> JournalMainView
+JournalNavigationView --> JournalDiaryView
+JournalNavigationView --> JournalEntryView
+JournalNavigationView --> PanicReflexion
+
+' ════════════════════════════════════════════
+'  LEGEND
+' ════════════════════════════════════════════
+legend right
+  |= Color |= Meaning |
+  |<#E8F5E9>| SwiftUI View |
+  |<#E3F2FD>| ViewModel (ObservableObject) |
+  |<#FFF3E0>| Service / Manager |
+  |<#F3E5F5>| KMP Shared Module |
+  |<#FFFDE7>| Protocol |
+  |<#ECEFF1>| Utility |
+  |<#FCE4EC>| watchOS |
+  ──> owns / creates
+  ..> implements
+  <══> bidirectional
+endlegend
+
+@enduml

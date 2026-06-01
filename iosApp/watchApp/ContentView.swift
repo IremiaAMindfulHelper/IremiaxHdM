@@ -1,9 +1,24 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var selectedMood: MoodLevel?
+
     var body: some View {
         NavigationStack {
-            HomeMenuView()
+            if selectedMood == nil {
+                MoodCheckView { mood in
+                    JourneyStore.shared.add(mood: mood)
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        selectedMood = mood
+                    }
+                } onDismiss: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        selectedMood = .neutral
+                    }
+                }
+            } else {
+                HomeMenuView()
+            }
         }
     }
 }
@@ -27,7 +42,7 @@ private struct HomeMenuView: View {
                     .position(x: w * 0.5, y: h * 0.20)
 
                 NavigationLink {
-                    BreathingPlaceholderView()
+                    BreathingWatchView()
                 } label: {
                     BubbleButton(title: "Breathe", size: bubble)
                 }
@@ -43,7 +58,7 @@ private struct HomeMenuView: View {
                 .position(x: w * 0.155, y: h * 0.61)
 
                 NavigationLink {
-                    JourneyPlaceholderView()
+                    JourneyView()
                 } label: {
                     BubbleButton(title: "Journey", size: bubble)
                 }
@@ -178,24 +193,10 @@ private struct BottomGlow: View {
     }
 }
 
-private struct BreathingPlaceholderView: View {
-    var body: some View {
-        PlaceholderContent(icon: "wind", title: "Breathing")
-            .navigationTitle("Breathe")
-    }
-}
-
 private struct LearnPlaceholderView: View {
     var body: some View {
         PlaceholderContent(icon: "book.fill", title: "Learn")
             .navigationTitle("Learn")
-    }
-}
-
-private struct JourneyPlaceholderView: View {
-    var body: some View {
-        PlaceholderContent(icon: "map.fill", title: "Journey")
-            .navigationTitle("Journey")
     }
 }
 

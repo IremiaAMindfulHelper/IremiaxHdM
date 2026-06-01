@@ -12,6 +12,8 @@ enum EmergencyState: Equatable {
 final class EmergencyWatchViewModel: ObservableObject {
     @Published var state: EmergencyState = .idle
 
+    private var timeoutTask: Task<Void, Never>?
+
     func tapped() {
         switch state {
         case .idle:
@@ -19,6 +21,7 @@ final class EmergencyWatchViewModel: ObservableObject {
         case .recording:
             stopAndAsk()
         case .processing, .responding:
+            timeoutTask?.cancel()
             state = .idle
         }
     }
@@ -44,14 +47,38 @@ final class EmergencyWatchViewModel: ObservableObject {
             state = .responding(fallback)
             return
         }
+
+        timeoutTask?.cancel()
+        timeoutTask = Task {
+            try? await Task.sleep(for: .seconds(15))
+            guard !Task.isCancelled, state == .processing else { return }
+            let transcript = WatchConnectivityManager.shared.liveTranscript
+            state = .responding(fallback)
+            JourneyStore.shared.attachVoiceSession(transcript: transcript, response: fallback)
+        }
+
         WCSession.default.sendMessage(
             ["action": "stopRecording"],
             replyHandler: { [weak self] reply in
-                let text = (reply["response"] as? String) ?? self?.fallback ?? ""
-                Task { @MainActor in self?.state = .responding(text) }
+                let responseText = (reply["response"] as? String) ?? self?.fallback ?? ""
+                Task { @MainActor in
+                    self?.timeoutTask?.cancel()
+                    self?.state = .responding(responseText)
+                    let transcript = WatchConnectivityManager.shared.liveTranscript
+                    JourneyStore.shared.attachVoiceSession(
+                        transcript: transcript,
+                        response: responseText
+                    )
+                }
             },
             errorHandler: { [weak self] _ in
-                Task { @MainActor in self?.state = .responding(self?.fallback ?? "") }
+                Task { @MainActor in
+                    self?.timeoutTask?.cancel()
+                    let fb = self?.fallback ?? ""
+                    self?.state = .responding(fb)
+                    let transcript = WatchConnectivityManager.shared.liveTranscript
+                    JourneyStore.shared.attachVoiceSession(transcript: transcript, response: fb)
+                }
             }
         )
     }

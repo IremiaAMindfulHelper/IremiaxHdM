@@ -11,4 +11,10 @@ extension Color {
     static let iremiaBannerTeal = Color(red: 0x0A / 255.0, green: 0x5C / 255.0, blue: 0x5A / 255.0)
     /// Copper accent used for the central Quick help bubble.
     static let iremiaQuickHelp = Color(red: 0xC8 / 255.0, green: 0x7B / 255.0, blue: 0x3B / 255.0)
+    /// Light teal for Journey screen titles (#A4DFDD).
+    static let iremiaJourneyTitle = Color(red: 0xA4 / 255.0, green: 0xDF / 255.0, blue: 0xDD / 255.0)
+    /// Teal gradient base for Journey header (#0F908E).
+    static let iremiaJourneyTeal = Color(red: 0x0F / 255.0, green: 0x90 / 255.0, blue: 0x8E / 255.0)
+    /// Journal entry row background (#59AAA8).
+    static let iremiaEntryBg = Color(red: 0x59 / 255.0, green: 0xAA / 255.0, blue: 0xA8 / 255.0)
 }
