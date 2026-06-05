@@ -4,6 +4,8 @@ struct JournalEntry: Codable, Identifiable {
     let id: UUID
     let date: Date
     let mood: String
+    var category: String?
+    var detail: String?
     var transcript: String?
     var response: String?
 
@@ -24,6 +26,14 @@ class JourneyStore: ObservableObject {
     func add(mood: MoodLevel) {
         let entry = JournalEntry(id: UUID(), date: Date(), mood: mood.rawValue)
         entries.insert(entry, at: 0)
+        save()
+    }
+
+    func attachMoodContext(category: String, detail: String, response: String = "") {
+        guard !entries.isEmpty else { return }
+        entries[0].category = category
+        entries[0].detail = detail
+        if !response.isEmpty { entries[0].response = response }
         save()
     }
 

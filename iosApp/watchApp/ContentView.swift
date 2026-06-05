@@ -1,25 +1,122 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var selectedMood: MoodLevel?
+    @State private var moodFlowStep: MoodFlowStep = .initial
 
     var body: some View {
         NavigationStack {
-            if selectedMood == nil {
+            switch moodFlowStep {
+            case .initial:
                 MoodCheckView { mood in
                     JourneyStore.shared.add(mood: mood)
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        selectedMood = mood
+                        if mood == .good {
+                            moodFlowStep = .goodResponse
+                        } else {
+                            moodFlowStep = .category(mood)
+                        }
                     }
                 } onDismiss: {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        selectedMood = .neutral
+                        moodFlowStep = .done
                     }
                 }
-            } else {
+
+            case .goodResponse:
+                GoodResponseView {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        moodFlowStep = .done
+                    }
+                }
+
+            case .category(let mood):
+                MoodCategoryView(mood: mood) { category in
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        moodFlowStep = .detail(mood, category)
+                    }
+                } onMicCompleted: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        moodFlowStep = .done
+                    }
+                }
+
+            case .detail(let mood, let category):
+                MoodDetailView(mood: mood, category: category) { detail in
+                    let response = MoodResponses.message(mood: mood, category: category, detail: detail)
+                    JourneyStore.shared.attachMoodContext(
+                        category: category.rawValue,
+                        detail: detail.rawValue,
+                        response: response
+                    )
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        moodFlowStep = .response(mood, category, detail)
+                    }
+                } onMicCompleted: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        moodFlowStep = .done
+                    }
+                }
+
+            case .response(let mood, let category, let detail):
+                MoodResponseView(mood: mood, category: category, detail: detail) {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        moodFlowStep = .done
+                    }
+                }
+
+            case .done:
                 HomeMenuView()
             }
         }
+    }
+}
+
+private enum MoodFlowStep {
+    case initial
+    case goodResponse
+    case category(MoodLevel)
+    case detail(MoodLevel, MoodCategory)
+    case response(MoodLevel, MoodCategory, MoodDetail)
+    case done
+}
+
+private struct GoodResponseView: View {
+    var onDone: () -> Void
+    @State private var appeared = false
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            DecorativeCirclesView(mood: .good).ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                Spacer(minLength: 0)
+
+                Text("That's great!\nKeep it up")
+                    .font(.system(size: 14, weight: .semibold))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(Color.iremiaResponseText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 16)
+
+                Button { onDone() } label: {
+                    Text("Continue")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.iremiaPetrol)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(Color.iremiaLabel))
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .opacity(appeared ? 1 : 0)
+        .animation(.easeOut(duration: 0.5), value: appeared)
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear { appeared = true }
     }
 }
 

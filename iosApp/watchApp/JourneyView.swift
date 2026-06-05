@@ -193,34 +193,38 @@ private struct JournalEntryDetailView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
 
+                if let category = entry.category, let detail = entry.detail {
+                    Text("You felt \(entry.moodLevel?.label.lowercased() ?? "this way") because of your \(category.lowercased()): \(detail.lowercased()).")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.iremiaLabel)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 2)
+                }
+
+                if let response = entry.response, !response.isEmpty {
+                    Text(response)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.iremiaResponseText)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 6)
+                        .padding(.horizontal, 4)
+                }
+
                 if let transcript = entry.transcript, !transcript.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("You said:")
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color.iremiaLabel)
                         Text(transcript)
-                            .font(.system(size: 13))
+                            .font(.system(size: 12))
                             .foregroundStyle(.white)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 4)
+                    .padding(.top, 6)
                 }
 
-                if let response = entry.response, !response.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Iremia:")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(Color.iremiaLabel)
-                        Text(response)
-                            .font(.system(size: 13))
-                            .foregroundStyle(.white)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 4)
-                }
-
-                if entry.transcript == nil && entry.response == nil {
-                    Text("No voice entry recorded")
+                if entry.category == nil && entry.transcript == nil {
+                    Text("No mood details recorded")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                         .padding(.top, 4)
