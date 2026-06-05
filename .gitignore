@@ -20,3 +20,5 @@ captures
 .env
 **/Secrets.xcconfig
 iosApp/iosApp/Secrets.plist
+
+.claude/

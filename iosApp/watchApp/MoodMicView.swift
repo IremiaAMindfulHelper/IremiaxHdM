@@ -211,7 +211,7 @@ private struct StopButtonView: View {
 
 // MARK: - Left waveform (Figma Group 21 — 5 bars, x=4 to x=60)
 
-private struct LeftWaveformBars: View {
+struct LeftWaveformBars: View {
     let level: Float
     // 8 bars (same count as right) so both groups are 52pt wide and extend
     // equally close to their screen edge. Heights build toward the button
@@ -241,7 +241,7 @@ private struct LeftWaveformBars: View {
 
 // MARK: - Right waveform (Figma Group 22 — 8 bars, x=127 to x=182)
 
-private struct RightWaveformBars: View {
+struct RightWaveformBars: View {
     let level: Float
     // Boost the far-end bars so all 8 bars are visibly animated throughout.
     private let heights:     [CGFloat] = [0.65, 1.00, 0.60, 0.42, 0.28, 0.20, 0.15, 0.12]
