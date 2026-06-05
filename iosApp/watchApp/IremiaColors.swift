@@ -17,4 +17,12 @@ extension Color {
     static let iremiaJourneyTeal = Color(red: 0x0F / 255.0, green: 0x90 / 255.0, blue: 0x8E / 255.0)
     /// Journal entry row background (#59AAA8).
     static let iremiaEntryBg = Color(red: 0x59 / 255.0, green: 0xAA / 255.0, blue: 0xA8 / 255.0)
+    /// Brighter teal for category/detail choice bubbles — lifted from Figma #59AAA8 + extra luminance.
+    static let iremiaCategoryBubble = Color(red: 110.0 / 255.0, green: 200.0 / 255.0, blue: 198.0 / 255.0)
+    /// Dark teal label inside category/detail bubbles (#0A4544).
+    static let iremiaCategoryLabel = Color(red: 10.0 / 255.0, green: 69.0 / 255.0, blue: 68.0 / 255.0)
+    /// Lighter teal for "Dismiss" and secondary mood-check text (#83BAB8).
+    static let iremiaDismiss = Color(red: 131.0 / 255.0, green: 186.0 / 255.0, blue: 184.0 / 255.0)
+    /// Light teal for personalized response message text (#A4DFDD).
+    static let iremiaResponseText = Color(red: 164.0 / 255.0, green: 223.0 / 255.0, blue: 221.0 / 255.0)
 }
