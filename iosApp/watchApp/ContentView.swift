@@ -34,6 +34,10 @@ struct ContentView: View {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         moodFlowStep = .detail(mood, category)
                     }
+                } onMicCompleted: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        moodFlowStep = .done
+                    }
                 }
 
             case .detail(let mood, let category):
@@ -46,6 +50,10 @@ struct ContentView: View {
                     )
                     withAnimation(.easeInOut(duration: 0.3)) {
                         moodFlowStep = .response(mood, category, detail)
+                    }
+                } onMicCompleted: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        moodFlowStep = .done
                     }
                 }
 

@@ -201,11 +201,10 @@ private struct ChoiceBubble: View {
 
 private struct MicButton: View {
     let size: CGFloat
+    var onTap: () -> Void = {}
 
     var body: some View {
-        Button {
-            // mic — not yet implemented
-        } label: {
+        Button { onTap() } label: {
             ZStack {
                 Circle().fill(Color.iremiaPetrol)
                 Image(systemName: "mic.fill")
@@ -276,6 +275,7 @@ private struct BubbleTriangle: View {
     let items: [String]
     let onSelect: (Int) -> Void
     let bubbleSize: CGFloat
+    var onMicTap: () -> Void = {}
 
     var body: some View {
         // Figma-exact diamond: step = 30px in 51px circles → 21px overlap per row.
@@ -300,7 +300,7 @@ private struct BubbleTriangle: View {
                 .zIndex(2)
             }
             // mic at bottom center — behind choice bubbles in the overlap region
-            MicButton(size: bubbleSize)
+            MicButton(size: bubbleSize, onTap: onMicTap)
                 .zIndex(1)
         }
     }
@@ -311,12 +311,14 @@ private struct BubbleTriangle: View {
 struct MoodCategoryView: View {
     let mood: MoodLevel
     var onCategorySelected: (MoodCategory) -> Void
+    var onMicCompleted: (() -> Void)?
+
+    @State private var showMic = false
 
     var body: some View {
         ZStack {
             moodGradient.ignoresSafeArea()
 
-            // Text pinned to top independently of buttons
             VStack {
                 Text("What made you\nfeel this way?")
                     .font(.system(size: 13, weight: .semibold))
@@ -329,13 +331,13 @@ struct MoodCategoryView: View {
             .padding(.horizontal, 6)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Buttons pinned to bottom independently of text
             VStack {
                 Spacer()
                 BubbleTriangle(
                     items: MoodCategory.allCases.map { $0.rawValue },
                     onSelect: { i in onCategorySelected(MoodCategory.allCases[i]) },
-                    bubbleSize: 51
+                    bubbleSize: 51,
+                    onMicTap: { showMic = true }
                 )
                 .padding(.bottom, 4)
             }
@@ -343,6 +345,14 @@ struct MoodCategoryView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .toolbar(.hidden, for: .navigationBar)
+        .fullScreenCover(isPresented: $showMic) {
+            MoodMicView {
+                showMic = false
+                onMicCompleted?()
+            } onCancel: {
+                showMic = false
+            }
+        }
     }
 }
 
@@ -352,12 +362,14 @@ struct MoodDetailView: View {
     let mood: MoodLevel
     let category: MoodCategory
     var onDetailSelected: (MoodDetail) -> Void
+    var onMicCompleted: (() -> Void)?
+
+    @State private var showMic = false
 
     var body: some View {
         ZStack {
             moodGradient.ignoresSafeArea()
 
-            // Text pinned to top independently of buttons
             VStack {
                 Text("What about your \(category.rawValue.lowercased())\nmade you feel that?")
                     .font(.system(size: 13, weight: .semibold))
@@ -370,13 +382,13 @@ struct MoodDetailView: View {
             .padding(.horizontal, 6)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Buttons pinned to bottom independently of text
             VStack {
                 Spacer()
                 BubbleTriangle(
                     items: category.details.map { $0.rawValue },
                     onSelect: { i in onDetailSelected(category.details[i]) },
-                    bubbleSize: 51
+                    bubbleSize: 51,
+                    onMicTap: { showMic = true }
                 )
                 .padding(.bottom, 4)
             }
@@ -384,6 +396,14 @@ struct MoodDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .toolbar(.hidden, for: .navigationBar)
+        .fullScreenCover(isPresented: $showMic) {
+            MoodMicView {
+                showMic = false
+                onMicCompleted?()
+            } onCancel: {
+                showMic = false
+            }
+        }
     }
 }
 

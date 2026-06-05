@@ -14,6 +14,7 @@
 		373D27242FCCCA230006C161 /* JourneyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373D27232FCCCA230006C161 /* JourneyView.swift */; };
 		373D27262FCCCFE70006C161 /* BreathingWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373D27252FCCCFE70006C161 /* BreathingWatchView.swift */; };
 		379332A12FC073F100D72D1C /* MoodCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379332A02FC073F100D72D1C /* MoodCheckView.swift */; };
+		379332B12FC073F100D72D1C /* MoodMicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379332B02FC073F100D72D1C /* MoodMicView.swift */; };
 		AA00000100000000000000D1 /* IremiaWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C1 /* IremiaWatchApp.swift */; };
 		AA00000100000000000000D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C2 /* ContentView.swift */; };
 		AA00000100000000000000D3 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C3 /* WatchConnectivityManager.swift */; };
@@ -67,6 +68,7 @@
 		373D27232FCCCA230006C161 /* JourneyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyView.swift; sourceTree = "<group>"; };
 		373D27252FCCCFE70006C161 /* BreathingWatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingWatchView.swift; sourceTree = "<group>"; };
 		379332A02FC073F100D72D1C /* MoodCheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodCheckView.swift; sourceTree = "<group>"; };
+		379332B02FC073F100D72D1C /* MoodMicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodMicView.swift; sourceTree = "<group>"; };
 		4C7053E52F47B8F600A8280D /* IreamiaApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IreamiaApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA00000100000000000000A0 /* IremiaWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IremiaWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA00000100000000000000C1 /* IremiaWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IremiaWatchApp.swift; sourceTree = "<group>"; };
@@ -136,6 +138,7 @@
 				AA00000100000000000000B2 /* EmergencyVoice */,
 				AA00000100000000000000C4 /* Assets.xcassets */,
 				379332A02FC073F100D72D1C /* MoodCheckView.swift */,
+				379332B02FC073F100D72D1C /* MoodMicView.swift */,
 				373D27212FCCCA070006C161 /* JourneyStore.swift */,
 				373D27232FCCCA230006C161 /* JourneyView.swift */,
 				373D27252FCCCFE70006C161 /* BreathingWatchView.swift */,
@@ -339,6 +342,7 @@
 				AA00000100000000000000D7 /* EmergencyVoiceView.swift in Sources */,
 				373D27242FCCCA230006C161 /* JourneyView.swift in Sources */,
 				379332A12FC073F100D72D1C /* MoodCheckView.swift in Sources */,
+				379332B12FC073F100D72D1C /* MoodMicView.swift in Sources */,
 				AA00000100000000000000D8 /* EmergencyWatchViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -372,6 +376,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Iremia;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to visualise your voice during mood check-ins.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = org.iremia.app;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -398,6 +403,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Iremia;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to visualise your voice during mood check-ins.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = org.iremia.app;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
