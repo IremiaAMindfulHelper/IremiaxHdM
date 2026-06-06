@@ -256,11 +256,12 @@ val unspecified_scheme = ColorFamily(
 /**
  * Custom AppTheme composable for iremia.
  *
- * This wraps the content in a Material 3 Theme, providing a consistent
- * color scheme throughout the app.
+ * Wraps the content in a Material 3 theme that applies the Iremia design system:
+ * the brand [IremiaColorScheme] (light, single-mode), [IremiaTypography] (Inter
+ * scale) and [IremiaMaterialShapes] (pill-first).
  *
  * @param darkTheme Whether to use the dark theme. Defaults to the system setting.
- * @param dynamicColor Whether to use dynamic colors (Material You) on Android 12+
+ * @param dynamicColor Whether to use dynamic colors (Material You) on Android 12+.
  *                     If true and the device supports it, colors are generated
  *                     from the system wallpaper.
  * @param content The composable content that will be styled with this theme.
@@ -278,13 +279,17 @@ fun AppTheme(
           val context = LocalContext.current
           if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
       }
-      
+
+      // NOTE: Iremia is a light, single-mode brand. Light uses the brand scheme;
+      // the generated darkScheme is kept as a fallback for system dark mode.
       darkTheme -> darkScheme
-      else -> lightScheme
+      else -> IremiaColorScheme
   }
 
   MaterialTheme(
     colorScheme = colorScheme,
+    typography = IremiaTypography,
+    shapes = IremiaMaterialShapes,
     content = content
   )
 }
