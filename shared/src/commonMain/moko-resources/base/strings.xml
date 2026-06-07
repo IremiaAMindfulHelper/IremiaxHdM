@@ -8,4 +8,8 @@
     <string name="sos">SOS</string>
     <string name="contacts">Contacts</string>
     <string name="profile">Profile</string>
+    <!-- High-fidelity prototype navigation tabs (Android Compose) -->
+    <string name="training">Training</string>
+    <string name="journal">Journal</string>
+    <string name="wellbeing">Wellbeing</string>
 </resources>
