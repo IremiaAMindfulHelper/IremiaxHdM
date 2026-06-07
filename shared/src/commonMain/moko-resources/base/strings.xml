@@ -12,4 +12,6 @@
     <string name="training">Training</string>
     <string name="journal">Journal</string>
     <string name="wellbeing">Wellbeing</string>
+    <!-- Journal screen -->
+    <string name="today">Today</string>
 </resources>
