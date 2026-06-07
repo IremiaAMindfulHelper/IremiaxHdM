@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import org.iremia.iremia.ui.journal.JournalScreen
 import org.iremia.iremia.ui.navigation.IremiaBottomBar
 import org.iremia.iremia.ui.navigation.MainTab
 import org.iremia.iremia.ui.theme.AppTheme
@@ -43,7 +44,7 @@ fun MainScreen() {
             when (selectedTab) {
                 MainTab.Start -> HomeScreen(modifier = contentModifier)
                 MainTab.Training -> PlaceholderScreen(MainTab.Training.labelRes, contentModifier)
-                MainTab.Journal -> PlaceholderScreen(MainTab.Journal.labelRes, contentModifier)
+                MainTab.Journal -> JournalScreen(modifier = contentModifier)
                 MainTab.Wellbeing -> PlaceholderScreen(MainTab.Wellbeing.labelRes, contentModifier)
             }
         }
