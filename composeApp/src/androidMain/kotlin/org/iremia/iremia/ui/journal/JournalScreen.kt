@@ -30,6 +30,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import org.iremia.iremia.ui.components.PrimaryButton
+import org.iremia.iremia.ui.garden.GardenOverviewScreen
 import org.iremia.iremia.ui.journal.episode.EpisodeCaptureFlow
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaSpacing
@@ -56,6 +57,7 @@ fun JournalScreen(modifier: Modifier = Modifier) {
     val today = remember { DateService().getToday() }
     var selectedDate by rememberSaveable(stateSaver = LocalDateSaver) { mutableStateOf(today) }
     var showCaptureFlow by rememberSaveable { mutableStateOf(false) }
+    var showGarden by rememberSaveable { mutableStateOf(false) }
 
     // NOTE: dummy entry markers until the real journal repository is wired up.
     val entryDates = remember(today) {
@@ -94,6 +96,7 @@ fun JournalScreen(modifier: Modifier = Modifier) {
                     treesPlanted = sampleTreesPlanted,
                     days = sampleGardenDays,
                     modifier = Modifier.fillMaxWidth(),
+                    onClick = { showGarden = true },
                 )
 
                 Spacer(Modifier.height(IremiaSpacing.SectionGap))
@@ -138,6 +141,19 @@ fun JournalScreen(modifier: Modifier = Modifier) {
             EpisodeCaptureFlow(
                 onClose = { showCaptureFlow = false },
                 onFinished = { showCaptureFlow = false },
+            )
+        }
+    }
+
+    if (showGarden) {
+        Dialog(
+            onDismissRequest = { showGarden = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            GardenOverviewScreen(
+                initialYear = today.year,
+                initialMonth = today.monthNumber,
+                onClose = { showGarden = false },
             )
         }
     }

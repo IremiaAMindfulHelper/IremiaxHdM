@@ -1,8 +1,7 @@
 package org.iremia.iremia.ui.journal
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material3.Icon
@@ -18,31 +16,30 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.iremia.iremia.ui.components.IremiaCard
+import org.iremia.iremia.ui.garden.GardenScene
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaText
 
 /**
- * "Baumübersicht" card: a 30-day garden of dots summarizing journaling activity.
+ * "Baumübersicht" card: a compact isometric preview of this month's garden.
  *
- * Each dot is one day; denser/greener dots mean more entries that day, light dots
- * are empty days. Purely presentational with sample data for now.
+ * Shows the trees-planted headline and an isometric mini-garden; tapping the card
+ * opens the full garden overview. Purely presentational with sample data for now.
  *
  * @param treesPlanted Number of trees planted in the period.
- * @param days Per-day entry counts (oldest → newest), one dot each.
+ * @param days Per-day entry counts, one tile each in the preview garden.
+ * @param onClick Opens the full-screen garden overview.
  */
 @Composable
 fun TreeOverviewCard(
     treesPlanted: Int,
     days: List<Int>,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
 ) {
-    IremiaCard(modifier = modifier) {
+    IremiaCard(modifier = modifier.clickable(onClick = onClick)) {
         Column(Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -68,17 +65,13 @@ fun TreeOverviewCard(
 
             Spacer(Modifier.height(14.dp))
 
-            // Two rows of dots (15 per row for 30 days).
-            days.chunked(15).forEach { week ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    week.forEach { count -> GardenDot(count, Modifier.weight(1f)) }
-                }
-            }
+            // Isometric garden preview (tap the card to open the full overview).
+            GardenScene(
+                days = days,
+                columns = 5,
+                rows = 5,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             Spacer(Modifier.height(14.dp))
 
@@ -94,39 +87,6 @@ fun TreeOverviewCard(
                     "Leere Tage sind völlig okay — dein Garten wächst in deinem Tempo.",
                     style = IremiaText.Caption,
                     color = IremiaColors.Gray500,
-                )
-            }
-        }
-    }
-}
-
-/** One garden day; color reflects entry [count], showing the number when 2+. */
-@Composable
-private fun GardenDot(count: Int, modifier: Modifier = Modifier) {
-    val color = when (count) {
-        0 -> IremiaColors.Garden100
-        1 -> IremiaColors.Garden500
-        2 -> IremiaColors.Garden700
-        else -> IremiaColors.Garden900
-    }
-    Box(
-        modifier = modifier
-            .height(14.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(14.dp)
-                .clip(CircleShape)
-                .background(color),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (count >= 2) {
-                Text(
-                    text = count.toString(),
-                    color = Color.White,
-                    fontSize = 8.sp,
-                    fontWeight = FontWeight.Bold,
                 )
             }
         }
