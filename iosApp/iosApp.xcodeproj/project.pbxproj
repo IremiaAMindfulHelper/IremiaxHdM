@@ -10,6 +10,7 @@
 		299B2FA52F8939510041BE9C /* Shared.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 299B2FA32F8939470041BE9C /* Shared.xcframework */; };
 		299B2FA62F8939510041BE9C /* Shared.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 299B2FA32F8939470041BE9C /* Shared.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		29CE79E52F7ED63700586B9C /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 29CE79E42F7ED62700586B9C /* libsqlite3.tbd */; };
+		4E39BE912FD899EB0058BC9A /* Shared.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 299B2FA32F8939470041BE9C /* Shared.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -66,6 +67,7 @@
 			files = (
 				299B2FA52F8939510041BE9C /* Shared.xcframework in Frameworks */,
 				29CE79E52F7ED63700586B9C /* libsqlite3.tbd in Frameworks */,
+				4E39BE912FD899EB0058BC9A /* Shared.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
