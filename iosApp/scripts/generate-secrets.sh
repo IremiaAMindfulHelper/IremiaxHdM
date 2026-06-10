@@ -1,5 +1,5 @@
 #!/bin/bash
-# Reads COHERE_API_KEY from .env at the repo root and writes it into
+# Reads ANTHROPIC_API_KEY from .env at the repo root and writes it into
 # Secrets.plist directly inside the built app bundle. Never commits the key.
 set -e
 
@@ -11,7 +11,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 API_KEY=""
 if [ -f "${ENV_FILE}" ]; then
-    API_KEY=$(grep -E "^COHERE_API_KEY=" "${ENV_FILE}" | head -n 1 | cut -d '=' -f 2- | tr -d '"' | tr -d "'" | xargs || true)
+    API_KEY=$(grep -E "^ANTHROPIC_API_KEY=" "${ENV_FILE}" | head -n 1 | cut -d '=' -f 2- | tr -d '"' | tr -d "'" | xargs || true)
 fi
 
 cat > "${OUTPUT_FILE}" <<EOF
@@ -19,12 +19,12 @@ cat > "${OUTPUT_FILE}" <<EOF
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>COHERE_API_KEY</key>
+    <key>ANTHROPIC_API_KEY</key>
     <string>${API_KEY}</string>
 </dict>
 </plist>
 EOF
 
 if [ -z "${API_KEY}" ]; then
-    echo "warning: COHERE_API_KEY missing — voice feature will use fallback strings only. Add it to ${ENV_FILE}"
+    echo "warning: ANTHROPIC_API_KEY missing — voice feature will use fallback strings only. Add it to ${ENV_FILE}"
 fi

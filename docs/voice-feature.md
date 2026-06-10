@@ -2,7 +2,7 @@
 
 ## Projektkontext
 
-Iremia ist eine Anti-Panikattacken-App für iOS und watchOS (Kotlin Multiplatform mit iOS-Komponente). Dieses Feature fügt eine Emergency Voice Funktion hinzu: Der Nutzer kann auf der Apple Watch sprechen, die Sprache wird transkribiert, und ein KI-Modell antwortet mit einer kurzen, beruhigenden Antwort basierend auf einem klinischen RAG-Datensatz.
+Iremia ist eine Anti-Panikattacken-App für iOS und watchOS (Kotlin Multiplatform mit iOS-Komponente). Dieses Feature fügt eine Emergency Voice Funktion hinzu: Der Nutzer kann auf der Apple Watch sprechen, die Sprache wird transkribiert, und Claude antwortet mit einer kurzen, beruhigenden Antwort basierend auf einem klinischen Wissensdatensatz. Zusätzlich laufen die Mood-Check-Buttons der Watch (vordefinierte Zustände) über denselben Claude-Dienst, der die **gesamte Eingabe-Historie** der Session mitführt.
 
 ---
 
@@ -10,12 +10,14 @@ Iremia ist eine Anti-Panikattacken-App für iOS und watchOS (Kotlin Multiplatfor
 
 ```
 Apple Watch
-  └─ Mikrofon (Aufnahme)
-       └─ WatchConnectivity (WCSession)
-            └─ iPhone
+  ├─ Mikrofon (Aufnahme) ───────────────┐
+  └─ Mood-Check-Buttons (Good/Okay/Bad  │
+     + Kategorie + Detail) ─────────────┤
+       └─ WatchConnectivity (WCSession) │
+            └─ iPhone                   │
                  ├─ SFSpeechRecognizer (Transkription, on-device)
-                 ├─ iremia_rag.json (RAG-Datensatz, im App Bundle)
-                 └─ Cohere Command R API (command-r-08-2024)
+                 ├─ iremia_rag.json (Wissensbasis, im App Bundle → System-Prompt)
+                 └─ Claude API (claude-opus-4-8)
                       └─ 1-2 Sätze Antwort → Watch (Text + TTS)
 ```
 
@@ -27,82 +29,88 @@ Apple Watch
 |---|---|---|
 | Spracheingabe | SFSpeechRecognizer (on-device) | Privacy, kein API-Call |
 | Transkription läuft auf | iPhone (nicht Watch) | watchOS-Limitierung bei SFSpeechRecognizer |
-| LLM | Cohere Command R (`command-r-08-2024`) | Nativer `documents[]`-RAG-Parameter, kostenloses Tier |
-| RAG-Matching | Cohere übernimmt intern | Kein eigenes Embedding/Vektormatching nötig |
-| RAG-Datensatz | `iremia_rag.json` im App Bundle | 40 klinisch geprüfte Einträge zu Angststörungen |
-| TTS | AVSpeechSynthesizer | On-device, kein API-Call, Deutsch |
+| LLM | Claude (`claude-opus-4-8`) | Stärkstes Modell; Wissensbasis als gecachter System-Prompt |
+| Wissensbasis | `iremia_rag.json` im App Bundle | 40 klinisch geprüfte Einträge, als System-Prompt-Block mit `cache_control` |
+| Historie | Vollständige Session-Historie im `ClaudeAssistantService` (Actor) | Claude kann Zusammenhänge zwischen früheren Angaben herstellen |
+| TTS | AVSpeechSynthesizer | On-device, kein API-Call |
 | API Key | iOS Keychain | Niemals hardcoden oder in UserDefaults speichern |
-| Fallback | Hardcoded Strings | Funktioniert ohne Internet und bei API-Fehler |
+| Fallback | Hardcoded Strings (Watch + Phone) | Funktioniert ohne Internet und bei API-Fehler |
 
 ---
 
 ## Dateistruktur
 
 ```
-Iremia/
+iosApp/
 ├── Features/
 │   └── EmergencyVoice/
 │       ├── EmergencyVoiceCoordinator.swift   # Hauptkoordinator (Phone)
-│       ├── CohereRAGService.swift             # Cohere API + RAG
-│       ├── SpeechRecognitionService.swift     # SFSpeechRecognizer
-│       └── TTSService.swift                   # AVSpeechSynthesizer
+│       ├── ClaudeAssistantService.swift      # Claude API + Wissensbasis + Historie
+│       ├── EmergencyResponder.swift          # Protocol, Fallbacks, Crisis-Keywords
+│       ├── SpeechRecognitionService.swift    # SFSpeechRecognizer
+│       └── TTSService.swift                  # AVSpeechSynthesizer
 ├── Watch/
-│   └── EmergencyVoice/
-│       ├── EmergencyVoiceView.swift           # watchOS UI
-│       └── EmergencyWatchViewModel.swift      # WCSession Watch-Seite
+│   └── PhoneConnectivityManager.swift        # WCSession Phone-Seite (Routing)
 ├── Shared/
-│   ├── WatchSessionHandler.swift              # WCSession Phone-Seite
-│   └── KeychainHelper.swift                   # API Key Keychain-Zugriff
+│   └── KeychainHelper.swift                  # API Key Keychain-Zugriff
 └── Resources/
-    └── iremia_rag.json                        # RAG-Datensatz (40 Einträge)
+    └── iremia_rag.json                       # Wissensbasis (40 Einträge)
+
+watchApp/
+├── EmergencyVoice/
+│   ├── EmergencyVoiceView.swift              # watchOS Voice-UI
+│   └── EmergencyWatchViewModel.swift         # WCSession Watch-Seite
+├── MoodCheckView.swift                       # Mood-Buttons → Claude-Antwort
+├── MoodMicView.swift                         # Voice-Check-in im Mood-Flow
+└── WatchConnectivityManager.swift            # requestMoodResponse(...)
 ```
 
 ---
 
-## Cohere API
+## Claude API
 
 ### Endpunkt
 ```
-POST https://api.cohere.com/v1/chat
+POST https://api.anthropic.com/v1/messages
 ```
 
 ### Headers
 ```
-Authorization: Bearer {COHERE_API_KEY}
+x-api-key: {ANTHROPIC_API_KEY}
+anthropic-version: 2023-06-01
 Content-Type: application/json
 ```
 
-### Request Body
+### Request Body (Schema)
 ```json
 {
-  "model": "command-r-08-2024",
-  "message": "{transkribierter Text des Nutzers}",
-  "documents": [
-    { "title": "Derealisation bei Panikattacken", "text": "..." },
-    { "title": "Box Breathing", "text": "..." }
+  "model": "claude-opus-4-8",
+  "max_tokens": 300,
+  "output_config": { "effort": "low" },
+  "system": [
+    { "type": "text", "text": "{Persona + Regeln (Iremia)}" },
+    { "type": "text", "text": "{Wissensbasis aus iremia_rag.json}",
+      "cache_control": { "type": "ephemeral" } }
   ],
-  "preamble": "Du bist Iremia, ein ruhiger Begleiter bei Panikattacken. Antworte auf Deutsch. Maximal 2 kurze Sätze. Nutze ausschließlich die bereitgestellten Dokumente. Keine Diagnosen.",
-  "max_tokens": 120,
-  "temperature": 0.2
-}
-```
-
-### Response
-```json
-{
-  "text": "Das unwirkliche Gefühl ist harmlos – dein Gehirn schützt dich gerade. Atme jetzt langsam: 4 Sekunden ein, 6 Sekunden aus."
+  "messages": [
+    { "role": "user", "content": "{frühere Eingabe 1}" },
+    { "role": "assistant", "content": "{frühere Antwort 1}" },
+    { "role": "user", "content": "{aktuelle Eingabe (Transkript oder Mood-Buttons)}" }
+  ]
 }
 ```
 
 ### Wichtig
-- **Alle** 40 RAG-Einträge aus `iremia_rag.json` werden bei jedem Request als `documents[]` mitgeschickt. Kein eigenes Matching implementieren – Cohere selektiert intern.
-- `max_tokens: 120` — Antworten müssen kurz bleiben (watchOS-Display, Panikmoment)
-- `temperature: 0.2` — Niedrig für konsistente, ruhige Antworten
-- Timeout: 8 Sekunden. Bei Timeout immer Fallback-String zurückgeben, nie einen leeren Zustand anzeigen.
+- **Die gesamte Historie der Session** (Voice-Transkripte, Mood-Button-Auswahlen, Antworten) wird bei jedem Request als `messages[]` mitgeschickt, damit Claude Bezüge zu früheren Angaben herstellen kann.
+- Die Wissensbasis steht komplett im System-Prompt; `cache_control: ephemeral` reduziert Kosten/Latenz bei Folge-Requests (Prompt Caching).
+- `output_config.effort: "low"` + `max_tokens: 300` — kurze Antworten, niedrige Latenz (Panikmoment, watchOS-Display).
+- `temperature`/`top_p` werden **nicht** gesendet (von `claude-opus-4-8` nicht mehr akzeptiert → HTTP 400).
+- Timeout: 12 Sekunden. Bei Timeout immer Fallback-String zurückgeben, nie einen leeren Zustand anzeigen.
+- Mood-Button-Eingaben werden als strukturierte User-Message formatiert, z. B.: `"Mood check-in via the preset buttons on my watch. Mood: Bad. Area: Mind. Specifically: Anxious."`
 
 ---
 
-## RAG-Datensatz
+## Wissensbasis
 
 Die Datei `iremia_rag.json` liegt im App Bundle und enthält 40 Einträge in folgendem Format:
 
@@ -117,13 +125,7 @@ Die Datei `iremia_rag.json` liegt im App Bundle und enthält 40 Einträge in fol
 ]
 ```
 
-Beim Laden alle Einträge in ein `[CohereDocument]`-Array mappen:
-```swift
-struct CohereDocument: Encodable {
-    let title: String
-    let text: String
-}
-```
+Beim Start werden alle Einträge in einen System-Prompt-Block gerendert (`## Titel (Kategorie)\nText`). Der System-Prompt verpflichtet Claude, fachliche Aussagen ausschließlich auf dieses Wissen zu stützen.
 
 ---
 
@@ -136,21 +138,33 @@ Kommunikation zwischen Watch und Phone über `WCSession.sendMessage(_:replyHandl
 // Aufnahme starten
 session.sendMessage(["action": "startRecording"], replyHandler: nil)
 
-// Aufnahme stoppen + Antwort anfordern
-session.sendMessage(["action": "stopRecording"], replyHandler: { reply in
+// Aufnahme stoppen + Antwort anfordern (speak=false unterdrückt iPhone-TTS)
+session.sendMessage(["action": "stopRecording", "speak": false], replyHandler: { reply in
     let response = reply["response"] as? String
 })
+
+// Aufnahme verwerfen (Cancel im Mood-Mic-Screen)
+session.sendMessage(["action": "cancelRecording"], replyHandler: nil)
+
+// Mood-Check über Buttons
+session.sendMessage(
+    ["action": "moodCheck", "mood": "Bad", "category": "Mind", "detail": "Anxious"],
+    replyHandler: { reply in
+        let response = reply["response"] as? String  // nil → lokaler Fallback
+    }
+)
 ```
 
 ### Phone → Watch (replyHandler)
 ```swift
-replyHandler(["response": "Antworttext von Cohere"])
+replyHandler(["response": "Antworttext von Claude"])
+// Mood-Check bei API-Fehler: replyHandler(["error": true]) → Watch nutzt lokale Texte
 ```
 
 ### Fehlerfall
 ```swift
-// Bei jedem Fehler (Netzwerk, API, Transkription):
-replyHandler(["response": "Atme tief durch. Du bist in Sicherheit."])
+// Voice: Bei jedem Fehler (Netzwerk, API, Transkription):
+replyHandler(["response": EmergencyFallback.random()])
 // Niemals replyHandler nicht aufrufen – das lässt die Watch hängen
 ```
 
@@ -159,18 +173,11 @@ replyHandler(["response": "Atme tief durch. Du bist in Sicherheit."])
 ## Fallback-Hierarchie
 
 ```
-1. Cohere API (Normalfall)
+1. Claude API (Normalfall)
 2. Hardcoded Fallback-String (bei Netzwerkfehler / Timeout / API-Fehler)
+   – Voice: EmergencyFallback (Phone)
+   – Mood-Buttons: MoodResponses (Watch, pro Mood/Kategorie/Detail)
 3. Niemals: leerer State, nil, oder Crash
-```
-
-Fallback-Strings (immer auf Deutsch):
-```swift
-let fallbacks = [
-    "Du bist in Sicherheit. Atme jetzt langsam: 4 Sekunden ein, 6 Sekunden aus.",
-    "Diese Empfindung ist unangenehm aber nicht gefährlich. Sie wird vorbeigehen.",
-    "Dein Körper schützt dich. Konzentriere dich auf deinen nächsten Atemzug."
-]
 ```
 
 ---
@@ -185,7 +192,7 @@ utterance.pitchMultiplier = 0.95
 utterance.volume = 1.0
 ```
 
-TTS läuft auf dem iPhone. Der Ton wird bei gepairter Watch über Bluetooth auf den Watch-Lautsprecher geroutet – das ist Standard-iOS-Verhalten und muss nicht extra implementiert werden.
+TTS läuft auf dem iPhone (nur Emergency-Voice-Flow; Mood-Flows senden `speak: false`). Der Ton wird bei gepairter Watch über Bluetooth auf den Watch-Lautsprecher geroutet – das ist Standard-iOS-Verhalten und muss nicht extra implementiert werden.
 
 ---
 
@@ -196,7 +203,6 @@ Das UI der Watch muss in Paniksituationen funktionieren:
 - **Minimal**: Ein großer Tap-Bereich (Circle Button), kein Text-Input
 - **Klarer State**: Idle → Aufnehmen (pulsierend) → Verarbeiten (Spinner) → Antwort
 - **Lesbar**: Systemschrift, hoher Kontrast, keine kleinen Elemente
-- **Scrollbar**: Die Antwort in einem `ScrollView`, da watchOS-Screens klein sind
 - **Keine Fehler-Alerts**: Bei Fehlern still den Fallback-String zeigen
 
 States:
@@ -213,10 +219,10 @@ enum EmergencyState {
 
 ## Sicherheit und Privacy
 
-- **Cohere API Key**: Ausschließlich in der iOS Keychain speichern. Nicht in `UserDefaults`, `Info.plist`, oder im Code.
-- **Keychain Service**: `"io.iremia.cohere-api-key"`
-- **Sprachdaten**: Verlassen das Gerät ausschließlich als transkribierter Text (String) zum Cohere API-Call. Keine Audioaufnahmen werden übertragen.
-- **Notruf-Erkennung**: Wenn der transkribierte Text Keywords wie `"sterben"`, `"suizid"`, `"umbringen"`, `"verletzen"` enthält, vor dem API-Call einen prominenten Hinweis auf die Telefonseelsorge anzeigen: **0800 111 0 111** (kostenlos, 24/7).
+- **Anthropic API Key**: Ausschließlich in der iOS Keychain speichern. Nicht in `UserDefaults`, `Info.plist`, oder im Code. Build-seitig aus `.env` (`ANTHROPIC_API_KEY`) via `scripts/generate-secrets.sh` → `Secrets.plist` → Keychain-Seed beim ersten Start.
+- **Keychain Service**: `"io.iremia.anthropic-api-key"`
+- **Sprachdaten**: Verlassen das Gerät ausschließlich als transkribierter Text (String) zum Claude API-Call. Keine Audioaufnahmen werden übertragen.
+- **Notruf-Erkennung**: Wenn der transkribierte Text Keywords wie `"sterben"`, `"suizid"`, `"umbringen"`, `"verletzen"` enthält, wird **vor** dem API-Call der Hinweis auf die Telefonseelsorge zurückgegeben: **0800 111 0 111** (kostenlos, 24/7). Der Austausch wird trotzdem in die Historie aufgenommen.
 
 ---
 
@@ -237,27 +243,21 @@ Watch App benötigt keine zusätzlichen Berechtigungen – Mikrofon und Spracher
 ## Bekannte Einschränkungen
 
 - `SFSpeechRecognizer` benötigt eine aktive Internetverbindung für Sprachen außer Englisch auf Geräten ohne Neural Engine. Auf neueren iPhones (A12+) ist Deutsch auch offline verfügbar.
-- `WCSession.sendMessage` mit `replyHandler` hat ein internes Timeout von ca. 60 Sekunden. Der eigene Timeout (8s für Cohere) muss davor greifen.
+- `WCSession.sendMessage` mit `replyHandler` hat ein internes Timeout von ca. 60 Sekunden. Der eigene Timeout (12s für Claude) muss davor greifen.
+- Die Konversations-Historie lebt im Speicher des `ClaudeAssistantService` und wird beim App-Neustart geleert.
 - Foundation Models Framework (Apple on-device LLM) ist eine geplante spätere Migration wenn iOS 26 released ist. Die Architektur über das `EmergencyResponder`-Protocol ist darauf vorbereitet.
 
 ---
 
 ## Migrations-Vorbereitung für Foundation Models (iOS 26+)
 
-Das `CohereRAGService` soll das `EmergencyResponder`-Protocol implementieren, damit später ein `LocalEmergencyResponder` (Foundation Models) ohne Architekturänderung eingesteckt werden kann:
+Der `ClaudeAssistantService` implementiert das `EmergencyResponder`-Protocol, damit später ein `LocalEmergencyResponder` (Foundation Models) ohne Architekturänderung eingesteckt werden kann:
 
 ```swift
 protocol EmergencyResponder {
     func respond(to input: String) async -> String
 }
 
-class CohereRAGService: EmergencyResponder { ... }    // Jetzt
-class LocalEmergencyResponder: EmergencyResponder { } // iOS 26+
-```
-
-Selektion beim App-Start:
-```swift
-let responder: EmergencyResponder = LocalEmergencyResponder.isAvailable
-    ? LocalEmergencyResponder()
-    : CohereRAGService()
+actor ClaudeAssistantService: EmergencyResponder { ... }  // Jetzt
+class LocalEmergencyResponder: EmergencyResponder { }     // iOS 26+
 ```

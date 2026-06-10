@@ -5,7 +5,7 @@ final class EmergencyVoiceCoordinator {
 
     private let speech = SpeechRecognitionService()
     private let tts = TTSService()
-    private let responder: EmergencyResponder = CohereRAGService()
+    private let assistant = ClaudeAssistantService()
     private var didRequestAuth = false
 
     private init() {
@@ -32,16 +32,24 @@ final class EmergencyVoiceCoordinator {
         }
     }
 
-    /// Stops recording, transcribes, asks Cohere (or falls back), speaks the
-    /// answer locally, and returns the same text to the Watch.
-    func stopRecordingAndRespond() async -> String {
+    /// Discards an in-flight recording without asking Claude (e.g. when the
+    /// user cancels the mood mic screen on the Watch).
+    func cancelRecording() {
+        _ = speech.stop()
+        print("[Voice] recording cancelled")
+    }
+
+    /// Stops recording, transcribes, asks Claude (or falls back), optionally
+    /// speaks the answer locally, and returns the same text to the Watch.
+    func stopRecordingAndRespond(speak: Bool = true) async -> String {
         let transcript = speech.stop()
         print("[Voice] transcript=\"\(transcript)\"")
 
         if CrisisKeywords.contains(transcript) {
             let msg = CrisisKeywords.helplineMessage
             print("[Voice] crisis keyword detected → helpline message")
-            tts.speak(msg)
+            await assistant.noteExchange(user: transcript, assistant: msg)
+            if speak { tts.speak(msg) }
             return msg
         }
 
@@ -51,11 +59,19 @@ final class EmergencyVoiceCoordinator {
             print("[Voice] empty transcript → fallback")
             answer = EmergencyFallback.random()
         } else {
-            print("[Voice] calling Cohere with \(text.count) chars")
-            answer = await responder.respond(to: text)
-            print("[Voice] Cohere/responder returned: \"\(answer.prefix(80))...\"")
+            print("[Voice] calling Claude with \(text.count) chars")
+            answer = await assistant.respond(to: text)
+            print("[Voice] Claude/responder returned: \"\(answer.prefix(80))...\"")
         }
-        tts.speak(answer)
+        if speak { tts.speak(answer) }
         return answer
+    }
+
+    /// Predefined-state input from the Watch mood-check buttons. Shares the
+    /// same conversation history as the voice flow. Returns nil when Claude
+    /// is unavailable so the Watch can fall back to its local messages.
+    func respondToMoodCheck(mood: String, category: String?, detail: String?) async -> String? {
+        print("[Voice] mood check: mood=\(mood) category=\(category ?? "-") detail=\(detail ?? "-")")
+        return await assistant.respondToMoodCheck(mood: mood, category: category, detail: detail)
     }
 }

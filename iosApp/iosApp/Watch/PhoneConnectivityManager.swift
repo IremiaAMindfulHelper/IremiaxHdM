@@ -53,8 +53,13 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         let action = message["action"] as? String ?? "(none)"
         print("[Voice] iPhone received message (no reply) action=\(action)")
-        if action == "startRecording" {
+        switch action {
+        case "startRecording":
             EmergencyVoiceCoordinator.shared.startRecording()
+        case "cancelRecording":
+            EmergencyVoiceCoordinator.shared.cancelRecording()
+        default:
+            break
         }
     }
 
@@ -67,13 +72,28 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         }
         switch action {
         case "stopRecording":
+            let speak = (message["speak"] as? Bool) ?? true
             Task {
-                let response = await EmergencyVoiceCoordinator.shared.stopRecordingAndRespond()
+                let response = await EmergencyVoiceCoordinator.shared.stopRecordingAndRespond(speak: speak)
                 replyHandler(["response": response])
             }
         case "startRecording":
             EmergencyVoiceCoordinator.shared.startRecording()
             replyHandler(["ok": true])
+        case "moodCheck":
+            let mood = message["mood"] as? String ?? ""
+            let category = message["category"] as? String
+            let detail = message["detail"] as? String
+            Task {
+                if let response = await EmergencyVoiceCoordinator.shared.respondToMoodCheck(
+                    mood: mood, category: category, detail: detail
+                ) {
+                    replyHandler(["response": response])
+                } else {
+                    // No payload — the Watch falls back to its local messages.
+                    replyHandler(["error": true])
+                }
+            }
         default:
             replyHandler(["response": EmergencyFallback.random()])
         }

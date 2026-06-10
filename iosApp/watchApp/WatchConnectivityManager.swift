@@ -24,6 +24,30 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         WCSession.default.activate()
     }
 
+    // MARK: - Claude mood check
+
+    /// Asks the iPhone to generate a Claude response for a mood check-in made
+    /// with the preset buttons. Returns nil when the phone is unreachable or
+    /// the API call failed, so callers can fall back to local messages.
+    func requestMoodResponse(mood: String, category: String?, detail: String?) async -> String? {
+        let session = WCSession.default
+        guard session.activationState == .activated, session.isReachable else { return nil }
+        var message: [String: Any] = ["action": "moodCheck", "mood": mood]
+        if let category { message["category"] = category }
+        if let detail { message["detail"] = detail }
+        return await withCheckedContinuation { continuation in
+            session.sendMessage(
+                message,
+                replyHandler: { reply in
+                    continuation.resume(returning: reply["response"] as? String)
+                },
+                errorHandler: { _ in
+                    continuation.resume(returning: nil)
+                }
+            )
+        }
+    }
+
     // MARK: - WCSessionDelegate
 
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {

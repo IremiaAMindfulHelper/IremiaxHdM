@@ -407,7 +407,7 @@ struct MoodDetailView: View {
     }
 }
 
-// MARK: - Step 4: Personalized Response
+// MARK: - Step 4: Personalized Response (Claude, with local fallback)
 
 struct MoodResponseView: View {
     let mood: MoodLevel
@@ -416,10 +416,7 @@ struct MoodResponseView: View {
     var onDone: () -> Void
 
     @State private var appeared = false
-
-    private var message: String {
-        MoodResponses.message(mood: mood, category: category, detail: detail)
-    }
+    @State private var message: String?
 
     var body: some View {
         ZStack {
@@ -428,34 +425,53 @@ struct MoodResponseView: View {
             DecorativeCirclesView(mood: mood)
                 .ignoresSafeArea()
 
-            VStack(spacing: 16) {
-                Spacer(minLength: 0)
+            if let message {
+                VStack(spacing: 16) {
+                    Spacer(minLength: 0)
 
-                Text(message)
-                    .font(.system(size: 13, weight: .medium))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Color.iremiaResponseText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 16)
+                    Text(message)
+                        .font(.system(size: 13, weight: .medium))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Color.iremiaResponseText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16)
 
-                Button { onDone() } label: {
-                    Text("Continue")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.iremiaPetrol)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 7)
-                        .background(Capsule().fill(Color.iremiaLabel))
+                    Button { onDone() } label: {
+                        Text("Continue")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.iremiaPetrol)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(Color.iremiaLabel))
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer(minLength: 0)
                 }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ProgressView()
+                    .tint(Color.iremiaLabel)
+                    .scaleEffect(0.9)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .opacity(appeared ? 1 : 0)
         .animation(.easeOut(duration: 0.5), value: appeared)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { appeared = true }
+        .task {
+            let response = await WatchConnectivityManager.shared.requestMoodResponse(
+                mood: mood.label,
+                category: category.rawValue,
+                detail: detail.rawValue
+            ) ?? MoodResponses.message(mood: mood, category: category, detail: detail)
+            JourneyStore.shared.attachMoodContext(
+                category: category.rawValue,
+                detail: detail.rawValue,
+                response: response
+            )
+            withAnimation(.easeOut(duration: 0.3)) { message = response }
+        }
     }
 }
 

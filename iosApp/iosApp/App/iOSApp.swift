@@ -4,7 +4,7 @@ import Shared
 @main
 struct iOSApp: App {
     init() {
-            KeychainHelper.seedCohereKeyFromBundleIfNeeded()
+            KeychainHelper.seedAnthropicKeyFromBundleIfNeeded()
             _ = PhoneConnectivityManager.shared
 
             // Optional: hart auf Deutsch schalten, falls du die Funktion gebaut hast

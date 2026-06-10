@@ -1,6 +1,8 @@
 import SwiftUI
 import AVFoundation
+import WatchConnectivity
 
+// Local fallback when the iPhone/Claude is unreachable.
 let moodMicResponse =
     "It sounds like your body is working hard right now. That's okay — it's trying to protect you. Place one hand on your chest, breathe in slowly for 4 counts, and out for 4. You're doing well."
 
@@ -67,6 +69,7 @@ struct MoodMicView: View {
 
     @StateObject private var monitor = MicLevelMonitor()
     @State private var phase: Phase = .listening
+    @State private var responseText: String = moodMicResponse
 
     enum Phase { case listening, processing, responded }
 
@@ -97,7 +100,7 @@ struct MoodMicView: View {
                     DecorativeCirclesView(mood: .bad).ignoresSafeArea()
                     VStack(spacing: 16) {
                         Spacer(minLength: 0)
-                        Text(moodMicResponse)
+                        Text(responseText)
                             .font(.system(size: 13, weight: .medium))
                             .multilineTextAlignment(.center)
                             .foregroundStyle(Color.iremiaResponseText)
@@ -105,9 +108,9 @@ struct MoodMicView: View {
                             .padding(.horizontal, 16)
                         Button {
                             JourneyStore.shared.attachMoodContext(
-                                category: "Body",
-                                detail: "Heart",
-                                response: moodMicResponse
+                                category: "Voice",
+                                detail: "Check-in",
+                                response: responseText
                             )
                             onComplete()
                         } label: {
@@ -130,6 +133,12 @@ struct MoodMicView: View {
         .onAppear {
             AVAudioSession.sharedInstance().requestRecordPermission { granted in
                 Task { @MainActor in if granted { monitor.start() } }
+            }
+            // The actual transcription runs on the iPhone (same as the
+            // emergency voice flow); the local monitor only drives the bars.
+            let session = WCSession.default
+            if session.activationState == .activated, session.isReachable {
+                session.sendMessage(["action": "startRecording"], replyHandler: nil, errorHandler: nil)
             }
         }
         .onDisappear { monitor.stop() }
@@ -182,14 +191,37 @@ struct MoodMicView: View {
     private func stopAndProcess() {
         monitor.stop()
         withAnimation(.easeInOut(duration: 0.3)) { phase = .processing }
-        Task {
-            try? await Task.sleep(for: .milliseconds(800))
+
+        let session = WCSession.default
+        guard session.activationState == .activated, session.isReachable else {
+            showResponse(moodMicResponse)
+            return
+        }
+        // speak=false: the answer is read on the Watch, no iPhone TTS needed.
+        session.sendMessage(
+            ["action": "stopRecording", "speak": false],
+            replyHandler: { reply in
+                showResponse((reply["response"] as? String) ?? moodMicResponse)
+            },
+            errorHandler: { _ in
+                showResponse(moodMicResponse)
+            }
+        )
+    }
+
+    private func showResponse(_ text: String) {
+        Task { @MainActor in
+            responseText = text
             withAnimation(.easeInOut(duration: 0.4)) { phase = .responded }
         }
     }
 
     private func stopAndCancel() {
         monitor.stop()
+        let session = WCSession.default
+        if session.activationState == .activated, session.isReachable {
+            session.sendMessage(["action": "cancelRecording"], replyHandler: nil, errorHandler: nil)
+        }
         onCancel()
     }
 }

@@ -42,12 +42,8 @@ struct ContentView: View {
 
             case .detail(let mood, let category):
                 MoodDetailView(mood: mood, category: category) { detail in
-                    let response = MoodResponses.message(mood: mood, category: category, detail: detail)
-                    JourneyStore.shared.attachMoodContext(
-                        category: category.rawValue,
-                        detail: detail.rawValue,
-                        response: response
-                    )
+                    // Journey context is attached by MoodResponseView once the
+                    // Claude response (or its local fallback) is known.
                     withAnimation(.easeInOut(duration: 0.3)) {
                         moodFlowStep = .response(mood, category, detail)
                     }
@@ -83,40 +79,57 @@ private enum MoodFlowStep {
 private struct GoodResponseView: View {
     var onDone: () -> Void
     @State private var appeared = false
+    @State private var message: String?
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             DecorativeCirclesView(mood: .good).ignoresSafeArea()
 
-            VStack(spacing: 16) {
-                Spacer(minLength: 0)
+            if let message {
+                VStack(spacing: 16) {
+                    Spacer(minLength: 0)
 
-                Text("That's great!\nKeep it up")
-                    .font(.system(size: 14, weight: .semibold))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Color.iremiaResponseText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 16)
+                    Text(message)
+                        .font(.system(size: 14, weight: .semibold))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Color.iremiaResponseText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16)
 
-                Button { onDone() } label: {
-                    Text("Continue")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.iremiaPetrol)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 7)
-                        .background(Capsule().fill(Color.iremiaLabel))
+                    Button { onDone() } label: {
+                        Text("Continue")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.iremiaPetrol)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(Color.iremiaLabel))
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer(minLength: 0)
                 }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ProgressView()
+                    .tint(Color.iremiaLabel)
+                    .scaleEffect(0.9)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .opacity(appeared ? 1 : 0)
         .animation(.easeOut(duration: 0.5), value: appeared)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { appeared = true }
+        .task {
+            // Record the good mood in the shared Claude history too, so later
+            // check-ins can reference it. Falls back to the static message.
+            let response = await WatchConnectivityManager.shared.requestMoodResponse(
+                mood: "Good", category: nil, detail: nil
+            )
+            withAnimation(.easeOut(duration: 0.3)) {
+                message = response ?? "That's great!\nKeep it up"
+            }
+        }
     }
 }
 

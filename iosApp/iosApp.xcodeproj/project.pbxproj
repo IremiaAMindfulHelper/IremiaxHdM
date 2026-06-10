@@ -374,9 +374,9 @@
 				DEVELOPMENT_TEAM = NCVMNQAM97;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Iremia;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to visualise your voice during mood check-ins.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_WKApplication = YES;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to visualise your voice during mood check-ins.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = org.iremia.app;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -401,9 +401,9 @@
 				DEVELOPMENT_TEAM = NCVMNQAM97;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Iremia;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to visualise your voice during mood check-ins.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_WKApplication = YES;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to visualise your voice during mood check-ins.";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = org.iremia.app;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
