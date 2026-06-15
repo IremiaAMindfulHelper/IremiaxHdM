@@ -1,6 +1,5 @@
 import SwiftUI
 import AVFoundation
-import WatchConnectivity
 
 // Local fallback when the iPhone/Claude is unreachable.
 let moodMicResponse =
@@ -15,6 +14,7 @@ final class MicLevelMonitor: ObservableObject {
     private var recorder: AVAudioRecorder?
     private var timer: Timer?
     private var smoothed: Float = 0
+    private var recordingURL: URL?
 
     func start() {
         let session = AVAudioSession.sharedInstance()
@@ -23,18 +23,24 @@ final class MicLevelMonitor: ObservableObject {
             try session.setActive(true)
         } catch { return }
 
+        // AAC 16 kHz mono: small enough to send over WatchConnectivity in a
+        // single message, and plenty of fidelity for speech recognition. This
+        // one recording drives the waveform AND is shipped to the iPhone for
+        // transcription, so there is exactly one microphone in the chain.
         let url = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("iremia_mic_level.caf")
+            .appendingPathComponent("iremia_voice_clip.m4a")
+        try? FileManager.default.removeItem(at: url)
         let settings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatAppleLossless),
-            AVSampleRateKey: 44_100.0,
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: 16_000.0,
             AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.min.rawValue
+            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
         ]
         guard let rec = try? AVAudioRecorder(url: url, settings: settings) else { return }
         rec.isMeteringEnabled = true
         rec.record()
         recorder = rec
+        recordingURL = url
 
         timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             guard let self else { return }
@@ -58,6 +64,13 @@ final class MicLevelMonitor: ObservableObject {
         recorder?.stop(); recorder = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         level = 0
+    }
+
+    /// The recorded clip. Call after `stop()` so the file is finalised.
+    /// Returns nil if nothing was recorded.
+    func recordedClip() -> Data? {
+        guard let recordingURL else { return nil }
+        return try? Data(contentsOf: recordingURL)
     }
 }
 
@@ -134,12 +147,6 @@ struct MoodMicView: View {
             AVAudioSession.sharedInstance().requestRecordPermission { granted in
                 Task { @MainActor in if granted { monitor.start() } }
             }
-            // The actual transcription runs on the iPhone (same as the
-            // emergency voice flow); the local monitor only drives the bars.
-            let session = WCSession.default
-            if session.activationState == .activated, session.isReachable {
-                session.sendMessage(["action": "startRecording"], replyHandler: nil, errorHandler: nil)
-            }
         }
         .onDisappear { monitor.stop() }
         .task {
@@ -192,21 +199,17 @@ struct MoodMicView: View {
         monitor.stop()
         withAnimation(.easeInOut(duration: 0.3)) { phase = .processing }
 
-        let session = WCSession.default
-        guard session.activationState == .activated, session.isReachable else {
+        // Ship the clip recorded on the Watch to the iPhone for transcription
+        // (speak=false: the answer is shown on the Watch, no iPhone TTS).
+        guard let clip = monitor.recordedClip() else {
             showResponse(moodMicResponse)
             return
         }
-        // speak=false: the answer is read on the Watch, no iPhone TTS needed.
-        session.sendMessage(
-            ["action": "stopRecording", "speak": false],
-            replyHandler: { reply in
-                showResponse((reply["response"] as? String) ?? moodMicResponse)
-            },
-            errorHandler: { _ in
-                showResponse(moodMicResponse)
-            }
-        )
+        Task {
+            let result = await WatchConnectivityManager.shared.requestVoiceResponse(audio: clip, speak: false)
+            let text = result?.response
+            showResponse((text?.isEmpty == false ? text! : moodMicResponse))
+        }
     }
 
     private func showResponse(_ text: String) {
@@ -217,11 +220,8 @@ struct MoodMicView: View {
     }
 
     private func stopAndCancel() {
+        // Nothing is recording on the iPhone, so just drop the local clip.
         monitor.stop()
-        let session = WCSession.default
-        if session.activationState == .activated, session.isReachable {
-            session.sendMessage(["action": "cancelRecording"], replyHandler: nil, errorHandler: nil)
-        }
         onCancel()
     }
 }

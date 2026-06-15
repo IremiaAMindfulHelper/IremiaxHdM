@@ -10,7 +10,12 @@ final class TTSService {
         utterance.rate = 0.42
         utterance.pitchMultiplier = 0.95
         utterance.volume = 1.0
-        // Audio session is already active (.playAndRecord) from the recording phase.
+        // The iPhone no longer records (the Watch does), so activate a playback
+        // session here. .duckOthers lowers any other audio; .spokenAudio routes
+        // to the paired Watch speaker over Bluetooth like other spoken content.
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+        try? session.setActive(true)
         synth.speak(utterance)
     }
 

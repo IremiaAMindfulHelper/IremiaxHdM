@@ -19,12 +19,6 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         WCSession.default.activate()
     }
 
-    func sendPartialTranscript(_ text: String) {
-        let session = WCSession.default
-        guard session.activationState == .activated, session.isReachable else { return }
-        session.sendMessage(["partialTranscript": text], replyHandler: nil, errorHandler: nil)
-    }
-
     func sendContacts(_ contacts: [WatchEmergencyContact]) {
         lastContacts = contacts
         guard WCSession.default.activationState == .activated else { return }
@@ -50,19 +44,6 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
 
     // MARK: - Voice action routing
 
-    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-        let action = message["action"] as? String ?? "(none)"
-        print("[Voice] iPhone received message (no reply) action=\(action)")
-        switch action {
-        case "startRecording":
-            EmergencyVoiceCoordinator.shared.startRecording()
-        case "cancelRecording":
-            EmergencyVoiceCoordinator.shared.cancelRecording()
-        default:
-            break
-        }
-    }
-
     func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
         let action = message["action"] as? String ?? "(none)"
         print("[Voice] iPhone received message (with reply) action=\(action)")
@@ -71,15 +52,16 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             return
         }
         switch action {
-        case "stopRecording":
+        case "transcribe":
             let speak = (message["speak"] as? Bool) ?? true
-            Task {
-                let response = await EmergencyVoiceCoordinator.shared.stopRecordingAndRespond(speak: speak)
-                replyHandler(["response": response])
+            guard let audio = message["audio"] as? Data else {
+                replyHandler(["response": EmergencyFallback.random(), "transcript": ""])
+                return
             }
-        case "startRecording":
-            EmergencyVoiceCoordinator.shared.startRecording()
-            replyHandler(["ok": true])
+            Task {
+                let result = await EmergencyVoiceCoordinator.shared.transcribeAndRespond(audio: audio, speak: speak)
+                replyHandler(["response": result.response, "transcript": result.transcript])
+            }
         case "moodCheck":
             let mood = message["mood"] as? String ?? ""
             let category = message["category"] as? String

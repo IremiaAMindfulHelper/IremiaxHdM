@@ -24,6 +24,33 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         WCSession.default.activate()
     }
 
+    // MARK: - Voice transcription
+
+    /// Sends an audio clip recorded on the Watch to the iPhone, which
+    /// transcribes it and asks Claude. Returns the spoken/displayed response
+    /// plus the transcript (for the Journey log), or nil when the phone is
+    /// unreachable or the call failed so callers can fall back locally.
+    func requestVoiceResponse(audio: Data, speak: Bool) async -> (response: String, transcript: String)? {
+        let session = WCSession.default
+        guard session.activationState == .activated, session.isReachable else { return nil }
+        let message: [String: Any] = ["action": "transcribe", "audio": audio, "speak": speak]
+        return await withCheckedContinuation { continuation in
+            session.sendMessage(
+                message,
+                replyHandler: { reply in
+                    if let response = reply["response"] as? String {
+                        continuation.resume(returning: (response, reply["transcript"] as? String ?? ""))
+                    } else {
+                        continuation.resume(returning: nil)
+                    }
+                },
+                errorHandler: { _ in
+                    continuation.resume(returning: nil)
+                }
+            )
+        }
+    }
+
     // MARK: - Claude mood check
 
     /// Asks the iPhone to generate a Claude response for a mood check-in made

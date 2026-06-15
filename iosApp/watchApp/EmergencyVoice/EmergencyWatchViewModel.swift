@@ -14,73 +14,48 @@ final class EmergencyWatchViewModel: ObservableObject {
 
     private var timeoutTask: Task<Void, Never>?
 
-    func tapped() {
-        switch state {
-        case .idle:
-            startRecording()
-        case .recording:
-            stopAndAsk()
-        case .processing, .responding:
-            timeoutTask?.cancel()
-            state = .idle
-        }
-    }
-
-    private func startRecording() {
+    /// Called when the user taps the mic in the idle state.
+    func startRecording() {
         guard WCSession.default.activationState == .activated,
               WCSession.default.isReachable else {
             state = .responding("Connect your iPhone and try again.")
             return
         }
-        WatchConnectivityManager.shared.clearLiveTranscript()
-        WCSession.default.sendMessage(
-            ["action": "startRecording"],
-            replyHandler: nil,
-            errorHandler: { _ in }
-        )
         state = .recording
     }
 
-    private func stopAndAsk() {
+    /// Called when the user taps stop. The View hands over the clip recorded
+    /// on the Watch; we send it to the iPhone for transcription + Claude.
+    func stopAndAsk(audio: Data?) {
         state = .processing
-        guard WCSession.default.isReachable else {
-            state = .responding(fallback)
+
+        guard let audio, WCSession.default.isReachable else {
+            finish(response: fallback, transcript: "")
             return
         }
 
         timeoutTask?.cancel()
         timeoutTask = Task {
-            try? await Task.sleep(for: .seconds(15))
+            try? await Task.sleep(for: .seconds(20))
             guard !Task.isCancelled, state == .processing else { return }
-            let transcript = WatchConnectivityManager.shared.liveTranscript
-            state = .responding(fallback)
-            JourneyStore.shared.attachVoiceSession(transcript: transcript, response: fallback)
+            finish(response: fallback, transcript: "")
         }
 
-        WCSession.default.sendMessage(
-            ["action": "stopRecording"],
-            replyHandler: { [weak self] reply in
-                let responseText = (reply["response"] as? String) ?? self?.fallback ?? ""
-                Task { @MainActor in
-                    self?.timeoutTask?.cancel()
-                    self?.state = .responding(responseText)
-                    let transcript = WatchConnectivityManager.shared.liveTranscript
-                    JourneyStore.shared.attachVoiceSession(
-                        transcript: transcript,
-                        response: responseText
-                    )
-                }
-            },
-            errorHandler: { [weak self] _ in
-                Task { @MainActor in
-                    self?.timeoutTask?.cancel()
-                    let fb = self?.fallback ?? ""
-                    self?.state = .responding(fb)
-                    let transcript = WatchConnectivityManager.shared.liveTranscript
-                    JourneyStore.shared.attachVoiceSession(transcript: transcript, response: fb)
-                }
-            }
-        )
+        Task {
+            let result = await WatchConnectivityManager.shared.requestVoiceResponse(audio: audio, speak: true)
+            timeoutTask?.cancel()
+            finish(response: result?.response ?? fallback, transcript: result?.transcript ?? "")
+        }
+    }
+
+    func reset() {
+        timeoutTask?.cancel()
+        state = .idle
+    }
+
+    private func finish(response: String, transcript: String) {
+        state = .responding(response)
+        JourneyStore.shared.attachVoiceSession(transcript: transcript, response: response)
     }
 
     private var fallback: String {

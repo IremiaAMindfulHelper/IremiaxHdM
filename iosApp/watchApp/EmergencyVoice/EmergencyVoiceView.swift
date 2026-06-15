@@ -38,11 +38,24 @@ struct EmergencyVoiceView: View {
             case .recording:
                 monitor.start()
             case .responding(let text):
-                monitor.stop()
                 responseItem = ResponseItem(text: text)
             default:
-                monitor.stop()
+                break
             }
+        }
+    }
+
+    /// One tap handler for both the mic and stop buttons. On stop we capture
+    /// the clip recorded on the Watch and hand it to the view model.
+    private func handleTap() {
+        switch viewModel.state {
+        case .idle:
+            viewModel.startRecording()
+        case .recording:
+            monitor.stop()
+            viewModel.stopAndAsk(audio: monitor.recordedClip())
+        case .processing, .responding:
+            viewModel.reset()
         }
     }
 
@@ -75,7 +88,7 @@ struct EmergencyVoiceView: View {
     private var idleView: some View {
         VStack(spacing: 10) {
             Spacer()
-            Button { viewModel.tapped() } label: {
+            Button { handleTap() } label: {
                 ZStack {
                     Circle().fill(Color.iremiaPetrol)
                     Image(systemName: "mic.fill")
@@ -121,7 +134,7 @@ struct EmergencyVoiceView: View {
             HStack(spacing: 5) {
                 LeftWaveformBars(level: monitor.level)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                Button { viewModel.tapped() } label: {
+                Button { handleTap() } label: {
                     RoundedRectangle(cornerRadius: 7)
                         .fill(Color.iremiaPetrol)
                         .frame(width: 30, height: 30)
