@@ -42,7 +42,7 @@ struct JourneyView: View {
             )
             .ignoresSafeArea()
         }
-        .navigationTitle("Streak Statistics")
+        .navigationTitle("Journey")
     }
 }
 
@@ -134,7 +134,7 @@ private struct JournalEntryRow: View {
 
     var body: some View {
         HStack {
-            MoodFaceView(mood: entry.moodLevel ?? .neutral, size: 20)
+            MoodIconView(mood: entry.moodLevel ?? .neutral, size: 20, tint: .iremiaBannerTeal)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(Self.dateFormatter.string(from: entry.date))
@@ -183,7 +183,7 @@ private struct JournalEntryDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 10) {
-                MoodFaceView(mood: entry.moodLevel ?? .neutral, size: 50)
+                MoodIconView(mood: entry.moodLevel ?? .neutral, size: 50)
 
                 Text(entry.moodLevel?.label ?? "Neutral")
                     .font(.system(size: 16, weight: .semibold))
@@ -255,11 +255,11 @@ private struct MoodChartView: View {
         VStack(spacing: 2) {
             HStack(spacing: 4) {
                 VStack(spacing: 0) {
-                    MoodFaceView(mood: .good, size: 14)
+                    MoodIconView(mood: .good, size: 14)
                     Spacer()
-                    MoodFaceView(mood: .neutral, size: 14)
+                    MoodIconView(mood: .neutral, size: 14)
                     Spacer()
-                    MoodFaceView(mood: .bad, size: 14)
+                    MoodIconView(mood: .bad, size: 14)
                 }
                 .frame(width: 18)
 
@@ -286,7 +286,7 @@ private struct MoodChartView: View {
 
                             ForEach(Array(pts.enumerated()), id: \.offset) { i, pt in
                                 Circle()
-                                    .fill(sorted[i].moodLevel?.color ?? .yellow)
+                                    .fill(Color.iremiaBannerTeal)
                                     .frame(width: 6, height: 6)
                                     .position(pt)
                             }

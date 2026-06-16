@@ -134,72 +134,86 @@ private struct GoodResponseView: View {
 }
 
 private struct HomeMenuView: View {
+    // Figma reference frame ("Apple Watch Series 10 42mm"): 187 × 223 pt.
+    // Everything is laid out in these coordinates, then scaled by a single
+    // factor and centred — so the spacing is a pixel-faithful copy of the
+    // Figma design and stays identical across every watch size (40–49 mm all
+    // share ~0.84 aspect). Sizing and gaps scale together, so nothing overlaps.
+    private static let refW: CGFloat = 187
+    private static let refH: CGFloat = 223
+
     var body: some View {
         GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            let bubble = w * 0.235
-            let quickHelp = w * 0.285
-            let small = w * 0.155
+            let s = min(geo.size.width / Self.refW, geo.size.height / Self.refH)
+            let ox = (geo.size.width - Self.refW * s) / 2
+            let oy = (geo.size.height - Self.refH * s) / 2
 
+            // On-screen point for a Figma centre coordinate: ox + x*s, oy + y*s.
             ZStack {
                 BottomGlow()
-                    .frame(width: w * 1.05, height: w * 1.05)
-                    .position(x: w * 0.5, y: h * 1.02)
+                    .frame(width: 187 * s, height: 187 * s)
+                    .position(x: ox + 93.5 * s, y: oy + 242.5 * s)
 
                 MessageOfDayBanner()
-                    .frame(width: w * 0.88, height: h * 0.19)
-                    .position(x: w * 0.5, y: h * 0.20)
+                    .frame(width: 163 * s, height: 42 * s)
+                    .position(x: ox + 93.5 * s, y: oy + 50 * s)
 
+                // Breathe — top centre
                 NavigationLink {
                     BreathingWatchView()
                 } label: {
-                    BubbleButton(title: "Breathe", size: bubble)
+                    BubbleButton(title: "Breathe", size: 51 * s)
                 }
                 .buttonStyle(.plain)
-                .position(x: w * 0.500, y: h * 0.46)
+                .position(x: ox + 94 * s, y: oy + 103.5 * s)
 
+                // Learn — mid left
                 NavigationLink {
                     LearnPlaceholderView()
                 } label: {
-                    BubbleButton(title: "Learn", size: bubble)
+                    BubbleButton(title: "Learn", size: 51 * s)
                 }
                 .buttonStyle(.plain)
-                .position(x: w * 0.155, y: h * 0.61)
+                .position(x: ox + 38 * s, y: oy + 137.5 * s)
 
+                // Journey — mid right
                 NavigationLink {
                     JourneyView()
                 } label: {
-                    BubbleButton(title: "Journey", size: bubble)
+                    BubbleButton(title: "Journey", size: 51 * s)
                 }
                 .buttonStyle(.plain)
-                .position(x: w * 0.845, y: h * 0.61)
+                .position(x: ox + 150 * s, y: oy + 137.5 * s)
 
+                // Microphone — big centre button → emergency voice access
                 NavigationLink {
                     EmergencyVoiceView()
                 } label: {
-                    QuickHelpButton(size: quickHelp)
+                    MicCenterButton(size: 52 * s)
                 }
                 .buttonStyle(.plain)
-                .position(x: w * 0.500, y: h * 0.79)
+                .position(x: ox + 94 * s, y: oy + 167 * s)
 
-                NavigationLink {
-                    EmergencyVoiceView()
-                } label: {
-                    SmallIconButton(icon: "mic.fill", size: small)
-                }
-                .buttonStyle(.plain)
-                .position(x: w * 0.115, y: h * 0.86)
-
+                // SOS — bottom left → emergency contacts
                 NavigationLink {
                     ContactsListView()
                 } label: {
-                    SmallIconButton(icon: "gearshape.fill", size: small)
+                    SosButton(size: 33 * s)
                 }
                 .buttonStyle(.plain)
-                .position(x: w * 0.885, y: h * 0.86)
+                .position(x: ox + 40 * s, y: oy + 197 * s)
+
+                // Settings — bottom right → placeholder
+                NavigationLink {
+                    SettingsPlaceholderView()
+                } label: {
+                    SettingsButton(size: 33 * s)
+                }
+                .buttonStyle(.plain)
+                .position(x: ox + 145 * s, y: oy + 195 * s)
             }
         }
+        .ignoresSafeArea()
         .background(Color.black.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
     }
@@ -240,10 +254,11 @@ private struct BubbleButton: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color.iremiaPetrol)
+                .fill(Color.iremiaEntryBg)
+                .overlay(Circle().stroke(Color.iremiaBannerTeal, lineWidth: 1))
             Text(title)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Color.iremiaLabel)
+                .foregroundStyle(Color.iremiaCategoryLabel)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
@@ -251,33 +266,48 @@ private struct BubbleButton: View {
     }
 }
 
-private struct QuickHelpButton: View {
+private struct MicCenterButton: View {
     let size: CGFloat
 
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color.iremiaQuickHelp)
-                .shadow(color: Color.iremiaQuickHelp.opacity(0.55), radius: 6)
-            Text("Quick\nhelp")
-                .font(.system(size: 12, weight: .medium))
+                .fill(Color.iremiaBannerTeal.opacity(0.2))
+                .overlay(Circle().stroke(Color.iremiaBannerTeal, lineWidth: 1.5))
+            Image(systemName: "mic.fill")
+                .font(.system(size: size * 0.42, weight: .semibold))
                 .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .lineSpacing(-2)
         }
         .frame(width: size, height: size)
     }
 }
 
-private struct SmallIconButton: View {
-    let icon: String
+private struct SosButton: View {
     let size: CGFloat
 
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color.iremiaPetrol)
-            Image(systemName: icon)
+                .fill(Color.iremiaSOS)
+                .overlay(Circle().stroke(Color.iremiaSOSStroke, lineWidth: 1))
+            Text("SOS")
+                .font(.system(size: size * 0.32, weight: .bold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+private struct SettingsButton: View {
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color.iremiaBannerTeal)
+            Image(systemName: "gearshape.fill")
                 .font(.system(size: size * 0.5, weight: .semibold))
                 .foregroundStyle(.white)
         }
@@ -307,6 +337,13 @@ private struct LearnPlaceholderView: View {
     var body: some View {
         PlaceholderContent(icon: "book.fill", title: "Learn")
             .navigationTitle("Learn")
+    }
+}
+
+private struct SettingsPlaceholderView: View {
+    var body: some View {
+        PlaceholderContent(icon: "gearshape.fill", title: "Settings")
+            .navigationTitle("Settings")
     }
 }
 
