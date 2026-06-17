@@ -11,6 +11,10 @@ extension Color {
     static let iremiaBannerTeal = Color(red: 0x0A / 255.0, green: 0x5C / 255.0, blue: 0x5A / 255.0)
     /// Copper accent used for the central Quick help bubble.
     static let iremiaQuickHelp = Color(red: 0xC8 / 255.0, green: 0x7B / 255.0, blue: 0x3B / 255.0)
+    /// SOS button copper fill (#A75E25) — from Figma home-menu concept.
+    static let iremiaSOS = Color(red: 0xA7 / 255.0, green: 0x5E / 255.0, blue: 0x25 / 255.0)
+    /// SOS button stroke (#7A4923).
+    static let iremiaSOSStroke = Color(red: 0x7A / 255.0, green: 0x49 / 255.0, blue: 0x23 / 255.0)
     /// Light teal for Journey screen titles (#A4DFDD).
     static let iremiaJourneyTitle = Color(red: 0xA4 / 255.0, green: 0xDF / 255.0, blue: 0xDD / 255.0)
     /// Teal gradient base for Journey header (#0F908E).

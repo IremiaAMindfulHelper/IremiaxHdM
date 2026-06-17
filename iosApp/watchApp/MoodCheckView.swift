@@ -37,6 +37,16 @@ enum MoodLevel: String, CaseIterable {
         case .bad: return "Bad"
         }
     }
+
+    // Weather-concept icons from Figma (mid-fidelity-wireframe-concepts, frame 1558:1608).
+    // Vector SVGs in Assets.xcassets, already tinted to the Figma teal (#A4DFDD).
+    var iconName: String {
+        switch self {
+        case .good: return "mood_good"
+        case .neutral: return "mood_okay"
+        case .bad: return "mood_bad"
+        }
+    }
 }
 
 // MARK: - MoodCategory
@@ -115,61 +125,34 @@ struct MoodResponses {
     }
 }
 
-// MARK: - Mood Face
+// MARK: - Mood Icon (Figma weather-concept vectors)
 
-struct MoodFaceView: View {
+/// Renders the Figma weather mood icon, scaled to fit a square box of `size`.
+/// Drop-in replacement for the old `MoodFaceView` circle (icons are wider than tall,
+/// so they sit centred within the box and never exceed `size` in width).
+///
+/// Pass `tint` to recolor the icon (template rendering) — e.g. the darker
+/// `#0A5C5A` used on bright list-row backgrounds. When `tint` is nil the icon
+/// keeps the Figma teal (#A4DFDD) baked into the SVG.
+struct MoodIconView: View {
     let mood: MoodLevel
     let size: CGFloat
+    var tint: Color? = nil
 
     var body: some View {
-        Circle()
-            .fill(mood.color)
+        icon
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(tint ?? Color.iremiaJourneyTitle)
             .frame(width: size, height: size)
-            .overlay {
-                VStack(spacing: size * 0.06) {
-                    HStack(spacing: size * 0.22) {
-                        Circle().fill(eyeColor).frame(width: size * 0.17, height: size * 0.17)
-                        Circle().fill(eyeColor).frame(width: size * 0.17, height: size * 0.17)
-                    }
-                    MouthShape(mood: mood)
-                        .stroke(eyeColor, style: StrokeStyle(lineWidth: size * 0.07, lineCap: .round))
-                        .frame(width: size * 0.42, height: size * 0.22)
-                }
-                .offset(y: size * 0.02)
-            }
     }
 
-    private var eyeColor: Color {
-        switch mood {
-        case .good: return Color(red: 0/255, green: 190/255, blue: 60/255)
-        case .neutral: return Color(red: 251/255, green: 159/255, blue: 0/255)
-        case .bad: return Color(red: 151/255, green: 0/255, blue: 0/255)
+    private var icon: Image {
+        if tint != nil {
+            return Image(mood.iconName).renderingMode(.template)
+        } else {
+            return Image(mood.iconName)
         }
-    }
-}
-
-private struct MouthShape: Shape {
-    let mood: MoodLevel
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let midX = rect.midX
-        let midY = rect.midY
-
-        switch mood {
-        case .good:
-            path.move(to: CGPoint(x: rect.minX, y: midY - rect.height * 0.2))
-            path.addQuadCurve(to: CGPoint(x: rect.maxX, y: midY - rect.height * 0.2),
-                              control: CGPoint(x: midX, y: rect.maxY))
-        case .neutral:
-            path.move(to: CGPoint(x: rect.minX, y: midY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: midY))
-        case .bad:
-            path.move(to: CGPoint(x: rect.minX, y: midY + rect.height * 0.2))
-            path.addQuadCurve(to: CGPoint(x: rect.maxX, y: midY + rect.height * 0.2),
-                              control: CGPoint(x: midX, y: rect.minY))
-        }
-        return path
     }
 }
 
@@ -243,7 +226,12 @@ struct MoodCheckView: View {
                         Button {
                             onMoodSelected(mood)
                         } label: {
-                            MoodFaceView(mood: mood, size: 42)
+                            VStack(spacing: 8) {
+                                MoodIconView(mood: mood, size: 48)
+                                Text(mood.label)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.iremiaJourneyTitle)
+                            }
                         }
                         .buttonStyle(.plain)
                     }
