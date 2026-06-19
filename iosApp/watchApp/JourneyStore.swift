@@ -37,6 +37,12 @@ class JourneyStore: ObservableObject {
         save()
     }
 
+    func attachResponse(_ response: String) {
+        guard !entries.isEmpty, !response.isEmpty else { return }
+        entries[0].response = response
+        save()
+    }
+
     func attachVoiceSession(transcript: String, response: String) {
         guard !entries.isEmpty else { return }
         if !transcript.isEmpty { entries[0].transcript = transcript }

@@ -22,14 +22,6 @@ enum MoodLevel: String, CaseIterable {
         }
     }
 
-    var color: Color {
-        switch self {
-        case .good: return Color(red: 145/255, green: 255/255, blue: 106/255)
-        case .neutral: return Color(red: 255/255, green: 255/255, blue: 124/255)
-        case .bad: return Color(red: 255/255, green: 114/255, blue: 114/255)
-        }
-    }
-
     var label: String {
         switch self {
         case .good: return "Good"

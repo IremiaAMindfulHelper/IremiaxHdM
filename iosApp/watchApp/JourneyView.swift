@@ -141,15 +141,10 @@ private struct JournalEntryRow: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.white)
 
-                if let transcript = entry.transcript, !transcript.isEmpty {
-                    Text(transcript)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.white.opacity(0.7))
-                        .lineLimit(2)
-                } else if let response = entry.response, !response.isEmpty {
+                if let response = entry.response, !response.isEmpty {
                     Text(response)
                         .font(.system(size: 10))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(2)
                 }
             }
@@ -187,7 +182,7 @@ private struct JournalEntryDetailView: View {
 
                 Text(entry.moodLevel?.label ?? "Neutral")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(entry.moodLevel?.color ?? .yellow)
+                    .foregroundStyle(Color.iremiaJourneyTitle)
 
                 Text(Self.dateFormatter.string(from: entry.date))
                     .font(.system(size: 12))
@@ -223,7 +218,7 @@ private struct JournalEntryDetailView: View {
                     .padding(.top, 6)
                 }
 
-                if entry.category == nil && entry.transcript == nil {
+                if entry.category == nil && entry.transcript == nil && (entry.response?.isEmpty ?? true) {
                     Text("No mood details recorded")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)

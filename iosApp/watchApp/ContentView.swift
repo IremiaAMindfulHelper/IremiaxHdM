@@ -126,8 +126,10 @@ private struct GoodResponseView: View {
             let response = await WatchConnectivityManager.shared.requestMoodResponse(
                 mood: "Good", category: nil, detail: nil
             )
+            let text = response ?? "That's great!\nKeep it up"
+            JourneyStore.shared.attachResponse(text)
             withAnimation(.easeOut(duration: 0.3)) {
-                message = response ?? "That's great!\nKeep it up"
+                message = text
             }
         }
     }
