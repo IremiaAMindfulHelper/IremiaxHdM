@@ -2,6 +2,11 @@ import SwiftUI
 
 struct BreathingWatchView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
+    // Anchors the breath clock. Reset on every appearance (and when the app
+    // returns to the foreground) so reopening the view always starts at
+    // elapsed 0 = breathe in, instead of resuming wherever wall-clock time
+    // happens to land.
     @State private var start = Date()
 
     var body: some View {
@@ -91,15 +96,23 @@ struct BreathingWatchView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear { start = Date() }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active { start = Date() }
+        }
     }
 }
 
 /// Breath guidance derived from the same clock as the flower, so the text and
-/// counter stay locked to the bloom. The 20s loop starts compressed:
-/// hold 0–4s (frame 103), breathe in 4–12s (expanding 103→100→101),
-/// breathe out 12–20s (compressing 101→103).
+/// counter stay locked to the bloom. The phases map onto the visual morph
+/// stages of the 16s loop: breathe in 0–4s (103→100, the big petal curves
+/// expand), hold 4–8s (100→101, the small lines follow), breathe out 8–16s
+/// (101→103, the whole flower compresses). The compressed state has no hold —
+/// the loop runs straight from compression back into the next breathe in.
+/// Bloom tracks real openness, so it rises through both the in and the hold
+/// (peaking fully open at 101) and falls back on the exhale.
 private struct BreathStep {
-    static let cycle: TimeInterval = 20
+    static let cycle: TimeInterval = 16
 
     let label: String
     let count: Int
@@ -110,17 +123,17 @@ private struct BreathStep {
         phase = CGFloat(elapsed / BreathStep.cycle)
         switch elapsed {
         case ..<4:
-            label = "Hold"
-            count = 4 - Int(elapsed)
-            bloom = 0
-        case ..<12:
             label = "Breathe in"
-            count = 8 - Int(elapsed - 4)
-            bloom = CGFloat((elapsed - 4) / 8)
+            count = 4 - Int(elapsed)
+            bloom = CGFloat(elapsed / 4 * 0.5)             // 0 → 0.5 (103→100)
+        case ..<8:
+            label = "Hold"
+            count = 4 - Int(elapsed - 4)
+            bloom = CGFloat(0.5 + (elapsed - 4) / 4 * 0.5) // 0.5 → 1.0 (100→101)
         default:
             label = "Breathe out"
-            count = 8 - Int(elapsed - 12)
-            bloom = CGFloat(1 - (elapsed - 12) / 8)
+            count = 8 - Int(elapsed - 8)
+            bloom = CGFloat(1 - (elapsed - 8) / 8)         // 1.0 → 0 (101→103)
         }
     }
 }
@@ -174,20 +187,19 @@ private struct BloomFlower: Shape {
         return combined
     }
 
-    /// Maps the loop position onto a pair of keyframes + local progress. Same
-    /// Figma segment durations as the prototype (4+4+4+8s), rotated so the loop
-    /// rests at the compressed state (frame 103):
-    /// hold 103 (4s), breathe in 103→100 (4s) then 100→101 (4s),
-    /// breathe out 101→103 (8s).
+    /// Maps the loop position onto a pair of keyframes + local progress over the
+    /// 16s loop (4+4+8s). Each breath phase owns one morph stage, with no pause
+    /// at the compressed state: breathe in 103→100 (4s, big petals expand),
+    /// hold 100→101 (4s, small lines follow), breathe out 101→103 (8s, the whole
+    /// flower compresses). Normalized boundaries: 4/16=0.25, 8/16=0.5.
     private func keyframes(for p: CGFloat) -> ([[SVGPath.Op]], [[SVGPath.Op]], CGFloat) {
         let k100 = FlowerGeometry.closedOps
         let k101 = FlowerGeometry.midOps
         let k103 = FlowerGeometry.openOps
         switch p {
-        case ..<0.2: return (k103, k103, 0)                // hold (compressed)
-        case ..<0.4: return (k103, k100, (p - 0.2) / 0.2)  // breathe in: 103→100
-        case ..<0.6: return (k100, k101, (p - 0.4) / 0.2)  // breathe in: 100→101
-        default:     return (k101, k103, min((p - 0.6) / 0.4, 1)) // breathe out: 101→103
+        case ..<0.25: return (k103, k100, p / 0.25)            // breathe in: 103→100
+        case ..<0.5:  return (k100, k101, (p - 0.25) / 0.25)   // hold: 100→101
+        default:      return (k101, k103, min((p - 0.5) / 0.5, 1)) // breathe out: 101→103
         }
     }
 }
