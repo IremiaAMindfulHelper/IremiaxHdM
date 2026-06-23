@@ -70,7 +70,14 @@ final class MicLevelMonitor: ObservableObject {
     /// Returns nil if nothing was recorded.
     func recordedClip() -> Data? {
         guard let recordingURL else { return nil }
-        return try? Data(contentsOf: recordingURL)
+        let data = try? Data(contentsOf: recordingURL)
+        // A near-empty clip means the mic captured nothing — common in the
+        // watchOS Simulator, where transcription then comes back empty and the
+        // user only ever sees the canned fallback. Surfacing the byte count
+        // makes that diagnosable at a glance instead of looking like a Claude
+        // failure.
+        print("[Voice] recorded clip: \(data?.count ?? 0) bytes")
+        return data
     }
 }
 

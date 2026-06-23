@@ -17,6 +17,22 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async { self.liveTranscript = "" }
     }
 
+    /// Waits up to `timeout` for the phone to become reachable. Returns true as
+    /// soon as it is. This closes the race where the very first request right
+    /// after launch (e.g. the Good-mood check fired after a single tap on the
+    /// launch screen) would fail because the session hadn't finished activating
+    /// or the iPhone app hadn't been woken yet — sending the user to the local
+    /// fallback even though Claude was available a moment later.
+    private func waitForReachable(timeout: TimeInterval = 3) async -> Bool {
+        let session = WCSession.default
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if session.activationState == .activated, session.isReachable { return true }
+            try? await Task.sleep(for: .milliseconds(150))
+        }
+        return session.activationState == .activated && session.isReachable
+    }
+
     private override init() {
         super.init()
         guard WCSession.isSupported() else { return }
@@ -31,8 +47,8 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     /// plus the transcript (for the Journey log), or nil when the phone is
     /// unreachable or the call failed so callers can fall back locally.
     func requestVoiceResponse(audio: Data, speak: Bool) async -> (response: String, transcript: String)? {
+        guard await waitForReachable() else { return nil }
         let session = WCSession.default
-        guard session.activationState == .activated, session.isReachable else { return nil }
         let message: [String: Any] = ["action": "transcribe", "audio": audio, "speak": speak]
         return await withCheckedContinuation { continuation in
             session.sendMessage(
@@ -57,8 +73,8 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     /// with the preset buttons. Returns nil when the phone is unreachable or
     /// the API call failed, so callers can fall back to local messages.
     func requestMoodResponse(mood: String, category: String?, detail: String?) async -> String? {
+        guard await waitForReachable() else { return nil }
         let session = WCSession.default
-        guard session.activationState == .activated, session.isReachable else { return nil }
         var message: [String: Any] = ["action": "moodCheck", "mood": mood]
         if let category { message["category"] = category }
         if let detail { message["detail"] = detail }
