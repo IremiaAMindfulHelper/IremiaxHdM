@@ -91,6 +91,29 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
+    // MARK: - Message of the day
+
+    /// Asks the iPhone for an encouraging home-screen message, passing a short
+    /// summary of the user's recent Journey so Claude can reference it. Returns
+    /// nil when the phone is unreachable or the call failed, so callers can keep
+    /// the cached/local message.
+    func requestDailyMessage(history summary: String) async -> String? {
+        guard await waitForReachable() else { return nil }
+        let session = WCSession.default
+        let message: [String: Any] = ["action": "dailyMessage", "history": summary]
+        return await withCheckedContinuation { continuation in
+            session.sendMessage(
+                message,
+                replyHandler: { reply in
+                    continuation.resume(returning: reply["response"] as? String)
+                },
+                errorHandler: { _ in
+                    continuation.resume(returning: nil)
+                }
+            )
+        }
+    }
+
     // MARK: - WCSessionDelegate
 
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {

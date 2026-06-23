@@ -34,6 +34,14 @@ final class EmergencyVoiceCoordinator {
         return await assistant.respondToMoodCheck(mood: mood, category: category, detail: detail)
     }
 
+    /// Encouraging message-of-the-day for the Watch home screen, built from a
+    /// short summary of the user's recent Journey entries. Returns nil when
+    /// Claude is unavailable so the Watch can fall back to a local message.
+    func dailyMessage(history summary: String) async -> String? {
+        print("[Voice] daily message requested (\(summary.count) chars of history)")
+        return await assistant.dailyMessage(history: summary)
+    }
+
     /// Shared post-transcript logic: crisis check first, then Claude, then a
     /// safe fallback — never an empty state.
     private func respond(toTranscript transcript: String, speak: Bool) async -> String {

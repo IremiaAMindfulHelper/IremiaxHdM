@@ -109,13 +109,42 @@ actor ClaudeAssistantService: EmergencyResponder {
         history.append(ClaudeChatMessage(role: "assistant", content: assistant))
     }
 
+    // MARK: Message of the day
+
+    /// One-shot encouraging greeting for the Watch home screen, grounded in a
+    /// short summary of the user's recent Journey entries. Deliberately kept
+    /// out of the running `history` so it never steers the panic-attack
+    /// conversation. Returns nil when the API is unavailable so the Watch can
+    /// fall back to a local message.
+    func dailyMessage(history summary: String) async -> String? {
+        let prompt = """
+        The user is opening the app on their Apple Watch right now. Write a single, \
+        short, warm and encouraging message (one sentence at most, ~10–14 words) that \
+        speaks directly to them. When possible, gently reference their recent history \
+        (e.g. progress, a good feeling from recently, or a recurring theme), without \
+        judging or diagnosing. Output only the message itself: no greeting by name, no \
+        heading, no quotation marks.
+
+        The user's recent history:
+        \(summary)
+        """
+        return await send([ClaudeChatMessage(role: "user", content: prompt)])
+    }
+
     // MARK: Claude API call
 
     private func complete(userMessage: String) async -> String? {
         // Record the input first so it stays part of the history even if this
         // particular request fails. Consecutive user turns are valid API input.
         history.append(ClaudeChatMessage(role: "user", content: userMessage))
+        guard let text = await send(history) else { return nil }
+        history.append(ClaudeChatMessage(role: "assistant", content: text))
+        return text
+    }
 
+    /// Sends a messages array to Claude and returns the text reply, or nil on
+    /// any failure. Stateless — callers decide what (if anything) to keep.
+    private func send(_ messages: [ClaudeChatMessage]) async -> String? {
         guard let apiKey = KeychainHelper.get(KeychainHelper.anthropicAPIKeyService),
               !apiKey.isEmpty else {
             print("[Claude] no API key in Keychain → fallback. Did .env get read at build time?")
@@ -126,7 +155,7 @@ actor ClaudeAssistantService: EmergencyResponder {
             model: model,
             maxTokens: 300,
             system: systemBlocks,
-            messages: history,
+            messages: messages,
             outputConfig: .init(effort: "low")
         )
 
@@ -156,7 +185,6 @@ actor ClaudeAssistantService: EmergencyResponder {
                 print("[Claude] 200 but no text content. stop_reason=\(decoded.stopReason ?? "nil")")
                 return nil
             }
-            history.append(ClaudeChatMessage(role: "assistant", content: text))
             return text
         } catch {
             print("[Claude] request failed: \(error.localizedDescription)")
@@ -168,17 +196,17 @@ actor ClaudeAssistantService: EmergencyResponder {
 
     private static func buildSystemBlocks() -> [ClaudeSystemBlock] {
         let persona = """
-        Du bist Iremia, ein ruhiger, mitfühlender Begleiter bei Panikattacken und Angst. \
-        Deine Antworten werden auf einer Apple Watch angezeigt und teilweise vorgelesen.
+        You are Iremia, a calm, compassionate companion for panic attacks and anxiety. \
+        Your replies are shown on an Apple Watch and are sometimes read aloud.
 
-        Regeln:
-        - Antworte in maximal 2 kurzen Sätzen.
-        - Antworte in der Sprache der letzten Nutzereingabe (Deutsch oder Englisch).
-        - Stütze fachliche Aussagen ausschließlich auf das bereitgestellte, inhaltlich gesicherte Wissen. Erfinde keine medizinischen Fakten.
-        - Keine Diagnosen, keine Medikamentenempfehlungen.
-        - Nutze den bisherigen Gesprächsverlauf: Greife frühere Angaben auf (z. B. wiederkehrende Symptome oder Stimmungen), wenn es hilft.
-        - Bei akuter Panik: kurz validieren, dann genau eine konkrete, sofort umsetzbare Technik nennen.
-        - Bei Suizidgedanken oder Selbstverletzungsabsichten: verweise auf die Telefonseelsorge 0800 111 0 111 (kostenlos, rund um die Uhr).
+        Rules:
+        - Reply in at most 2 short sentences.
+        - Always reply in English, regardless of the language the user wrote in.
+        - Base factual statements only on the provided, verified knowledge. Do not invent medical facts.
+        - No diagnoses, no medication recommendations.
+        - Use the prior conversation: gently refer back to earlier details (e.g. recurring symptoms or moods) when it helps.
+        - During acute panic: validate briefly, then name exactly one concrete, immediately actionable technique.
+        - For thoughts of suicide or self-harm: point to the Telefonseelsorge 0800 111 0 111 (free, around the clock).
         """
 
         guard let knowledge = loadKnowledge() else {
@@ -201,6 +229,6 @@ actor ClaudeAssistantService: EmergencyResponder {
         let body = entries
             .map { "## \($0.title) (\($0.category))\n\($0.text)" }
             .joined(separator: "\n\n")
-        return "Inhaltlich gesichertes Wissen über Panikattacken und Hilfetechniken:\n\n" + body
+        return "Verified knowledge about panic attacks and coping techniques (source content may be in German; always answer in English):\n\n" + body
     }
 }

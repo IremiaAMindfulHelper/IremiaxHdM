@@ -222,8 +222,10 @@ private struct HomeMenuView: View {
 }
 
 private struct MessageOfDayBanner: View {
+    @ObservedObject private var store = DailyMessageStore.shared
+
     var body: some View {
-        ZStack(alignment: .topLeading) {
+        ZStack {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(
                     LinearGradient(
@@ -236,16 +238,16 @@ private struct MessageOfDayBanner: View {
                     )
                 )
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Message of the day")
-                    .font(.system(size: 10, weight: .semibold))
-                Text("Lorem ipsum dolor est")
-                    .font(.system(size: 10, weight: .regular))
-            }
-            .foregroundStyle(Color.iremiaLabel)
-            .padding(.leading, 9)
-            .padding(.top, 5)
+            Text(store.message)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color.iremiaLabel)
+                .multilineTextAlignment(.leading)
+                .lineLimit(3)
+                .minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 9)
         }
+        .task { await store.refresh() }
     }
 }
 

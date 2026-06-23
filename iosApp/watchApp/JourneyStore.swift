@@ -51,6 +51,24 @@ class JourneyStore: ObservableObject {
         save()
     }
 
+    /// A compact, human-readable digest of the most recent entries for Claude
+    /// to ground the message of the day in. Returns a sentinel when empty so
+    /// the model still produces a generic, welcoming line.
+    func journeySummary(limit: Int = 7) -> String {
+        let recent = entries.prefix(limit)
+        guard !recent.isEmpty else { return "No entries yet." }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.unitsStyle = .full
+        return recent.map { entry -> String in
+            var parts = ["\(formatter.localizedString(for: entry.date, relativeTo: Date())): mood \(entry.mood)"]
+            if let category = entry.category, !category.isEmpty { parts.append("area \(category)") }
+            if let detail = entry.detail, !detail.isEmpty { parts.append("details: \(detail)") }
+            if let transcript = entry.transcript, !transcript.isEmpty { parts.append("said: \(transcript)") }
+            return "- " + parts.joined(separator: ", ")
+        }.joined(separator: "\n")
+    }
+
     private func load() {
         guard let data = UserDefaults.standard.data(forKey: key),
               let decoded = try? JSONDecoder().decode([JournalEntry].self, from: data) else { return }

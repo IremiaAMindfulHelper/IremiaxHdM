@@ -76,6 +76,16 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
                     replyHandler(["error": true])
                 }
             }
+        case "dailyMessage":
+            let summary = message["history"] as? String ?? ""
+            Task {
+                if let response = await EmergencyVoiceCoordinator.shared.dailyMessage(history: summary) {
+                    replyHandler(["response": response])
+                } else {
+                    // No payload — the Watch keeps its cached/local message.
+                    replyHandler(["error": true])
+                }
+            }
         default:
             replyHandler(["response": EmergencyFallback.random()])
         }
