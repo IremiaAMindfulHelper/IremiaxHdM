@@ -7,7 +7,6 @@ import SwiftUI
 /// live transcript streamed back from the iPhone, and ends in either a response
 /// or an error — there is no canned fallback text.
 struct VoiceInputView: View {
-    let speak: Bool
     /// Called once with the final transcript + response so the caller can log
     /// the session in the Journey.
     var onLogged: (_ transcript: String, _ response: String) -> Void
@@ -16,24 +15,11 @@ struct VoiceInputView: View {
     /// Dismiss after the user cancelled while listening.
     var onCancel: () -> Void
 
-    @StateObject private var controller: VoiceCaptureController
+    @StateObject private var controller = VoiceCaptureController()
     // Observe the shared singleton directly rather than via @EnvironmentObject:
     // this view is presented through a fullScreenCover (mood flow), which does
     // not reliably inherit environment objects.
     @ObservedObject private var connectivity = WatchConnectivityManager.shared
-
-    init(
-        speak: Bool,
-        onLogged: @escaping (String, String) -> Void,
-        onClose: @escaping () -> Void,
-        onCancel: @escaping () -> Void
-    ) {
-        self.speak = speak
-        self.onLogged = onLogged
-        self.onClose = onClose
-        self.onCancel = onCancel
-        _controller = StateObject(wrappedValue: VoiceCaptureController(speak: speak))
-    }
 
     var body: some View {
         ZStack {
@@ -157,7 +143,6 @@ struct MoodMicView: View {
 
     var body: some View {
         VoiceInputView(
-            speak: false,
             onLogged: { _, response in
                 JourneyStore.shared.attachMoodContext(
                     category: "Voice", detail: "Check-in", response: response

@@ -59,9 +59,8 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         }
         switch message["action"] as? String {
         case "voiceStart":
-            let speak = (message["speak"] as? Bool) ?? true
             Task {
-                _ = await EmergencyVoiceCoordinator.shared.startVoiceStream(speak: speak) { partial in
+                _ = await EmergencyVoiceCoordinator.shared.startVoiceStream { partial in
                     PhoneConnectivityManager.shared.sendPartialTranscript(partial)
                 }
             }

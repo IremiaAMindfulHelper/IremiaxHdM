@@ -22,11 +22,8 @@ final class VoiceCaptureController: ObservableObject {
     /// Final transcript of the last session (for the Journey log).
     private(set) var transcript: String = ""
 
-    private let speak: Bool
     private let engine = AVAudioEngine()
     private var streaming = false
-
-    init(speak: Bool) { self.speak = speak }
 
     // MARK: - Lifecycle
 
@@ -38,7 +35,7 @@ final class VoiceCaptureController: ObservableObject {
             phase = .error("Microphone access is needed to speak. Enable it in Settings.")
             return
         }
-        guard await WatchConnectivityManager.shared.startVoice(speak: speak) else {
+        guard await WatchConnectivityManager.shared.startVoice() else {
             phase = .error("Can't reach your iPhone. Open the Iremia app on your phone and try again.")
             return
         }

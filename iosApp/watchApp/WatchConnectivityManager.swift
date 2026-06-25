@@ -45,11 +45,11 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     /// Opens a live recognition session on the iPhone. The phone transcribes
     /// the streamed audio and pushes partials back via `partialTranscript`.
     /// Returns false when the phone is unreachable so the caller shows an error.
-    func startVoice(speak: Bool) async -> Bool {
+    func startVoice() async -> Bool {
         guard await waitForReachable() else { return false }
         clearLiveTranscript()
         WCSession.default.sendMessage(
-            ["action": "voiceStart", "speak": speak], replyHandler: nil, errorHandler: nil
+            ["action": "voiceStart"], replyHandler: nil, errorHandler: nil
         )
         return true
     }

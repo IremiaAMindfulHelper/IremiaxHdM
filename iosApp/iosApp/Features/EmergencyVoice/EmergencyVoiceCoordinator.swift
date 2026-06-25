@@ -9,10 +9,8 @@ final class EmergencyVoiceCoordinator {
     static let shared = EmergencyVoiceCoordinator()
 
     private let speech = SpeechRecognitionService()
-    private let tts = TTSService()
     private let assistant = ClaudeAssistantService()
     private var didRequestAuth = false
-    private var speakResponse = true
 
     private init() {}
 
@@ -20,16 +18,15 @@ final class EmergencyVoiceCoordinator {
 
     /// Begins a live recognition session. `onPartial` is invoked on the main
     /// queue with the running transcript so the Watch can display it.
-    func startVoiceStream(speak: Bool, onPartial: @escaping (String) -> Void) async -> Bool {
+    func startVoiceStream(onPartial: @escaping (String) -> Void) async -> Bool {
         if !didRequestAuth {
             didRequestAuth = true
             let granted = await speech.requestAuthorization()
             print("[Voice] speech auth granted=\(granted)")
         }
-        speakResponse = speak
         speech.onPartial = onPartial
         let started = speech.start()
-        print("[Voice] stream started=\(started) speak=\(speak)")
+        print("[Voice] stream started=\(started)")
         return started
     }
 
@@ -52,7 +49,6 @@ final class EmergencyVoiceCoordinator {
             let msg = CrisisKeywords.helplineMessage
             print("[Voice] crisis keyword detected → helpline message")
             await assistant.noteExchange(user: text, assistant: msg)
-            if speakResponse { tts.speak(msg) }
             return (msg, text)
         }
 
@@ -61,7 +57,6 @@ final class EmergencyVoiceCoordinator {
             print("[Voice] Claude unavailable → error")
             return nil
         }
-        if speakResponse { tts.speak(answer) }
         return (answer, text)
     }
 
