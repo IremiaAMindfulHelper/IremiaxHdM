@@ -1,0 +1,12 @@
+// OPTIONAL override — most developers do not need this file.
+//
+// The shared Apple Developer Team ID is already committed in Config.xcconfig,
+// so the project signs and builds without any setup.
+//
+// Only if you must sign with a DIFFERENT team, copy this file to
+// Local.xcconfig and set your own ID:
+//
+//   cp Local.xcconfig.template Local.xcconfig
+//
+// Local.xcconfig is git-ignored, so your override stays local.
+DEV_TEAM_ID =

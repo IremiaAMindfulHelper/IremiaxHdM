@@ -19,6 +19,7 @@ captures
 **/*.xcframework/
 .env
 **/Secrets.xcconfig
+**/Local.xcconfig
 iosApp/iosApp/Secrets.plist
 
 .claude/

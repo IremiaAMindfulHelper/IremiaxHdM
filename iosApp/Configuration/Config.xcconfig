@@ -1,7 +1,11 @@
-TEAM_ID=
+// Shared Xcode build configuration (checked into git).
+//
+// The Apple Developer Team ID is committed here so the project signs and
+// builds out of the box — no per-developer setup required.
+DEV_TEAM_ID = 5WRJ6K8ZQJ
 
-PRODUCT_NAME=iremia
-PRODUCT_BUNDLE_IDENTIFIER=org.iremia.iremia.iremia$(TEAM_ID)
-
-CURRENT_PROJECT_VERSION=1
-MARKETING_VERSION=1.0
+// Optional, git-ignored override. Anyone who needs a different signing team
+// can create Configuration/Local.xcconfig with their own DEV_TEAM_ID; the
+// include is optional, so the build never fails if the file is absent.
+// Because it comes after the default above, a local value wins.
+#include? "Local.xcconfig"
