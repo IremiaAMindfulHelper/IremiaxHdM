@@ -66,7 +66,7 @@ private struct RAGEntry: Decodable {
 /// Talks to the Claude API and keeps the full conversation history of the
 /// session — voice transcripts and mood-check button selections alike — so
 /// Claude can connect new input with everything the user shared before.
-actor ClaudeAssistantService: EmergencyResponder {
+actor ClaudeAssistantService {
     private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
     private let model = "claude-opus-4-8"
     private let timeoutSeconds: TimeInterval = 12
@@ -79,16 +79,13 @@ actor ClaudeAssistantService: EmergencyResponder {
 
     // MARK: Voice input
 
-    func respond(to input: String) async -> String {
+    /// Voice transcript → Claude. Returns nil when the input is empty or the
+    /// API is unavailable so the caller can surface an error instead of a
+    /// canned fallback sentence.
+    func respondToVoice(_ input: String) async -> String? {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return EmergencyFallback.random() }
-        if let answer = await complete(userMessage: text) {
-            return answer
-        }
-        // Keep the history consistent with what the user actually heard.
-        let fallback = EmergencyFallback.random()
-        history.append(ClaudeChatMessage(role: "assistant", content: fallback))
-        return fallback
+        guard !text.isEmpty else { return nil }
+        return await complete(userMessage: text)
     }
 
     // MARK: Mood-check buttons

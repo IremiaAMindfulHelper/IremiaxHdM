@@ -1,19 +1,8 @@
 import Foundation
 
-protocol EmergencyResponder {
-    func respond(to input: String) async -> String
-}
-
-enum EmergencyFallback {
-    static let strings = [
-        "You are safe. Breathe slowly: 4 seconds in, 6 seconds out.",
-        "This sensation is uncomfortable but not dangerous. It will pass.",
-        "Your body is protecting you. Focus on your next breath."
-    ]
-
-    static func random() -> String { strings.randomElement() ?? strings[0] }
-}
-
+/// Safety net that runs before Claude: if the user voices intent to harm
+/// themselves, we always show the helpline immediately rather than relying on
+/// the model. This is a deliberate response, not a connectivity fallback.
 enum CrisisKeywords {
     static let keywords = [
         "sterben", "suizid", "umbringen", "verletzen",

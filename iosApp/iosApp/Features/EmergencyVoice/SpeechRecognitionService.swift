@@ -1,20 +1,38 @@
 import Foundation
+import AVFoundation
 import Speech
 
-/// Transcribes an audio clip recorded on the Watch. The Watch captures the
-/// audio (its microphone is the one next to the user's mouth) and ships the
-/// clip to the iPhone, which runs recognition on the file. The iPhone never
-/// opens its own microphone, so there is no audio-session contention with the
-/// Watch and the transcribed audio is actually what the user said.
+/// Streaming speech recognition for the consolidated voice flow. The Watch
+/// captures audio with its own microphone (the one next to the user's mouth)
+/// and streams raw PCM chunks to the iPhone; this service feeds them into a
+/// live `SFSpeechAudioBufferRecognitionRequest` and reports partial results
+/// back so the Watch can show what is being said in real time. The iPhone
+/// never opens its own microphone — there is exactly one mic in the chain.
 final class SpeechRecognitionService {
+    /// Canonical wire format for the streamed audio: 16 kHz mono Float32.
+    /// Both sides must agree on this so the iPhone can rebuild the PCM buffers.
+    static let streamFormat = AVAudioFormat(
+        commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false
+    )!
+
     private let recognizer: SFSpeechRecognizer?
+    private var request: SFSpeechAudioBufferRecognitionRequest?
+    private var task: SFSpeechRecognitionTask?
+
+    private let lock = NSLock()
+    private var latest = ""
+    private var finishContinuation: CheckedContinuation<String, Never>?
+    private var didFinish = false
+
+    /// Called on the main queue with the latest partial transcript.
+    var onPartial: ((String) -> Void)?
 
     init(locale: Locale = Locale(identifier: "de-DE")) {
         self.recognizer = SFSpeechRecognizer(locale: locale)
     }
 
-    /// Only speech-recognition authorization is needed now — the iPhone does
-    /// not record, so it never needs the microphone permission.
+    /// Only speech-recognition authorization is needed — the iPhone does not
+    /// record, so it never needs the microphone permission.
     func requestAuthorization() async -> Bool {
         await withCheckedContinuation { c in
             SFSpeechRecognizer.requestAuthorization { status in
@@ -23,39 +41,88 @@ final class SpeechRecognitionService {
         }
     }
 
-    /// Writes the clip to a temporary file and transcribes it. Returns an empty
-    /// string on any failure so callers fall back to a safe canned response.
-    func transcribe(audioData: Data) async -> String {
-        guard let recognizer, recognizer.isAvailable else { return "" }
+    /// Opens a streaming recognition request. Returns false if recognition is
+    /// unavailable, so callers can surface an error instead of a canned reply.
+    func start() -> Bool {
+        guard let recognizer, recognizer.isAvailable else { return false }
+        cancel()
 
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("iremia_voice_\(UUID().uuidString).m4a")
-        do {
-            try audioData.write(to: url)
-        } catch {
-            print("[Voice] could not write audio clip: \(error)")
-            return ""
-        }
-        defer { try? FileManager.default.removeItem(at: url) }
+        lock.lock(); latest = ""; didFinish = false; lock.unlock()
 
-        let request = SFSpeechURLRecognitionRequest(url: url)
-        request.shouldReportPartialResults = false
+        let req = SFSpeechAudioBufferRecognitionRequest()
+        req.shouldReportPartialResults = true
+        self.request = req
 
-        return await withCheckedContinuation { continuation in
-            var resumed = false
-            func finish(_ text: String) {
-                guard !resumed else { return }
-                resumed = true
-                continuation.resume(returning: text)
+        self.task = recognizer.recognitionTask(with: req) { [weak self] result, error in
+            guard let self else { return }
+            if let result {
+                let text = result.bestTranscription.formattedString
+                self.lock.lock(); self.latest = text; self.lock.unlock()
+                let onPartial = self.onPartial
+                DispatchQueue.main.async { onPartial?(text) }
+                if result.isFinal { self.resolveFinish() }
             }
-            recognizer.recognitionTask(with: request) { result, error in
-                if let result, result.isFinal {
-                    finish(result.bestTranscription.formattedString)
-                } else if error != nil {
-                    // Surface whatever partial we have; empty triggers fallback.
-                    finish(result?.bestTranscription.formattedString ?? "")
+            if error != nil { self.resolveFinish() }
+        }
+        return true
+    }
+
+    /// Appends one streamed PCM chunk (raw 16 kHz mono Float32 samples).
+    func append(_ data: Data) {
+        guard let request, !data.isEmpty else { return }
+        let frames = data.count / MemoryLayout<Float>.size
+        guard frames > 0,
+              let buffer = AVAudioPCMBuffer(
+                pcmFormat: Self.streamFormat, frameCapacity: AVAudioFrameCount(frames)
+              ) else { return }
+        buffer.frameLength = AVAudioFrameCount(frames)
+        data.withUnsafeBytes { raw in
+            if let src = raw.baseAddress, let dst = buffer.floatChannelData?[0] {
+                memcpy(dst, src, frames * MemoryLayout<Float>.size)
+            }
+        }
+        request.append(buffer)
+    }
+
+    /// Closes the audio stream and awaits the final transcript. Returns
+    /// whatever was recognised (possibly empty); callers treat empty as an
+    /// error. A timeout guards against a recognition task that never finalises.
+    func finish() async -> String {
+        request?.endAudio()
+        let transcript = await withCheckedContinuation { (c: CheckedContinuation<String, Never>) in
+            lock.lock()
+            if didFinish {
+                let t = latest; lock.unlock(); c.resume(returning: t)
+            } else {
+                finishContinuation = c; lock.unlock()
+                Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(5))
+                    self?.resolveFinish()
                 }
             }
         }
+        task = nil
+        request = nil
+        return transcript
+    }
+
+    /// Tears down any in-flight recognition without awaiting a result.
+    func cancel() {
+        task?.cancel()
+        request?.endAudio()
+        task = nil
+        request = nil
+        resolveFinish()
+    }
+
+    private func resolveFinish() {
+        lock.lock()
+        guard !didFinish else { lock.unlock(); return }
+        didFinish = true
+        let c = finishContinuation
+        finishContinuation = nil
+        let t = latest
+        lock.unlock()
+        c?.resume(returning: t)
     }
 }

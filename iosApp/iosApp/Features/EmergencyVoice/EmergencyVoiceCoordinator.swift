@@ -1,5 +1,10 @@
 import Foundation
 
+/// Drives the iPhone half of the consolidated voice flow: it streams Watch
+/// audio into live recognition, reports partial transcripts back to the Watch,
+/// and on stop turns the final transcript into a Claude response. Anything that
+/// fails (no transcript, API unavailable) returns nil so the Watch shows an
+/// error rather than a canned fallback sentence.
 final class EmergencyVoiceCoordinator {
     static let shared = EmergencyVoiceCoordinator()
 
@@ -7,63 +12,78 @@ final class EmergencyVoiceCoordinator {
     private let tts = TTSService()
     private let assistant = ClaudeAssistantService()
     private var didRequestAuth = false
+    private var speakResponse = true
 
     private init() {}
 
-    /// Transcribes an audio clip recorded on the Watch, asks Claude (or falls
-    /// back), optionally speaks the answer locally, and returns both the answer
-    /// and the transcript (the Watch logs the transcript in the Journey).
-    func transcribeAndRespond(audio: Data, speak: Bool) async -> (response: String, transcript: String) {
+    // MARK: - Streaming voice
+
+    /// Begins a live recognition session. `onPartial` is invoked on the main
+    /// queue with the running transcript so the Watch can display it.
+    func startVoiceStream(speak: Bool, onPartial: @escaping (String) -> Void) async -> Bool {
         if !didRequestAuth {
             didRequestAuth = true
             let granted = await speech.requestAuthorization()
             print("[Voice] speech auth granted=\(granted)")
         }
-
-        let transcript = await speech.transcribe(audioData: audio)
-        print("[Voice] transcript=\"\(transcript)\"")
-        let response = await respond(toTranscript: transcript, speak: speak)
-        return (response, transcript)
+        speakResponse = speak
+        speech.onPartial = onPartial
+        let started = speech.start()
+        print("[Voice] stream started=\(started) speak=\(speak)")
+        return started
     }
 
-    /// Predefined-state input from the Watch mood-check buttons. Shares the
-    /// same conversation history as the voice flow. Returns nil when Claude
-    /// is unavailable so the Watch can fall back to its local messages.
+    /// Feeds one streamed PCM chunk from the Watch into recognition.
+    func appendVoiceAudio(_ data: Data) {
+        speech.append(data)
+    }
+
+    /// Closes the stream, runs crisis → Claude, and returns the answer plus the
+    /// final transcript. Returns nil when nothing was understood or Claude is
+    /// unavailable, so the Watch surfaces an error.
+    func finishVoiceStream() async -> (response: String, transcript: String)? {
+        let transcript = await speech.finish()
+        speech.onPartial = nil
+        let text = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        print("[Voice] final transcript=\"\(text)\"")
+        guard !text.isEmpty else { return nil }
+
+        if CrisisKeywords.contains(text) {
+            let msg = CrisisKeywords.helplineMessage
+            print("[Voice] crisis keyword detected → helpline message")
+            await assistant.noteExchange(user: text, assistant: msg)
+            if speakResponse { tts.speak(msg) }
+            return (msg, text)
+        }
+
+        print("[Voice] calling Claude with \(text.count) chars")
+        guard let answer = await assistant.respondToVoice(text) else {
+            print("[Voice] Claude unavailable → error")
+            return nil
+        }
+        if speakResponse { tts.speak(answer) }
+        return (answer, text)
+    }
+
+    /// Aborts an in-flight session (user cancelled on the Watch).
+    func cancelVoiceStream() {
+        speech.onPartial = nil
+        speech.cancel()
+    }
+
+    // MARK: - Preset mood-check buttons (unchanged)
+
+    /// Predefined-state input from the Watch mood-check buttons. Returns nil
+    /// when Claude is unavailable so the Watch falls back to its local messages.
     func respondToMoodCheck(mood: String, category: String?, detail: String?) async -> String? {
         print("[Voice] mood check: mood=\(mood) category=\(category ?? "-") detail=\(detail ?? "-")")
         return await assistant.respondToMoodCheck(mood: mood, category: category, detail: detail)
     }
 
-    /// Encouraging message-of-the-day for the Watch home screen, built from a
-    /// short summary of the user's recent Journey entries. Returns nil when
-    /// Claude is unavailable so the Watch can fall back to a local message.
+    /// Encouraging message-of-the-day for the Watch home screen. Returns nil
+    /// when Claude is unavailable so the Watch keeps its cached/local message.
     func dailyMessage(history summary: String) async -> String? {
         print("[Voice] daily message requested (\(summary.count) chars of history)")
         return await assistant.dailyMessage(history: summary)
-    }
-
-    /// Shared post-transcript logic: crisis check first, then Claude, then a
-    /// safe fallback — never an empty state.
-    private func respond(toTranscript transcript: String, speak: Bool) async -> String {
-        if CrisisKeywords.contains(transcript) {
-            let msg = CrisisKeywords.helplineMessage
-            print("[Voice] crisis keyword detected → helpline message")
-            await assistant.noteExchange(user: transcript, assistant: msg)
-            if speak { tts.speak(msg) }
-            return msg
-        }
-
-        let text = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
-        let answer: String
-        if text.isEmpty {
-            print("[Voice] empty transcript → fallback")
-            answer = EmergencyFallback.random()
-        } else {
-            print("[Voice] calling Claude with \(text.count) chars")
-            answer = await assistant.respond(to: text)
-            print("[Voice] Claude/responder returned: \"\(answer.prefix(80))...\"")
-        }
-        if speak { tts.speak(answer) }
-        return answer
     }
 }

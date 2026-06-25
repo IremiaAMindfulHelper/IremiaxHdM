@@ -27,6 +27,13 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         try? WCSession.default.updateApplicationContext(context)
     }
 
+    /// Streams a live partial transcript back to the Watch during recording.
+    func sendPartialTranscript(_ text: String) {
+        let session = WCSession.default
+        guard session.activationState == .activated, session.isReachable else { return }
+        session.sendMessage(["partialTranscript": text], replyHandler: nil, errorHandler: nil)
+    }
+
     // MARK: - WCSessionDelegate
 
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
@@ -42,25 +49,43 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         session.sendMessage(["emergencyContacts": data], replyHandler: nil)
     }
 
-    // MARK: - Voice action routing
+    // MARK: - Voice: control channel (no reply)
+
+    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        // Streamed audio chunk (same channel as control, so it stays ordered).
+        if let audio = message["voiceAudio"] as? Data {
+            EmergencyVoiceCoordinator.shared.appendVoiceAudio(audio)
+            return
+        }
+        switch message["action"] as? String {
+        case "voiceStart":
+            let speak = (message["speak"] as? Bool) ?? true
+            Task {
+                _ = await EmergencyVoiceCoordinator.shared.startVoiceStream(speak: speak) { partial in
+                    PhoneConnectivityManager.shared.sendPartialTranscript(partial)
+                }
+            }
+        case "voiceCancel":
+            EmergencyVoiceCoordinator.shared.cancelVoiceStream()
+        default:
+            break
+        }
+    }
+
+    // MARK: - Voice + mood: request/reply
 
     func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
         let action = message["action"] as? String ?? "(none)"
         print("[Voice] iPhone received message (with reply) action=\(action)")
-        guard let action = message["action"] as? String else {
-            replyHandler(["response": EmergencyFallback.random()])
-            return
-        }
         switch action {
-        case "transcribe":
-            let speak = (message["speak"] as? Bool) ?? true
-            guard let audio = message["audio"] as? Data else {
-                replyHandler(["response": EmergencyFallback.random(), "transcript": ""])
-                return
-            }
+        case "voiceStop":
             Task {
-                let result = await EmergencyVoiceCoordinator.shared.transcribeAndRespond(audio: audio, speak: speak)
-                replyHandler(["response": result.response, "transcript": result.transcript])
+                if let result = await EmergencyVoiceCoordinator.shared.finishVoiceStream() {
+                    replyHandler(["response": result.response, "transcript": result.transcript])
+                } else {
+                    // Nothing understood or Claude unavailable — the Watch shows an error.
+                    replyHandler(["error": true])
+                }
             }
         case "moodCheck":
             let mood = message["mood"] as? String ?? ""
@@ -72,7 +97,6 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
                 ) {
                     replyHandler(["response": response])
                 } else {
-                    // No payload — the Watch falls back to its local messages.
                     replyHandler(["error": true])
                 }
             }
@@ -82,12 +106,11 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
                 if let response = await EmergencyVoiceCoordinator.shared.dailyMessage(history: summary) {
                     replyHandler(["response": response])
                 } else {
-                    // No payload — the Watch keeps its cached/local message.
                     replyHandler(["error": true])
                 }
             }
         default:
-            replyHandler(["response": EmergencyFallback.random()])
+            replyHandler(["error": true])
         }
     }
 

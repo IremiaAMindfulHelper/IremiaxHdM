@@ -1,103 +1,43 @@
 import SwiftUI
-import AVFoundation
 
-// Local fallback when the iPhone/Claude is unreachable.
-let moodMicResponse =
-    "It sounds like your body is working hard right now. That's okay — it's trying to protect you. Place one hand on your chest, breathe in slowly for 4 counts, and out for 4. You're doing well."
+// MARK: - Shared voice input
 
-// MARK: - Mic level monitor
-
-@MainActor
-final class MicLevelMonitor: ObservableObject {
-    @Published var level: Float = 0
-
-    private var recorder: AVAudioRecorder?
-    private var timer: Timer?
-    private var smoothed: Float = 0
-    private var recordingURL: URL?
-
-    func start() {
-        let session = AVAudioSession.sharedInstance()
-        do {
-            try session.setCategory(.record, mode: .measurement, options: [])
-            try session.setActive(true)
-        } catch { return }
-
-        // AAC 16 kHz mono: small enough to send over WatchConnectivity in a
-        // single message, and plenty of fidelity for speech recognition. This
-        // one recording drives the waveform AND is shipped to the iPhone for
-        // transcription, so there is exactly one microphone in the chain.
-        let url = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("iremia_voice_clip.m4a")
-        try? FileManager.default.removeItem(at: url)
-        let settings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 16_000.0,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
-        ]
-        guard let rec = try? AVAudioRecorder(url: url, settings: settings) else { return }
-        rec.isMeteringEnabled = true
-        rec.record()
-        recorder = rec
-        recordingURL = url
-
-        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            rec.updateMeters()
-            let db = rec.averagePower(forChannel: 0)
-            // Threshold at -35 dB (ignores ambient noise), peaks at -5 dB.
-            // Tighter range makes the level jump quickly when someone speaks.
-            let mapped = max(0, min(1, (db + 35) / 30))
-            Task { @MainActor in
-                // Fast attack so bars react immediately; slow decay so they
-                // don't snap back the instant someone stops speaking.
-                let alpha: Float = mapped > self.smoothed ? 0.25 : 0.90
-                self.smoothed = self.smoothed * alpha + mapped * (1 - alpha)
-                self.level = self.smoothed
-            }
-        }
-    }
-
-    func stop() {
-        timer?.invalidate(); timer = nil
-        recorder?.stop(); recorder = nil
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        level = 0
-    }
-
-    /// The recorded clip. Call after `stop()` so the file is finalised.
-    /// Returns nil if nothing was recorded.
-    func recordedClip() -> Data? {
-        guard let recordingURL else { return nil }
-        let data = try? Data(contentsOf: recordingURL)
-        // A near-empty clip means the mic captured nothing — common in the
-        // watchOS Simulator, where transcription then comes back empty and the
-        // user only ever sees the canned fallback. Surfacing the byte count
-        // makes that diagnosable at a glance instead of looking like a Claude
-        // failure.
-        print("[Voice] recorded clip: \(data?.count ?? 0) bytes")
-        return data
-    }
-}
-
-// MARK: - Recording screen
-
-struct MoodMicView: View {
-    var onComplete: () -> Void
+/// The single voice-input surface used everywhere in the Watch app (mood
+/// check-in and emergency). It records via `VoiceCaptureController`, shows the
+/// live transcript streamed back from the iPhone, and ends in either a response
+/// or an error — there is no canned fallback text.
+struct VoiceInputView: View {
+    let speak: Bool
+    /// Called once with the final transcript + response so the caller can log
+    /// the session in the Journey.
+    var onLogged: (_ transcript: String, _ response: String) -> Void
+    /// Dismiss after a response (or after acknowledging an error).
+    var onClose: () -> Void
+    /// Dismiss after the user cancelled while listening.
     var onCancel: () -> Void
 
-    @StateObject private var monitor = MicLevelMonitor()
-    @State private var phase: Phase = .listening
-    @State private var responseText: String = moodMicResponse
+    @StateObject private var controller: VoiceCaptureController
+    // Observe the shared singleton directly rather than via @EnvironmentObject:
+    // this view is presented through a fullScreenCover (mood flow), which does
+    // not reliably inherit environment objects.
+    @ObservedObject private var connectivity = WatchConnectivityManager.shared
 
-    enum Phase { case listening, processing, responded }
+    init(
+        speak: Bool,
+        onLogged: @escaping (String, String) -> Void,
+        onClose: @escaping () -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        self.speak = speak
+        self.onLogged = onLogged
+        self.onClose = onClose
+        self.onCancel = onCancel
+        _controller = StateObject(wrappedValue: VoiceCaptureController(speak: speak))
+    }
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-
-            // Background circle positioned in lower half matching Figma Ellipse 35
             GeometryReader { geo in
                 Circle()
                     .fill(Color.iremiaPetrol.opacity(0.18))
@@ -106,65 +46,25 @@ struct MoodMicView: View {
             }
             .ignoresSafeArea()
 
-            switch phase {
-            case .listening:
+            switch controller.phase {
+            case .idle, .listening:
                 listeningView
-
             case .processing:
                 ProgressView()
                     .tint(Color.iremiaLabel)
                     .scaleEffect(0.9)
-
-            case .responded:
-                ZStack {
-                    DecorativeCirclesView(mood: .bad).ignoresSafeArea()
-                    VStack(spacing: 16) {
-                        Spacer(minLength: 0)
-                        Text(responseText)
-                            .font(.system(size: 13, weight: .medium))
-                            .multilineTextAlignment(.center)
-                            .foregroundStyle(Color.iremiaResponseText)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.horizontal, 16)
-                        Button {
-                            JourneyStore.shared.attachMoodContext(
-                                category: "Voice",
-                                detail: "Check-in",
-                                response: responseText
-                            )
-                            onComplete()
-                        } label: {
-                            Text("Continue")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(Color.iremiaPetrol)
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 7)
-                                .background(Capsule().fill(Color.iremiaLabel))
-                        }
-                        .buttonStyle(.plain)
-                        Spacer(minLength: 0)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .ignoresSafeArea()
+            case .responded(let text):
+                resultView(text, isError: false)
+            case .error(let text):
+                resultView(text, isError: true)
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear {
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
-                Task { @MainActor in if granted { monitor.start() } }
-            }
-        }
-        .onDisappear { monitor.stop() }
-        .task {
-            // 15 s safety fallback — user can stop manually via the stop button
-            try? await Task.sleep(for: .seconds(15))
-            guard phase == .listening else { return }
-            stopAndProcess()
-        }
+        .task { await controller.begin() }
+        .onDisappear { controller.teardown() }
     }
 
-    // MARK: Listening layout
+    // MARK: Listening
 
     private var listeningView: some View {
         VStack(spacing: 0) {
@@ -173,25 +73,37 @@ struct MoodMicView: View {
                 .foregroundStyle(Color.iremiaLabel)
                 .padding(.top, 8)
 
+            if !connectivity.liveTranscript.isEmpty {
+                Text(connectivity.liveTranscript)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.iremiaLabel.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+                    .lineLimit(2)
+            }
+
             Spacer()
 
-            // HStack(spacing:5) + frame(maxWidth:.infinity) on both bar sides gives
-            // each exactly (available − button − 2×spacing) / 2 wide, so the
-            // button lands at the mathematical centre on any screen size.
-            // Left bars trail-align so they press right up to the 5pt gap;
-            // right bars lead-align so they do the same from the other side.
             HStack(spacing: 5) {
-                LeftWaveformBars(level: monitor.level)
+                LeftWaveformBars(level: controller.level)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                StopButtonView { stopAndProcess() }
-                RightWaveformBars(level: monitor.level)
+                Button { Task { await controller.stopAndRespond() } } label: {
+                    RoundedRectangle(cornerRadius: 7)
+                        .fill(Color.iremiaPetrol)
+                        .frame(width: 30, height: 30)
+                }
+                .buttonStyle(.plain)
+                RightWaveformBars(level: controller.level)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 6)
 
             Spacer()
 
-            Button { stopAndCancel() } label: {
+            Button {
+                controller.cancel()
+                onCancel()
+            } label: {
                 Text("Cancel")
                     .font(.system(size: 12))
                     .foregroundStyle(Color.iremiaLabel)
@@ -202,59 +114,65 @@ struct MoodMicView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func stopAndProcess() {
-        monitor.stop()
-        withAnimation(.easeInOut(duration: 0.3)) { phase = .processing }
+    // MARK: Response / error
 
-        // Ship the clip recorded on the Watch to the iPhone for transcription
-        // (speak=false: the answer is shown on the Watch, no iPhone TTS).
-        guard let clip = monitor.recordedClip() else {
-            showResponse(moodMicResponse)
-            return
+    private func resultView(_ text: String, isError: Bool) -> some View {
+        ZStack {
+            DecorativeCirclesView(mood: .bad).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Spacer(minLength: 0)
+                Text(text)
+                    .font(.system(size: 13, weight: .medium))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(Color.iremiaResponseText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 16)
+                Button {
+                    if !isError {
+                        onLogged(controller.transcript, text)
+                    }
+                    onClose()
+                } label: {
+                    Text(isError ? "Close" : "Continue")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.iremiaPetrol)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(Color.iremiaLabel))
+                }
+                .buttonStyle(.plain)
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        Task {
-            let result = await WatchConnectivityManager.shared.requestVoiceResponse(audio: clip, speak: false)
-            let text = result?.response
-            showResponse((text?.isEmpty == false ? text! : moodMicResponse))
-        }
-    }
-
-    private func showResponse(_ text: String) {
-        Task { @MainActor in
-            responseText = text
-            withAnimation(.easeInOut(duration: 0.4)) { phase = .responded }
-        }
-    }
-
-    private func stopAndCancel() {
-        // Nothing is recording on the iPhone, so just drop the local clip.
-        monitor.stop()
-        onCancel()
+        .ignoresSafeArea()
     }
 }
 
-// MARK: - Stop button (Figma Rectangle 28: 39×39, rgb 9,91,90)
+// MARK: - Mood check-in entry point
 
-private struct StopButtonView: View {
-    let action: () -> Void
+struct MoodMicView: View {
+    var onComplete: () -> Void
+    var onCancel: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            RoundedRectangle(cornerRadius: 7)
-                .fill(Color.iremiaPetrol)
-                .frame(width: 30, height: 30)
-        }
-        .buttonStyle(.plain)
+        VoiceInputView(
+            speak: false,
+            onLogged: { _, response in
+                JourneyStore.shared.attachMoodContext(
+                    category: "Voice", detail: "Check-in", response: response
+                )
+            },
+            onClose: onComplete,
+            onCancel: onCancel
+        )
     }
 }
 
-// MARK: - Left waveform (Figma Group 21 — 5 bars, x=4 to x=60)
+// MARK: - Waveform bars (shared by every voice screen)
 
 struct LeftWaveformBars: View {
     let level: Float
-    // 8 bars (same count as right) so both groups are 52pt wide and extend
-    // equally close to their screen edge. Heights build toward the button
-    // (rightmost = nearest to button).
     private let heights:     [CGFloat] = [0.10, 0.18, 0.30, 0.55, 0.80, 1.00, 0.70, 0.45]
     private let frequencies: [Double]  = [1.9,  2.4,  2.1,  1.4,  1.3,  0.9,  1.7,  1.5]
     private let phases:      [Double]  = [1.2,  3.5,  0.4,  2.3,  0.0,  0.8,  1.5,  2.9]
@@ -262,8 +180,6 @@ struct LeftWaveformBars: View {
     var body: some View {
         TimelineView(.animation) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
-            // Additive: small idle baseline so bars always move gently,
-            // plus the real audio level on top for a clear jump when speaking.
             let amp = 0.18 + CGFloat(level)
             HStack(alignment: .center, spacing: 4) {
                 ForEach(0..<heights.count, id: \.self) { i in
@@ -278,11 +194,8 @@ struct LeftWaveformBars: View {
     }
 }
 
-// MARK: - Right waveform (Figma Group 22 — 8 bars, x=127 to x=182)
-
 struct RightWaveformBars: View {
     let level: Float
-    // Boost the far-end bars so all 8 bars are visibly animated throughout.
     private let heights:     [CGFloat] = [0.65, 1.00, 0.60, 0.42, 0.28, 0.20, 0.15, 0.12]
     private let frequencies: [Double]  = [1.1,  0.8,  1.5,  1.2,  1.8,  2.3,  1.6,  1.0]
     private let phases:      [Double]  = [3.1,  1.8,  0.2,  2.7,  1.1,  3.8,  0.6,  2.1]
@@ -290,8 +203,6 @@ struct RightWaveformBars: View {
     var body: some View {
         TimelineView(.animation) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
-            // Additive: small idle baseline so bars always move gently,
-            // plus the real audio level on top for a clear jump when speaking.
             let amp = 0.18 + CGFloat(level)
             HStack(alignment: .center, spacing: 4) {
                 ForEach(0..<heights.count, id: \.self) { i in

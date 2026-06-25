@@ -40,19 +40,38 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         WCSession.default.activate()
     }
 
-    // MARK: - Voice transcription
+    // MARK: - Voice streaming
 
-    /// Sends an audio clip recorded on the Watch to the iPhone, which
-    /// transcribes it and asks Claude. Returns the spoken/displayed response
-    /// plus the transcript (for the Journey log), or nil when the phone is
-    /// unreachable or the call failed so callers can fall back locally.
-    func requestVoiceResponse(audio: Data, speak: Bool) async -> (response: String, transcript: String)? {
-        guard await waitForReachable() else { return nil }
+    /// Opens a live recognition session on the iPhone. The phone transcribes
+    /// the streamed audio and pushes partials back via `partialTranscript`.
+    /// Returns false when the phone is unreachable so the caller shows an error.
+    func startVoice(speak: Bool) async -> Bool {
+        guard await waitForReachable() else { return false }
+        clearLiveTranscript()
+        WCSession.default.sendMessage(
+            ["action": "voiceStart", "speak": speak], replyHandler: nil, errorHandler: nil
+        )
+        return true
+    }
+
+    /// Streams one raw PCM chunk (16 kHz mono Float32) to the iPhone. Sent over
+    /// the same sendMessage channel as start/stop so the phone receives
+    /// start → chunks → stop strictly in order (no cross-channel reordering).
+    func sendVoiceAudio(_ data: Data) {
         let session = WCSession.default
-        let message: [String: Any] = ["action": "transcribe", "audio": audio, "speak": speak]
+        guard session.activationState == .activated, session.isReachable else { return }
+        session.sendMessage(["voiceAudio": data], replyHandler: nil, errorHandler: nil)
+    }
+
+    /// Tells the iPhone the user stopped speaking and awaits the final answer.
+    /// Returns nil when the phone is unreachable, nothing was understood, or
+    /// Claude failed — the caller surfaces an error (no local fallback).
+    func finishVoice() async -> (response: String, transcript: String)? {
+        let session = WCSession.default
+        guard session.activationState == .activated, session.isReachable else { return nil }
         return await withCheckedContinuation { continuation in
             session.sendMessage(
-                message,
+                ["action": "voiceStop"],
                 replyHandler: { reply in
                     if let response = reply["response"] as? String {
                         continuation.resume(returning: (response, reply["transcript"] as? String ?? ""))
@@ -60,11 +79,16 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
                         continuation.resume(returning: nil)
                     }
                 },
-                errorHandler: { _ in
-                    continuation.resume(returning: nil)
-                }
+                errorHandler: { _ in continuation.resume(returning: nil) }
             )
         }
+    }
+
+    /// Aborts an in-flight session without waiting for a response.
+    func cancelVoice() {
+        let session = WCSession.default
+        guard session.activationState == .activated, session.isReachable else { return }
+        session.sendMessage(["action": "voiceCancel"], replyHandler: nil, errorHandler: nil)
     }
 
     // MARK: - Claude mood check
