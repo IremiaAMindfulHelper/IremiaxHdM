@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct BreathingWatchView: View {
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     // Anchors the breath clock. Reset on every appearance (and when the app
     // returns to the foreground) so reopening the view always starts at
@@ -68,20 +67,6 @@ struct BreathingWatchView: View {
                     .ignoresSafeArea()
 
                 VStack {
-                    HStack {
-                        Spacer()
-                        Button { dismiss() } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.6))
-                                .frame(width: 28, height: 28)
-                                .background(Circle().fill(.white.opacity(0.1)))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.trailing, 8)
-                    .padding(.top, 4)
-
                     Spacer()
 
                     Text(step.label)
@@ -95,7 +80,6 @@ struct BreathingWatchView: View {
                 .padding(.bottom, 4)
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
         .onAppear { start = Date() }
         .onChange(of: scenePhase) { phase in
             if phase == .active { start = Date() }
