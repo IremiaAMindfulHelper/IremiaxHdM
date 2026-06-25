@@ -207,7 +207,7 @@ private struct HomeMenuView: View {
 
                 // Settings — bottom right → placeholder
                 NavigationLink {
-                    SettingsPlaceholderView()
+                    SettingsView()
                 } label: {
                     SettingsButton(size: 33 * s)
                 }
@@ -344,10 +344,22 @@ private struct LearnPlaceholderView: View {
     }
 }
 
-private struct SettingsPlaceholderView: View {
+private struct SettingsView: View {
+    // Off = German (default), On = English. Shared with the connectivity layer
+    // via VoiceSettings; the choice is sent to the iPhone on each voice session.
+    @AppStorage(VoiceSettings.englishKey) private var english = false
+
     var body: some View {
-        PlaceholderContent(icon: "gearshape.fill", title: "Settings")
-            .navigationTitle("Settings")
+        List {
+            Section("Speech recognition") {
+                Toggle("English", isOn: $english)
+            }
+            Text("When off, your spoken check-ins are transcribed in German (default).")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .listRowBackground(Color.clear)
+        }
+        .navigationTitle("Settings")
     }
 }
 

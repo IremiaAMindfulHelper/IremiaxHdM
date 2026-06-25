@@ -18,15 +18,15 @@ final class EmergencyVoiceCoordinator {
 
     /// Begins a live recognition session. `onPartial` is invoked on the main
     /// queue with the running transcript so the Watch can display it.
-    func startVoiceStream(onPartial: @escaping (String) -> Void) async -> Bool {
+    func startVoiceStream(localeIdentifier: String, onPartial: @escaping (String) -> Void) async -> Bool {
         if !didRequestAuth {
             didRequestAuth = true
             let granted = await speech.requestAuthorization()
             print("[Voice] speech auth granted=\(granted)")
         }
         speech.onPartial = onPartial
-        let started = speech.start()
-        print("[Voice] stream started=\(started)")
+        let started = speech.start(localeIdentifier: localeIdentifier)
+        print("[Voice] stream started=\(started) locale=\(localeIdentifier)")
         return started
     }
 

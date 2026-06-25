@@ -15,7 +15,7 @@ final class SpeechRecognitionService {
         commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false
     )!
 
-    private let recognizer: SFSpeechRecognizer?
+    private var recognizer: SFSpeechRecognizer?
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
 
@@ -27,10 +27,6 @@ final class SpeechRecognitionService {
     /// Called on the main queue with the latest partial transcript.
     var onPartial: ((String) -> Void)?
 
-    init(locale: Locale = Locale(identifier: "de-DE")) {
-        self.recognizer = SFSpeechRecognizer(locale: locale)
-    }
-
     /// Only speech-recognition authorization is needed — the iPhone does not
     /// record, so it never needs the microphone permission.
     func requestAuthorization() async -> Bool {
@@ -41,10 +37,13 @@ final class SpeechRecognitionService {
         }
     }
 
-    /// Opens a streaming recognition request. Returns false if recognition is
-    /// unavailable, so callers can surface an error instead of a canned reply.
-    func start() -> Bool {
+    /// Opens a streaming recognition request for the given language (e.g.
+    /// "de-DE" or "en-US"). Returns false if recognition is unavailable, so
+    /// callers can surface an error instead of a canned reply.
+    func start(localeIdentifier: String) -> Bool {
+        let recognizer = SFSpeechRecognizer(locale: Locale(identifier: localeIdentifier))
         guard let recognizer, recognizer.isAvailable else { return false }
+        self.recognizer = recognizer
         cancel()
 
         lock.lock(); latest = ""; didFinish = false; lock.unlock()

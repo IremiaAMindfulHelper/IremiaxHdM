@@ -59,8 +59,9 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         }
         switch message["action"] as? String {
         case "voiceStart":
+            let locale = message["locale"] as? String ?? "de-DE"
             Task {
-                _ = await EmergencyVoiceCoordinator.shared.startVoiceStream { partial in
+                _ = await EmergencyVoiceCoordinator.shared.startVoiceStream(localeIdentifier: locale) { partial in
                     PhoneConnectivityManager.shared.sendPartialTranscript(partial)
                 }
             }

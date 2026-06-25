@@ -1,6 +1,18 @@
 import Foundation
 import WatchConnectivity
 
+/// User preference for the speech-recognition language. German is the default;
+/// the Settings toggle flips it to English. Stored as a Bool in UserDefaults so
+/// the SwiftUI Toggle and the connectivity layer share one source of truth.
+enum VoiceSettings {
+    static let englishKey = "voiceRecognitionEnglish"
+
+    /// "de-DE" by default, "en-US" when the English toggle is on.
+    static var localeIdentifier: String {
+        UserDefaults.standard.bool(forKey: englishKey) ? "en-US" : "de-DE"
+    }
+}
+
 struct WatchContact: Identifiable, Codable {
     let id: Int64
     let name: String
@@ -44,12 +56,15 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
 
     /// Opens a live recognition session on the iPhone. The phone transcribes
     /// the streamed audio and pushes partials back via `partialTranscript`.
-    /// Returns false when the phone is unreachable so the caller shows an error.
+    /// The recognition language follows the user's Settings toggle (German by
+    /// default). Returns false when the phone is unreachable so the caller
+    /// shows an error.
     func startVoice() async -> Bool {
         guard await waitForReachable() else { return false }
         clearLiveTranscript()
         WCSession.default.sendMessage(
-            ["action": "voiceStart"], replyHandler: nil, errorHandler: nil
+            ["action": "voiceStart", "locale": VoiceSettings.localeIdentifier],
+            replyHandler: nil, errorHandler: nil
         )
         return true
     }
