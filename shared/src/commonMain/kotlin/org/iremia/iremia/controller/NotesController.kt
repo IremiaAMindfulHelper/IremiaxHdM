@@ -51,8 +51,32 @@ class NotesController(
     /** Android: Add a new note. */
     suspend fun add(content: String, createdAt: Long) = repo.add(content, createdAt)
 
+    /** Android: Add a full episode with captured metadata. */
+    suspend fun addEpisode(
+        content: String,
+        createdAt: Long,
+        strength: Int?,
+        places: List<String>,
+        activities: List<String>,
+        bodySignals: List<String>,
+        moodBefore: Int?,
+        moodAfter: Int?,
+    ) = repo.addEpisode(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
+
     /** Android: Update an existing note. */
     suspend fun update(id: Long, content: String) = repo.update(id, content)
+
+    /** Android: Update an episode with metadata. */
+    suspend fun updateEpisode(
+        id: Long,
+        content: String,
+        strength: Int?,
+        places: List<String>,
+        activities: List<String>,
+        bodySignals: List<String>,
+        moodBefore: Int?,
+        moodAfter: Int?,
+    ) = repo.updateEpisode(id, content, strength, places, activities, bodySignals, moodBefore, moodAfter)
 
     /** Android: Delete a note. */
     suspend fun delete(id: Long) = repo.delete(id)
@@ -66,12 +90,50 @@ class NotesController(
         }
     }
 
+    /** iOS: Add a full episode with captured metadata. */
+    fun addEpisodeAsync(
+        content: String,
+        createdAt: Long,
+        strength: Int?,
+        places: List<String>,
+        activities: List<String>,
+        bodySignals: List<String>,
+        moodBefore: Int?,
+        moodAfter: Int?,
+        onDone: (Throwable?) -> Unit,
+    ) {
+        scope.launch {
+            runCatching {
+                repo.addEpisode(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
+            }.onFailure(onDone).onSuccess { onDone(null) }
+        }
+    }
+
     /** iOS: Update an existing note. */
     fun updateAsync(id: Long, content: String, onDone: (Throwable?) -> Unit) {
         scope.launch {
             runCatching { repo.update(id, content) }
                 .onFailure(onDone)
                 .onSuccess { onDone(null) }
+        }
+    }
+
+    /** iOS: Update an episode with metadata. */
+    fun updateEpisodeAsync(
+        id: Long,
+        content: String,
+        strength: Int?,
+        places: List<String>,
+        activities: List<String>,
+        bodySignals: List<String>,
+        moodBefore: Int?,
+        moodAfter: Int?,
+        onDone: (Throwable?) -> Unit,
+    ) {
+        scope.launch {
+            runCatching {
+                repo.updateEpisode(id, content, strength, places, activities, bodySignals, moodBefore, moodAfter)
+            }.onFailure(onDone).onSuccess { onDone(null) }
         }
     }
 

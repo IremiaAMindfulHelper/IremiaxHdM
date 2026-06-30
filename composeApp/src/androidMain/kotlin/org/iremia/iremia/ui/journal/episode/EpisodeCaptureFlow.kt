@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import org.iremia.iremia.domain.note.EpisodeDraft
 import org.iremia.iremia.ui.theme.IremiaColors
 import java.util.Calendar
 
@@ -33,7 +34,8 @@ fun EpisodeCaptureFlow(
     entryCount: Int,
     onClose: () -> Unit,
     onFinished: () -> Unit,
-    onSaveNote: (String) -> Unit,
+    onViewGarden: () -> Unit = onFinished,
+    onSaveEpisode: (EpisodeDraft) -> Unit,
 ) {
     val finalEntryCount = remember { entryCount + 1 }
     var step by rememberSaveable { mutableStateOf(EpisodeStep.Intensity) }
@@ -88,7 +90,17 @@ fun EpisodeCaptureFlow(
                 onMoodAfter = { moodAfter = it },
                 onBack = { step = EpisodeStep.Context },
                 onSave = {
-                    onSaveNote(note)
+                    onSaveEpisode(
+                        EpisodeDraft(
+                            content = note,
+                            strength = strength.toInt(),
+                            places = places.toList(),
+                            activities = activities.toList(),
+                            bodySignals = bodySignals.toList(),
+                            moodBefore = moodBefore.takeIf { it >= 0 },
+                            moodAfter = moodAfter.takeIf { it >= 0 },
+                        )
+                    )
                     step = EpisodeStep.Saved
                 },
             )
@@ -98,6 +110,7 @@ fun EpisodeCaptureFlow(
                 goal = INSIGHTS_GOAL,
                 onInsights = onFinished,
                 onHome = onFinished,
+                onViewGarden = onViewGarden,
             )
         }
     }

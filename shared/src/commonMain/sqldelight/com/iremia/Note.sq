@@ -1,7 +1,15 @@
 CREATE TABLE note (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   content TEXT NOT NULL,
-  createdAt INTEGER NOT NULL -- timestamp in millis
+  createdAt INTEGER NOT NULL, -- timestamp in millis
+  -- Episode metadata (all nullable; older rows keep NULL). Multi-select fields
+  -- are stored as comma-separated tokens. Mood/strength are small integers.
+  strength INTEGER,
+  place TEXT,
+  activity TEXT,
+  bodySignals TEXT,
+  moodBefore INTEGER,
+  moodAfter INTEGER
 );
 
 selectAll:
@@ -10,12 +18,18 @@ FROM note
 ORDER BY createdAt DESC;
 
 insert:
-INSERT INTO note(content, createdAt)
-VALUES (?, ?);
+INSERT INTO note(content, createdAt, strength, place, activity, bodySignals, moodBefore, moodAfter)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 updateById:
 UPDATE note
-SET content = ?
+SET content = ?,
+    strength = ?,
+    place = ?,
+    activity = ?,
+    bodySignals = ?,
+    moodBefore = ?,
+    moodAfter = ?
 WHERE id = ?;
 
 deleteById:

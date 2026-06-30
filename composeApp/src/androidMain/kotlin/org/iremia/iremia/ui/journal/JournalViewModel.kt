@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.iremia.iremia.controller.NotesController
 import org.iremia.iremia.controller.NotesState
+import org.iremia.iremia.domain.note.EpisodeDraft
 
 /**
  * ViewModel for the Journal Screen.
@@ -30,6 +31,24 @@ class JournalViewModel(
     fun addNote(content: String) {
         viewModelScope.launch {
             notesController.add(content, System.currentTimeMillis())
+        }
+    }
+
+    /**
+     * Add a full episode with the metadata captured by the wizard.
+     */
+    fun addEpisode(draft: EpisodeDraft) {
+        viewModelScope.launch {
+            notesController.addEpisode(
+                content = draft.content,
+                createdAt = System.currentTimeMillis(),
+                strength = draft.strength,
+                places = draft.places,
+                activities = draft.activities,
+                bodySignals = draft.bodySignals,
+                moodBefore = draft.moodBefore,
+                moodAfter = draft.moodAfter,
+            )
         }
     }
 

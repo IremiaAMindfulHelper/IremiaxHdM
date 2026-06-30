@@ -1,5 +1,6 @@
 package org.iremia.iremia.ui.journal.episode
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,8 +42,17 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import io.github.alexzhirkevich.compottie.DotLottie
+import io.github.alexzhirkevich.compottie.LottieCompositionSpec
+import io.github.alexzhirkevich.compottie.rememberLottieComposition
+import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -413,6 +423,7 @@ fun EpisodeSavedScreen(
     goal: Int,
     onInsights: () -> Unit,
     onHome: () -> Unit,
+    onViewGarden: () -> Unit = {},
 ) {
     val context = LocalContext.current
     Column(
@@ -424,16 +435,10 @@ fun EpisodeSavedScreen(
             .padding(vertical = IremiaSpacing.S5),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(Modifier.height(IremiaSpacing.S8))
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(IremiaColors.Teal50),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Filled.Check, contentDescription = null, tint = IremiaColors.Teal700, modifier = Modifier.size(36.dp))
-        }
+        Spacer(Modifier.height(IremiaSpacing.S6))
+        // A large growth animation so the user actually sees their tree grow after
+        // saving, without losing the app context (we stay on the saved screen).
+        EpisodeGrowthAnimation(modifier = Modifier.size(160.dp))
         Spacer(Modifier.height(IremiaSpacing.S4))
         Text(localized(SharedRes.strings.episode_saved_title).toString(context), style = IremiaText.H1, color = IremiaColors.Ink)
         Spacer(Modifier.height(IremiaSpacing.S2))
@@ -488,8 +493,32 @@ fun EpisodeSavedScreen(
         }
 
         Spacer(Modifier.weight(1f))
-        PrimaryButton(localized(SharedRes.strings.episode_saved_insights).toString(context), onInsights, trailingIcon = Icons.AutoMirrored.Filled.ArrowForward)
+        PrimaryButton(localized(SharedRes.strings.episode_saved_view_garden).toString(context), onViewGarden, trailingIcon = Icons.Filled.Eco)
+        Spacer(Modifier.height(IremiaSpacing.S1))
+        SecondaryTextButton(localized(SharedRes.strings.episode_saved_insights).toString(context), onInsights)
         Spacer(Modifier.height(IremiaSpacing.S1))
         SecondaryTextButton(localized(SharedRes.strings.episode_saved_home).toString(context), onHome)
     }
+}
+
+/** Plays the plant-growth Lottie once, so the user sees their new tree grow. */
+@Composable
+private fun EpisodeGrowthAnimation(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val growBytes = remember {
+        context.resources.openRawResource(SharedRes.files.tree_growth_without_background_lottie.rawResId)
+            .use { it.readBytes() }
+    }
+    val composition by rememberLottieComposition { LottieCompositionSpec.DotLottie(growBytes) }
+    val progress = remember { Animatable(0f) }
+    val painter = rememberLottiePainter(composition = composition, progress = { progress.value })
+
+    LaunchedEffect(composition) {
+        if (composition != null) {
+            progress.snapTo(0f)
+            progress.animateTo(1f, tween(durationMillis = 2200, easing = LinearEasing))
+        }
+    }
+
+    Image(painter = painter, contentDescription = null, modifier = modifier)
 }

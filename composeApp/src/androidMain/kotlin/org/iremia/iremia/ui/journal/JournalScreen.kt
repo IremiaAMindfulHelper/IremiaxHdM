@@ -193,8 +193,12 @@ fun JournalScreen(modifier: Modifier = Modifier) {
                 entryCount = state.entryCount,
                 onClose = { showCaptureFlow = false },
                 onFinished = { showCaptureFlow = false },
-                onSaveNote = { content ->
-                    viewModel.addNote(content)
+                onViewGarden = {
+                    showCaptureFlow = false
+                    showGarden = true
+                },
+                onSaveEpisode = { draft ->
+                    viewModel.addEpisode(draft)
                 }
             )
         }
