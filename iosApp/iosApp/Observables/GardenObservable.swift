@@ -79,4 +79,9 @@ final class GardenObservable: ObservableObject {
     func navigateMonth(delta: Int) {
         controller.navigateMonthAsync(delta: Int32(delta)) { _ in }
     }
+
+    /// Clears the growth-animation marker once the planting animation has played.
+    func clearNewlyPlanted() {
+        controller.clearNewlyPlanted()
+    }
 }

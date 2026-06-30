@@ -106,6 +106,11 @@ struct GardenSceneView: View {
     var interactive: Bool = false
     var selectedTile: Int? = nil
     var onTileTap: ((Int) -> Void)? = nil
+    var newlyPlantedTileIndex: Int? = nil
+    var onGrowthFinished: (() -> Void)? = nil
+
+    /// 0 → 1 growth progress for the newly planted sprite (scale + fade-in).
+    @State private var plantProgress: CGFloat = 1
 
     var body: some View {
         Canvas { ctx, size in
@@ -160,16 +165,23 @@ struct GardenSceneView: View {
                     if let plantType = tile?.plantType,
                        let uiImage = plantType.image.toUIImage() {
                         let scale = scaleFor(Int(count))
-                        let spriteWidth = l.tileW * scale
+                        // The just-planted sprite grows from the ground: it scales up
+                        // and fades in via plantProgress, others stay at full size.
+                        let isGrowing = index == newlyPlantedTileIndex
+                        let growth: CGFloat = isGrowing ? max(0.05, plantProgress) : 1
+                        let spriteWidth = l.tileW * scale * growth
                         let aspect = uiImage.size.height / uiImage.size.width
                         let spriteHeight = spriteWidth * aspect
-                        
+
                         let left = base.x - spriteWidth / 2
+                        // Keep the trunk pinned to the tile while the crown grows up.
                         let top = (base.y + l.tileH / 2) - spriteHeight
-                        
+
                         let rect = CGRect(x: left, y: top, width: spriteWidth, height: spriteHeight)
-                        let resolvedImage = ctx.resolve(Image(uiImage: uiImage))
-                        ctx.draw(resolvedImage, in: rect)
+                        var spriteCtx = ctx
+                        if isGrowing { spriteCtx.opacity = Double(plantProgress) }
+                        let resolvedImage = spriteCtx.resolve(Image(uiImage: uiImage))
+                        spriteCtx.draw(resolvedImage, in: rect)
                     } else {
                         // Fallback to procedural
                         let foliage = foliagePalettes[(index * 5 + 2) % foliagePalettes.count]
@@ -185,22 +197,8 @@ struct GardenSceneView: View {
         }
         .aspectRatio(1.35, contentMode: .fit)
         .contentShape(Rectangle())
-        .onTapGesture { location in
-            guard interactive, let tap = onTileTap else { return }
-            // NOTE: We need the actual rendered size. Canvas uses the proposed size.
-            // This approximation works because aspectRatio constrains the canvas.
-        }
-        .simultaneousGesture(
-            interactive ?
-            DragGesture(minimumDistance: 0)
-                .onEnded { value in
-                    guard let tap = onTileTap else { return }
-                    // Use the tap location from the gesture
-                    let point = value.location
-                    // We need the size, estimate from parent
-                }
-            : nil
-        )
+        // Tap handling needs the actual rendered size, so it lives in this overlay
+        // GeometryReader rather than a plain .onTapGesture on the Canvas.
         .overlay(
             interactive ?
             GeometryReader { geo in
@@ -215,6 +213,15 @@ struct GardenSceneView: View {
             }
             : nil
         )
+        .onChange(of: newlyPlantedTileIndex) { idx in
+            guard idx != nil else { return }
+            // Grow the new sprite from the ground, then clear the marker.
+            plantProgress = 0
+            withAnimation(.easeOut(duration: 1.4)) { plantProgress = 1 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                onGrowthFinished?()
+            }
+        }
     }
 }
 

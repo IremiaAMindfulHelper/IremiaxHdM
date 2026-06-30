@@ -71,7 +71,9 @@ struct GardenOverviewScreen: View {
                 rows: garden.gridRows,
                 interactive: true,
                 selectedTile: garden.selectedTile,
-                onTileTap: { garden.selectTile($0) }
+                onTileTap: { garden.selectTile($0) },
+                newlyPlantedTileIndex: garden.newlyPlantedTileIndex,
+                onGrowthFinished: { garden.clearNewlyPlanted() }
             )
             .padding(IremiaSpacing.s3)
             .background(

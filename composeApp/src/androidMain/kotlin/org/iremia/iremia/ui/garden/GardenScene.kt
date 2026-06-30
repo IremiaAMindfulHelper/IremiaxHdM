@@ -151,38 +151,38 @@ fun GardenScene(
         progress = { lottieProgress.value }
     )
 
-    LaunchedEffect(newlyPlantedTileIndex) {
-        if (newlyPlantedTileIndex != null) {
-            lottieProgress.snapTo(0.0f)
-            crossfadeAlpha.snapTo(0.0f)
+    // The plant grows only for a tile that was just planted. We key on the index
+    // AND on whether the matching composition has loaded, so the growth step never
+    // runs against an empty (still-loading) painter — otherwise nothing is drawn.
+    val newPlantIsTree = newlyPlantedTileIndex?.let { idx ->
+        tiles.getOrNull(idx)?.plantType?.isTree
+    }
+    val activeComposition = when (newPlantIsTree) {
+        true -> treeComposition
+        false -> plantComposition
+        null -> null
+    }
 
-            // Step 1: Zoom in (800ms)
-            zoomProgress.animateTo(
-                targetValue = 1.0f,
-                animationSpec = tween(durationMillis = 800, easing = EaseInOutCubic)
-            )
+    LaunchedEffect(newlyPlantedTileIndex, activeComposition) {
+        if (newlyPlantedTileIndex == null || activeComposition == null) return@LaunchedEffect
 
-            // Step 2: Play growth animation (1800ms)
-            lottieProgress.animateTo(
-                targetValue = 1.0f,
-                animationSpec = tween(durationMillis = 1800, easing = LinearEasing)
-            )
+        zoomProgress.snapTo(0.0f)
+        lottieProgress.snapTo(0.0f)
+        crossfadeAlpha.snapTo(0.0f)
 
-            // Step 3: Crossfade (400ms)
-            crossfadeAlpha.animateTo(
-                targetValue = 1.0f,
-                animationSpec = tween(durationMillis = 400, easing = EaseInOutCubic)
-            )
+        // Step 1: Zoom in to the new plant.
+        zoomProgress.animateTo(1.0f, tween(durationMillis = 800, easing = EaseInOutCubic))
 
-            // Step 4: Zoom out (800ms)
-            zoomProgress.animateTo(
-                targetValue = 0.0f,
-                animationSpec = tween(durationMillis = 800, easing = EaseInOutCubic)
-            )
+        // Step 2: Play the growth animation (composition is guaranteed loaded here).
+        lottieProgress.animateTo(1.0f, tween(durationMillis = 1800, easing = LinearEasing))
 
-            // Finished!
-            onAnimationFinished()
-        }
+        // Step 3: Crossfade the Lottie into the final static sprite.
+        crossfadeAlpha.animateTo(1.0f, tween(durationMillis = 400, easing = EaseInOutCubic))
+
+        // Step 4: Zoom back out to the full garden.
+        zoomProgress.animateTo(0.0f, tween(durationMillis = 800, easing = EaseInOutCubic))
+
+        onAnimationFinished()
     }
 
     val tap = if (interactive) {
