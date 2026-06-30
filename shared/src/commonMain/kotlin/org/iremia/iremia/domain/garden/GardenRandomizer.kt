@@ -27,20 +27,24 @@ object GardenRandomizer {
         return freePositions[random.nextInt(freePositions.size)]
     }
 
+    /** Share of planted entries that become a flower crate (rest are trees). */
+    private const val FLOWER_CRATE_SHARE = 0.35f
+
     /**
      * Selects a random [PlantType] for the given entry.
      *
-     * Weighted toward trees (~80%) with occasional flower crates (~20%).
+     * Weighted toward trees with a meaningful share of flower crates so flower
+     * beds appear regularly instead of almost never.
      *
      * @param entryId Unique entry identifier used as seed for deterministic selection.
      * @return The chosen [PlantType].
      */
     fun assignPlantType(entryId: Long): PlantType {
         val random = Random(entryId * 31 + 7) // Different seed offset than position
-        return if (random.nextFloat() < 0.8f) {
-            PlantType.trees[random.nextInt(PlantType.trees.size)]
-        } else {
+        return if (random.nextFloat() < FLOWER_CRATE_SHARE) {
             PlantType.flowers[random.nextInt(PlantType.flowers.size)]
+        } else {
+            PlantType.trees[random.nextInt(PlantType.trees.size)]
         }
     }
 

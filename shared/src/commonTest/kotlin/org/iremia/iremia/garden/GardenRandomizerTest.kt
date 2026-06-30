@@ -71,4 +71,12 @@ class GardenRandomizerTest {
         assertTrue(grid.count { it.entryId == null } == 24)
         assertNull(grid.first { it.entryId == null }.plantType)
     }
+
+    @Test
+    fun flower_crates_appear_regularly() {
+        // Flower beds should be a meaningful minority (~35%), not almost never.
+        val sample = (1L..1000L).map { GardenRandomizer.assignPlantType(it) }
+        val flowerShare = sample.count { !it.isTree }.toDouble() / sample.size
+        assertTrue(flowerShare in 0.25..0.45, "flower share was $flowerShare, expected ~0.35")
+    }
 }

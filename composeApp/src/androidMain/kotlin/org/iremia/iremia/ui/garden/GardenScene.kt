@@ -44,9 +44,11 @@ import kotlin.math.roundToInt
 // =============================================================================
 
 // NOTE: A single uniform grass tone for every tile so the top surface reads as
-// one seamless meadow instead of a two-tone checkerboard.
-private val GrassTop = Color(0xFF8FCB9B)
-private val GrassEdge = Color(0xFF5FA877)
+// one seamless meadow instead of a two-tone checkerboard. The value is sampled
+// from the grass base baked into the (unchangeable) plant sprite assets
+// (~#A8C060) so the drawn platform blends seamlessly with the sprites.
+private val GrassTop = Color(0xFFA8C060)
+private val GrassEdge = Color(0xFF8AA24A)
 private val SoilLeft = Color(0xFF5E4A38)
 private val SoilRight = Color(0xFF7A5C46)
 private val FlowerColors = listOf(Color(0xFFE5A3B8), Color(0xFFF6C453), Color(0xFFB7E4C7), Color(0xFFC9A7EB))
@@ -422,10 +424,13 @@ private fun DrawScope.drawShadow(base: Offset, tileW: Float) {
     )
 }
 
-/** Ambient decoration for an empty day: a small bush or a flower (deterministic). */
+/**
+ * Ambient decoration for an empty tile (deterministic). Weighted toward flowers
+ * so the meadow looks lush; bushes are rarer and bare tiles rarest.
+ */
 private fun DrawScope.drawDecoration(base: Offset, tileW: Float, index: Int) {
     when ((index * 31 + 7) % 10) {
-        in 0..2 -> {
+        in 0..5 -> {
             val color = FlowerColors[index % FlowerColors.size]
             drawPath(
                 Path().apply {
@@ -439,7 +444,7 @@ private fun DrawScope.drawDecoration(base: Offset, tileW: Float, index: Int) {
             )
             drawCircle(color, tileW * 0.05f, base + Offset(0f, -tileW * 0.16f))
         }
-        in 3..4 -> {
+        in 6..7 -> {
             drawCircle(IremiaColors.Garden500, tileW * 0.1f, base + Offset(0f, -tileW * 0.05f))
             drawCircle(IremiaColors.Garden500, tileW * 0.08f, base + Offset(-tileW * 0.1f, -tileW * 0.02f))
             drawCircle(IremiaColors.Garden300, tileW * 0.06f, base + Offset(tileW * 0.08f, -tileW * 0.06f))

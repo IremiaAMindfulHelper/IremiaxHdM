@@ -13,9 +13,11 @@ typealias Color = SwiftUI.Color
 // MARK: - Color Constants
 
 // NOTE: A single uniform grass tone for every tile so the top surface reads as
-// one seamless meadow instead of a two-tone checkerboard.
-private let grassTop  = Color(red: 0x8F / 255.0, green: 0xCB / 255.0, blue: 0x9B / 255.0)
-private let grassEdge  = Color(red: 0x5F / 255.0, green: 0xA8 / 255.0, blue: 0x77 / 255.0)
+// one seamless meadow instead of a two-tone checkerboard. Sampled from the grass
+// base baked into the (unchangeable) plant sprite assets (~#A8C060) so the drawn
+// platform blends seamlessly with the sprites.
+private let grassTop  = Color(red: 0xA8 / 255.0, green: 0xC0 / 255.0, blue: 0x60 / 255.0)
+private let grassEdge  = Color(red: 0x8A / 255.0, green: 0xA2 / 255.0, blue: 0x4A / 255.0)
 private let soilLeft   = Color(red: 0x5E / 255.0, green: 0x4A / 255.0, blue: 0x38 / 255.0)
 private let soilRight  = Color(red: 0x7A / 255.0, green: 0x5C / 255.0, blue: 0x46 / 255.0)
 private let flowerColors: [Color] = [
@@ -339,14 +341,15 @@ private func drawBroadleaf(ctx: GraphicsContext, base: CGPoint, tileW: CGFloat, 
     }
 }
 
+// Weighted toward flowers so the meadow looks lush; bushes rarer, bare tiles rarest.
 private func drawDecoration(ctx: GraphicsContext, base: CGPoint, tileW: CGFloat, index: Int) {
     switch (index * 31 + 7) % 10 {
-    case 0...2:
+    case 0...5:
         let color = flowerColors[index % flowerColors.count]
         ctx.fill(Path(CGRect(x: base.x - tileW * 0.012, y: base.y - tileW * 0.14, width: tileW * 0.024, height: tileW * 0.14)), with: .color(IremiaColors.garden500))
         let center = CGPoint(x: base.x, y: base.y - tileW * 0.16)
         ctx.fill(Path(ellipseIn: CGRect(x: center.x - tileW * 0.05, y: center.y - tileW * 0.05, width: tileW * 0.1, height: tileW * 0.1)), with: .color(color))
-    case 3...4:
+    case 6...7:
         let c1 = CGPoint(x: base.x, y: base.y - tileW * 0.05)
         ctx.fill(Path(ellipseIn: CGRect(x: c1.x - tileW * 0.1, y: c1.y - tileW * 0.1, width: tileW * 0.2, height: tileW * 0.2)), with: .color(IremiaColors.garden500))
         let c2 = CGPoint(x: base.x - tileW * 0.1, y: base.y - tileW * 0.02)
