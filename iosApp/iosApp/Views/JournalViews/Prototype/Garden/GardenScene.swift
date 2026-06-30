@@ -171,7 +171,9 @@ struct GardenSceneView: View {
                         // drawn by the growth Lottie overlay below
                     } else if let plantType = tile?.plantType,
                        let uiImage = plantType.image.toUIImage() {
-                        let scale = scaleFor(Int(count))
+                        // Flower crates are smaller assets, so draw them larger.
+                        let sizeMult: CGFloat = plantType.isTree ? 1.0 : 1.7
+                        let scale = scaleFor(Int(count)) * sizeMult
                         let spriteWidth = l.tileW * scale
                         let aspect = uiImage.size.height / uiImage.size.width
                         let spriteHeight = spriteWidth * aspect

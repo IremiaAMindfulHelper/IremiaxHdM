@@ -263,7 +263,7 @@ fun GardenScene(
 
                     val activeLottiePainter = if (plantType.isTree) treeLottiePainter else plantLottiePainter
                     val count = tile.entryCount
-                    val scale = scaleFor(count)
+                    val scale = scaleFor(count) * plantType.sizeMultiplier()
                     val spriteWidth = l.tileW * scale
 
                     // 1. Draw Lottie growth animation (fading out during crossfade)
@@ -307,7 +307,7 @@ fun GardenScene(
                     val painter = plantPainters[plantType]
                     if (painter != null) {
                         val count = tile.entryCount
-                        val scale = scaleFor(count)
+                        val scale = scaleFor(count) * plantType.sizeMultiplier()
                         val spriteWidth = l.tileW * scale
                         val aspect = painter.intrinsicSize.height / painter.intrinsicSize.width
                         val spriteHeight = spriteWidth * aspect
@@ -347,6 +347,9 @@ fun GardenScene(
         }
     }
 }
+
+/** Flower crates are smaller assets than trees, so draw them noticeably larger. */
+private fun PlantType.sizeMultiplier(): Float = if (isTree) 1.0f else 1.7f
 
 private fun scaleFor(count: Int): Float = when (count) {
     1 -> 0.8f

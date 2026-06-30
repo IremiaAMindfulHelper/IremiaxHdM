@@ -42,15 +42,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import io.github.alexzhirkevich.compottie.DotLottie
 import io.github.alexzhirkevich.compottie.LottieCompositionSpec
+import io.github.alexzhirkevich.compottie.animateLottieCompositionAsState
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -526,15 +523,13 @@ private fun EpisodeGrowthAnimation(modifier: Modifier = Modifier) {
             .use { it.readBytes() }
     }
     val composition by rememberLottieComposition { LottieCompositionSpec.DotLottie(growBytes) }
-    val progress = remember { Animatable(0f) }
-    val painter = rememberLottiePainter(composition = composition, progress = { progress.value })
-
-    LaunchedEffect(composition) {
-        if (composition != null) {
-            progress.snapTo(0f)
-            progress.animateTo(1f, tween(durationMillis = 2200, easing = LinearEasing))
-        }
-    }
+    // Idiomatic Compottie auto-play: drives progress itself once the composition loads.
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = 1,
+        isPlaying = true,
+    )
+    val painter = rememberLottiePainter(composition = composition, progress = { progress })
 
     Image(painter = painter, contentDescription = null, modifier = modifier)
 }
