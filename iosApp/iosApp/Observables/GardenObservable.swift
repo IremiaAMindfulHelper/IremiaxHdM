@@ -59,7 +59,7 @@ final class GardenObservable: ObservableObject {
         if let idx = index {
             controller.selectTileAsync(index: Int32(idx)) { _ in }
         } else {
-            controller.selectTile(index: nil)
+            controller.deselectTileAsync { _ in }
         }
     }
 

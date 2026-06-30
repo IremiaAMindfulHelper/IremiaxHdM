@@ -36,6 +36,23 @@ enum class PlantType(val resourceName: String) {
     /** True for all tree types, false for flower crates. */
     val isTree: Boolean get() = this != FLOWER_YELLOW && this != FLOWER_PURPLE
 
+    /** The moko ImageResource associated with this PlantType. */
+    val image: dev.icerock.moko.resources.ImageResource
+        get() = when (this) {
+            BIRCH -> org.iremia.library.SharedRes.images.sprite_1_1
+            MAPLE -> org.iremia.library.SharedRes.images.sprite_1_2
+            OAK -> org.iremia.library.SharedRes.images.sprite_1_3
+            WILLOW -> org.iremia.library.SharedRes.images.sprite_1_4
+            CEDAR -> org.iremia.library.SharedRes.images.sprite_1_5
+            PINE -> org.iremia.library.SharedRes.images.sprite_2_1
+            SPRUCE -> org.iremia.library.SharedRes.images.sprite_2_2
+            CHERRY -> org.iremia.library.SharedRes.images.sprite_2_3
+            CYPRESS -> org.iremia.library.SharedRes.images.sprite_2_4
+            REDWOOD -> org.iremia.library.SharedRes.images.sprite_2_5
+            FLOWER_YELLOW -> org.iremia.library.SharedRes.images.flower_gelb
+            FLOWER_PURPLE -> org.iremia.library.SharedRes.images.flower_lila
+        }
+
     companion object {
         /** All tree types (no flowers). */
         val trees: List<PlantType> = entries.filter { it.isTree }
@@ -44,22 +61,3 @@ enum class PlantType(val resourceName: String) {
         val flowers: List<PlantType> = entries.filter { !it.isTree }
     }
 }
-
-/**
- * Extension property to get the moko ImageResource associated with the PlantType.
- */
-val PlantType.image: dev.icerock.moko.resources.ImageResource
-    get() = when (this) {
-        PlantType.BIRCH -> org.iremia.library.SharedRes.images.sprite_1_1
-        PlantType.MAPLE -> org.iremia.library.SharedRes.images.sprite_1_2
-        PlantType.OAK -> org.iremia.library.SharedRes.images.sprite_1_3
-        PlantType.WILLOW -> org.iremia.library.SharedRes.images.sprite_1_4
-        PlantType.CEDAR -> org.iremia.library.SharedRes.images.sprite_1_5
-        PlantType.PINE -> org.iremia.library.SharedRes.images.sprite_2_1
-        PlantType.SPRUCE -> org.iremia.library.SharedRes.images.sprite_2_2
-        PlantType.CHERRY -> org.iremia.library.SharedRes.images.sprite_2_3
-        PlantType.CYPRESS -> org.iremia.library.SharedRes.images.sprite_2_4
-        PlantType.REDWOOD -> org.iremia.library.SharedRes.images.sprite_2_5
-        PlantType.FLOWER_YELLOW -> org.iremia.library.SharedRes.images.flower_gelb
-        PlantType.FLOWER_PURPLE -> org.iremia.library.SharedRes.images.flower_lila
-    }

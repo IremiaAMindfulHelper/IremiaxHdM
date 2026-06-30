@@ -1,6 +1,8 @@
 import SwiftUI
 import Shared
 
+typealias Color = SwiftUI.Color
+
 // =============================================================================
 // Isometric "Forest"-style garden — 1:1 translation of GardenScene.kt (331 lines).
 //
@@ -154,18 +156,29 @@ struct GardenSceneView: View {
                     drawDecoration(ctx: ctx, base: base, tileW: l.tileW, index: index)
                 } else {
                     drawShadow(ctx: ctx, base: base, tileW: l.tileW)
-                    let foliage = foliagePalettes[(index * 5 + 2) % foliagePalettes.count]
-                    let scale = scaleFor(Int(count))
-                    let isTree = tile?.plantType?.isTree ?? true
-                    if isTree {
+                    
+                    if let plantType = tile?.plantType,
+                       let uiImage = plantType.image.toUIImage() {
+                        let scale = scaleFor(Int(count))
+                        let spriteWidth = l.tileW * scale
+                        let aspect = uiImage.size.height / uiImage.size.width
+                        let spriteHeight = spriteWidth * aspect
+                        
+                        let left = base.x - spriteWidth / 2
+                        let top = (base.y + l.tileH / 2) - spriteHeight
+                        
+                        let rect = CGRect(x: left, y: top, width: spriteWidth, height: spriteHeight)
+                        let resolvedImage = ctx.resolve(Image(uiImage: uiImage))
+                        ctx.draw(resolvedImage, in: rect)
+                    } else {
+                        // Fallback to procedural
+                        let foliage = foliagePalettes[(index * 5 + 2) % foliagePalettes.count]
+                        let scale = scaleFor(Int(count))
                         if index % 2 == 0 {
                             drawPine(ctx: ctx, base: base, tileW: l.tileW, scale: scale, foliage: foliage)
                         } else {
                             drawBroadleaf(ctx: ctx, base: base, tileW: l.tileW, scale: scale, foliage: foliage, index: index)
                         }
-                    } else {
-                        // It's a flower crate! Draw a procedural flower
-                        drawDecoration(ctx: ctx, base: base, tileW: l.tileW, index: index)
                     }
                 }
             }

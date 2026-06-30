@@ -115,6 +115,12 @@ class GardenController(
         onDone(null)
     }
 
+    /** iOS: deselect current tile. */
+    fun deselectTileAsync(onDone: (Throwable?) -> Unit) {
+        selectTile(null)
+        onDone(null)
+    }
+
     /** iOS: navigate months. */
     fun navigateMonthAsync(delta: Int, onDone: (Throwable?) -> Unit) {
         navigateMonth(delta)

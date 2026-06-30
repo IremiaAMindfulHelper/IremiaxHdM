@@ -28,7 +28,6 @@ import androidx.compose.ui.res.painterResource
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.domain.garden.GardenTile
 import org.iremia.iremia.domain.garden.PlantType
-import org.iremia.iremia.domain.garden.image
 import org.iremia.library.SharedRes
 import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.rememberLottieComposition

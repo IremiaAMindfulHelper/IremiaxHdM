@@ -39,8 +39,11 @@ import org.iremia.iremia.data.note.NoteRepository
 @ObjCName("SharedFactory", exact = true)
 object SharedFactory {
 
+    private var cachedDatabase: UserData? = null
+
     /**
      * Builds the platform-specific SQLDelight driver and returns the generated database.
+     * Caches the database instance so multiple controllers share the same connection.
      *
      * @param driverFactory Platform driver provider (Android/iOS actuals).
      * @param dbName Optional database filename, defaults to "iremia.db".
@@ -49,7 +52,13 @@ object SharedFactory {
     fun createDatabase(
         driverFactory: DriverFactory,
         dbName: String = "iremia.db"
-    ): UserData = UserData(driverFactory.createDriver(dbName))
+    ): UserData {
+        val existing = cachedDatabase
+        if (existing != null) return existing
+        val newDb = UserData(driverFactory.createDriver(dbName))
+        cachedDatabase = newDb
+        return newDb
+    }
 
     /**
      * Assembles the Mantras feature (DAO → Repository → Controller) for Swift.

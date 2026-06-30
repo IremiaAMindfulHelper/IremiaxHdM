@@ -12,7 +12,7 @@ struct GardenOverviewScreen: View {
     let onClose: () -> Void
 
     var body: some View {
-        let trees = garden.tiles.filter { $0 > 0 }.count
+        let trees = garden.tiles.filter { $0.entryCount > 0 }.count
 
         VStack(spacing: 0) {
             // Header
@@ -66,7 +66,7 @@ struct GardenOverviewScreen: View {
 
             // Garden scene on blue header wash
             GardenSceneView(
-                days: garden.tiles,
+                tiles: garden.tiles,
                 columns: garden.gridColumns,
                 rows: garden.gridRows,
                 interactive: true,
@@ -97,7 +97,7 @@ struct GardenOverviewScreen: View {
 
     private func infoText(trees: Int) -> String {
         if let tile = garden.selectedTile {
-            let count = tile < garden.tiles.count ? garden.tiles[tile] : 0
+            let count = tile < garden.tiles.count ? garden.tiles[tile].entryCount : 0
             if count == 0 {
                 return PS.garden_no_entry
             } else {
