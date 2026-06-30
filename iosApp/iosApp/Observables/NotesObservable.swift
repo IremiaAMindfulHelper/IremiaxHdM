@@ -7,6 +7,12 @@ struct NoteUI: Identifiable, Equatable {
     let id: Int64
     let content: String
     let createdAt: Int64
+    var strength: Int? = nil
+    var places: [String] = []
+    var activities: [String] = []
+    var bodySignals: [String] = []
+    var moodBefore: Int? = nil
+    var moodAfter: Int? = nil
 }
 
 /// ObservableObject that bridges the shared KMP NotesController state
@@ -96,6 +102,21 @@ final class NotesObservable: ObservableObject {
     /// Converts an arbitrary KMP-exported Note object to `NoteUI`.
     /// Uses KVC/Mirror to read properties, making the bridge resilient to renames.
     private static func toUI(_ any: Any) -> NoteUI? {
+        // Fast path: the shared model is exported as a typed `Note`.
+        if let note = any as? Note {
+            return NoteUI(
+                id: note.id,
+                content: note.content,
+                createdAt: note.createdAt,
+                strength: note.strength?.intValue,
+                places: (note.places as? [String]) ?? [],
+                activities: (note.activities as? [String]) ?? [],
+                bodySignals: (note.bodySignals as? [String]) ?? [],
+                moodBefore: note.moodBefore?.intValue,
+                moodAfter: note.moodAfter?.intValue
+            )
+        }
+
         let obj = any as AnyObject
 
         // content

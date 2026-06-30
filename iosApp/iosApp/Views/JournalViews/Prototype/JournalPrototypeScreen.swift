@@ -12,6 +12,7 @@ struct JournalPrototypeScreen: View {
     @State private var selectedDate = Date()
     @State private var showCaptureFlow = false
     @State private var showGarden = false
+    @State private var detailNote: NoteUI?
 
     private let today = Date()
 
@@ -63,7 +64,7 @@ struct JournalPrototypeScreen: View {
                         RecentNotesSectionView(
                             notes: notesObservable.items,
                             onAdd: { showCaptureFlow = true },
-                            onNoteClick: { _ in /* TODO: open note detail */ },
+                            onNoteClick: { note in detailNote = note },
                             onDelete: { id in
                                 notesObservable.delete(id: id)
                             }
@@ -111,6 +112,16 @@ struct JournalPrototypeScreen: View {
             GardenOverviewScreen(
                 garden: gardenObservable,
                 onClose: { showGarden = false }
+            )
+        }
+        .sheet(item: $detailNote) { note in
+            EpisodeDetailView(
+                note: note,
+                onClose: { detailNote = nil },
+                onSave: { draft in
+                    notesObservable.updateEpisode(id: note.id, draft)
+                    detailNote = nil
+                }
             )
         }
     }

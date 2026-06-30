@@ -105,23 +105,37 @@ private struct NoteCardView: View {
                 let title = titleOf(note.content)
                 let preview = previewOf(note.content)
 
-                Text(title)
-                    .font(IremiaText.cardTitle)
-                    .foregroundColor(IremiaColors.ink)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(IremiaText.cardTitle)
+                            .foregroundColor(IremiaColors.ink)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
 
-                if !preview.isEmpty {
-                    Spacer().frame(height: 2)
+                        if !preview.isEmpty {
+                            Text(preview)
+                                .font(IremiaText.body)
+                                .foregroundColor(IremiaColors.gray500)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
+                    }
+                    Spacer()
+                    // Mood emoji from the "after" mood, if captured.
+                    if let mood = note.moodAfter, mood >= 0, mood < moodFaces.count {
+                        Text(moodFaces[mood]).font(IremiaText.cardTitle)
+                    }
+                }
 
-                    Text(preview)
-                        .font(IremiaText.body)
-                        .foregroundColor(IremiaColors.gray500)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                // Intensity indicator bar.
+                if let strength = note.strength {
+                    Spacer().frame(height: 8)
+                    IntensityBar(strength: strength)
                 }
             }
         }
+        .contentShape(Rectangle())
         .onTapGesture(perform: onClick)
     }
 
@@ -141,14 +155,44 @@ private struct NoteCardView: View {
     }
 
     private func titleOf(_ content: String) -> String {
-        content.components(separatedBy: .newlines).first ?? ""
+        let first = content.components(separatedBy: .newlines).first ?? ""
+        return first.isEmpty ? "—" : first
     }
 
     private func previewOf(_ content: String) -> String {
-        let lines = content.components(separatedBy: .newlines)
-        if lines.count > 1 {
-            return lines[1]
+        // ~50-character preview of the body text.
+        let flat = content.replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespaces)
+        if flat.count <= 50 { return flat }
+        return String(flat.prefix(50)) + "…"
+    }
+}
+
+/// Compact bar visualising episode intensity (1...10) with a matching color.
+private struct IntensityBar: View {
+    let strength: Int
+
+    private var color: Color {
+        switch strength {
+        case ...3: return IremiaColors.garden500
+        case 4...6: return IremiaColors.warning
+        default: return IremiaColors.danger
         }
-        return ""
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(IremiaColors.gray200)
+                    Capsule().fill(color)
+                        .frame(width: geo.size.width * CGFloat(min(max(strength, 1), 10)) / 10)
+                }
+            }
+            .frame(height: 6)
+            Text("\(strength)/10")
+                .font(IremiaText.caption)
+                .foregroundColor(IremiaColors.gray500)
+        }
     }
 }

@@ -53,6 +53,24 @@ class JournalViewModel(
     }
 
     /**
+     * Update an existing episode with edited content and metadata.
+     */
+    fun updateEpisode(id: Long, draft: EpisodeDraft) {
+        viewModelScope.launch {
+            notesController.updateEpisode(
+                id = id,
+                content = draft.content,
+                strength = draft.strength,
+                places = draft.places,
+                activities = draft.activities,
+                bodySignals = draft.bodySignals,
+                moodBefore = draft.moodBefore,
+                moodAfter = draft.moodAfter,
+            )
+        }
+    }
+
+    /**
      * Delete an existing note.
      */
     fun deleteNote(id: Long) {

@@ -100,6 +100,7 @@ fun JournalScreen(modifier: Modifier = Modifier) {
     var selectedDate by rememberSaveable(stateSaver = LocalDateSaver) { mutableStateOf(today) }
     var showCaptureFlow by rememberSaveable { mutableStateOf(false) }
     var showGarden by rememberSaveable { mutableStateOf(false) }
+    var detailNoteId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     // Map real entries to calendar dots.
     val entryDates by remember {
@@ -153,7 +154,7 @@ fun JournalScreen(modifier: Modifier = Modifier) {
                 RecentNotesSection(
                     notes = state.items,
                     onAdd = { showCaptureFlow = true },
-                    onNoteClick = { /* TODO: open note detail (later) */ },
+                    onNoteClick = { detailNoteId = it.id },
                     onDelete = { viewModel.deleteNote(it.id) }
                 )
 
@@ -212,6 +213,20 @@ fun JournalScreen(modifier: Modifier = Modifier) {
             GardenOverviewScreen(
                 viewModel = gardenViewModel,
                 onClose = { showGarden = false },
+            )
+        }
+    }
+
+    val detailNote = detailNoteId?.let { id -> state.items.firstOrNull { it.id == id } }
+    if (detailNote != null) {
+        Dialog(
+            onDismissRequest = { detailNoteId = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            EpisodeDetailScreen(
+                note = detailNote,
+                onClose = { detailNoteId = null },
+                onSave = { draft -> viewModel.updateEpisode(detailNote.id, draft) },
             )
         }
     }

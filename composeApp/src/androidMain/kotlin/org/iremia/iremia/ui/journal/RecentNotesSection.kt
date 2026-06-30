@@ -1,7 +1,9 @@
 package org.iremia.iremia.ui.journal
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +34,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.iremia.iremia.domain.note.Note
 import org.iremia.iremia.ui.components.IremiaCard
 import org.iremia.iremia.ui.theme.IremiaColors
+import androidx.compose.ui.draw.clip
 import org.iremia.iremia.ui.theme.IremiaShapes
 import org.iremia.iremia.ui.theme.IremiaText
 import org.iremia.iremia.utils.localized
@@ -147,21 +150,72 @@ private fun NoteCard(note: Note, onClick: () -> Unit, onDelete: () -> Unit) {
             }
 
             Spacer(Modifier.height(6.dp))
-            // We use the first line as title or a default
-            val title = note.content.lineSequence().firstOrNull() ?: ""
-            val preview = note.content.lineSequence().drop(1).firstOrNull() ?: ""
-            
-            Text(title, style = IremiaText.CardTitle, color = IremiaColors.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (preview.isNotEmpty()) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    preview,
-                    style = IremiaText.Body,
-                    color = IremiaColors.Gray500,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            val title = note.content.lineSequence().firstOrNull()?.takeIf { it.isNotBlank() } ?: "—"
+            // ~50-char preview of the body text.
+            val preview = note.content.replace("\n", " ").trim().take(50)
+                .let { if (note.content.length > 50) "$it…" else it }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = IremiaText.CardTitle, color = IremiaColors.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (preview.isNotEmpty()) {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            preview,
+                            style = IremiaText.Body,
+                            color = IremiaColors.Gray500,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                // Mood emoji (from the "after" mood), if captured.
+                note.moodAfter?.let { idx ->
+                    moodFaces.getOrNull(idx)?.let { face ->
+                        Spacer(Modifier.size(8.dp))
+                        Text(face, style = IremiaText.CardTitle)
+                    }
+                }
+            }
+
+            // Intensity indicator: a small bar tinted by strength.
+            note.strength?.let { strength ->
+                Spacer(Modifier.height(8.dp))
+                IntensityBar(strength = strength)
             }
         }
+    }
+}
+
+/** A compact bar that visualises episode intensity (1..10) with a matching color. */
+@Composable
+private fun IntensityBar(strength: Int) {
+    val fraction = (strength.coerceIn(1, 10)) / 10f
+    val color = when {
+        strength <= 3 -> IremiaColors.Garden500
+        strength <= 6 -> IremiaColors.Warning
+        else -> IremiaColors.Danger
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(6.dp)
+                .clip(IremiaShapes.Pill)
+                .background(IremiaColors.Gray200),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction)
+                    .height(6.dp)
+                    .clip(IremiaShapes.Pill)
+                    .background(color),
+            )
+        }
+        Spacer(Modifier.size(8.dp))
+        Text("$strength/10", style = IremiaText.Caption, color = IremiaColors.Gray500)
     }
 }

@@ -96,8 +96,10 @@
     <string name="garden_entry_plural">%1$d Einträge</string>
     <string name="garden_day_label">Tag %1$d</string>
     <string name="garden_month_trees">%1$d Bäume in diesem Monat gepflanzt</string>
-    <string name="garden_entry_sheet_title">Dieser Eintrag</string>
-    <string name="garden_entry_sheet_empty">Kein Text für diesen Eintrag.</string>
+    <string name="garden_entry_sheet_title">Diese Episode</string>
+    <string name="garden_entry_sheet_empty">Kein Text für diese Episode.</string>
+    <string name="episode_detail_title">Episode</string>
+    <string name="episode_detail_edit">Bearbeiten</string>
 
     <!-- Sample journal notes (prototype) -->
     <string name="sample_note_title_1">Erkenntnis aus der Therapie</string>
