@@ -2,37 +2,17 @@ import SwiftUI
 import Shared
 
 // =============================================================================
-// Full-screen garden overview — 1:1 translation of GardenOverviewScreen.kt.
+// Full-screen garden overview — refactored to use GardenObservable (shared controller).
 // =============================================================================
 
 /// Full-screen "Forest"-style garden browser with month navigation.
+/// State is now driven by `GardenObservable` → shared `GardenController`.
 struct GardenOverviewScreen: View {
-    let initialYear: Int
-    let initialMonth: Int
-    let entryCounts: [Int]
+    @ObservedObject var garden: GardenObservable
     let onClose: () -> Void
 
-    @State private var year: Int
-    @State private var month: Int
-    @State private var selectedTile: Int? = nil
-
-    init(initialYear: Int, initialMonth: Int, entryCounts: [Int], onClose: @escaping () -> Void) {
-        self.initialYear = initialYear
-        self.initialMonth = initialMonth
-        self.entryCounts = entryCounts
-        self.onClose = onClose
-        _year = State(initialValue: initialYear)
-        _month = State(initialValue: initialMonth)
-    }
-
-    /// 1 tree per entry (up to 25).
-    private var days: [Int] {
-        let count = min(entryCounts.count, 25)
-        return Array(entryCounts.prefix(count)) + Array(repeating: 0, count: 25 - count)
-    }
-
     var body: some View {
-        let trees = days.filter { $0 > 0 }.count
+        let trees = garden.tiles.filter { $0 > 0 }.count
 
         VStack(spacing: 0) {
             // Header
@@ -55,8 +35,7 @@ struct GardenOverviewScreen: View {
             // Month navigation
             HStack {
                 Button {
-                    selectedTile = nil
-                    if month > 1 { month -= 1 } else { month = 12; year -= 1 }
+                    garden.navigateMonth(delta: -1)
                 } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(IremiaColors.teal700)
@@ -66,15 +45,14 @@ struct GardenOverviewScreen: View {
 
                 Spacer()
 
-                Text("\(monthName(month: month)) \(String(year))")
+                Text("\(monthName(month: garden.month)) \(String(garden.year))")
                     .font(IremiaText.cardTitle)
                     .foregroundColor(IremiaColors.ink)
 
                 Spacer()
 
                 Button {
-                    selectedTile = nil
-                    if month < 12 { month += 1 } else { month = 1; year += 1 }
+                    garden.navigateMonth(delta: 1)
                 } label: {
                     Image(systemName: "chevron.right")
                         .foregroundColor(IremiaColors.teal700)
@@ -88,12 +66,12 @@ struct GardenOverviewScreen: View {
 
             // Garden scene on blue header wash
             GardenSceneView(
-                days: days,
-                columns: 5,
-                rows: 5,
+                days: garden.tiles,
+                columns: garden.gridColumns,
+                rows: garden.gridRows,
                 interactive: true,
-                selectedTile: selectedTile,
-                onTileTap: { selectedTile = $0 }
+                selectedTile: garden.selectedTile,
+                onTileTap: { garden.selectTile($0) }
             )
             .padding(IremiaSpacing.s3)
             .background(
@@ -104,7 +82,7 @@ struct GardenOverviewScreen: View {
             Spacer().frame(height: IremiaSpacing.s5)
 
             // Info text
-            Text(infoText(days: days, trees: trees))
+            Text(infoText(trees: trees))
                 .font(IremiaText.body)
                 .foregroundColor(IremiaColors.gray600)
                 .multilineTextAlignment(.center)
@@ -117,13 +95,12 @@ struct GardenOverviewScreen: View {
         .background(IremiaColors.gray100.ignoresSafeArea())
     }
 
-    private func infoText(days: [Int], trees: Int) -> String {
-        if let tile = selectedTile {
-            let count = tile < days.count ? days[tile] : 0
+    private func infoText(trees: Int) -> String {
+        if let tile = garden.selectedTile {
+            let count = tile < garden.tiles.count ? garden.tiles[tile] : 0
             if count == 0 {
                 return PS.garden_no_entry
             } else {
-                // In this "one tree per entry" mode, clicking a tree represents a single entry.
                 return PS.garden_entry_singular.replacingOccurrences(of: "%1$d", with: "1")
             }
         }

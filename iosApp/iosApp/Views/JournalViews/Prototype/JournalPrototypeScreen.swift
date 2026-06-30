@@ -8,6 +8,7 @@ import Shared
 
 struct JournalPrototypeScreen: View {
     @StateObject private var notesObservable = NotesObservable()
+    @StateObject private var gardenObservable = GardenObservable()
     @State private var selectedDate = Date()
     @State private var showCaptureFlow = false
     @State private var showGarden = false
@@ -103,11 +104,8 @@ struct JournalPrototypeScreen: View {
             )
         }
         .fullScreenCover(isPresented: $showGarden) {
-            let cal = Calendar(identifier: .iso8601)
             GardenOverviewScreen(
-                initialYear: cal.component(.year, from: selectedDate),
-                initialMonth: cal.component(.month, from: selectedDate),
-                entryCounts: gardenEntries,
+                garden: gardenObservable,
                 onClose: { showGarden = false }
             )
         }

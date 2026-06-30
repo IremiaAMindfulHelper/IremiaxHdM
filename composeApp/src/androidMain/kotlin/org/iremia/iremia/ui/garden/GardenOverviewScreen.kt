@@ -20,18 +20,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import org.iremia.iremia.controller.GardenState
 import org.iremia.iremia.ui.journal.monthName
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaShapes
@@ -39,36 +35,24 @@ import org.iremia.iremia.ui.theme.IremiaSpacing
 import org.iremia.iremia.ui.theme.IremiaText
 import org.iremia.iremia.utils.localized
 import org.iremia.library.SharedRes
-import kotlin.random.Random
 
 /**
- * Full-screen "Forest"-style garden overview (prototype).
+ * Full-screen "Forest"-style garden overview.
  *
  * Shows one month of the isometric [GardenScene] with prev/next navigation; tapping
  * a tile reveals that day's entry count. Styled to match the Journal (light surfaces,
  * brand blue header wash) so moving here does not feel like a different app.
  *
- * Uses deterministic dummy data per month until journal persistence lands.
+ * State is driven by [GardenViewModel] → [GardenState]. Composable stays stateless.
  */
 @Composable
 fun GardenOverviewScreen(
-    initialYear: Int,
-    initialMonth: Int,
-    entryCounts: List<Int>,
+    viewModel: GardenViewModel,
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
-    var year by rememberSaveable { mutableIntStateOf(initialYear) }
-    var month by rememberSaveable { mutableIntStateOf(initialMonth) }
-    var selectedTile by remember { mutableStateOf<Int?>(null) }
-    
-    // If year/month matches current, we could filter entryCounts, 
-    // but for now the user asked to plant trees if there are entries.
-    // To keep it simple and dynamic as requested: 1 tree per entry.
-    val days = entryCounts.take(25).let { 
-        if (it.size < 25) it + List(25 - it.size) { 0 } else it 
-    }
-    val trees = entryCounts.sum() 
+    val state by viewModel.state.collectAsState()
+    val days = state.tiles.map { it.entryCount }
 
     Column(
         modifier = Modifier
@@ -96,28 +80,23 @@ fun GardenOverviewScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            IconButton(onClick = {
-                month--; if (month < 1) { month = 12; year-- }; selectedTile = null
-            }) {
+            IconButton(onClick = { viewModel.navigateMonth(-1) }) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = localized(SharedRes.strings.garden_prev_month).toString(context), tint = IremiaColors.Teal700)
             }
             Text(
-                text = "${monthName(month)} $year",
+                text = "${monthName(state.month)} ${state.year}",
                 style = IremiaText.CardTitle,
                 color = IremiaColors.Ink,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = IremiaSpacing.S4),
             )
-            IconButton(onClick = {
-                month++; if (month > 12) { month = 1; year++ }; selectedTile = null
-            }) {
+            IconButton(onClick = { viewModel.navigateMonth(1) }) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = localized(SharedRes.strings.garden_next_month).toString(context), tint = IremiaColors.Teal700)
             }
         }
 
         Spacer(Modifier.height(IremiaSpacing.S5))
 
-        // Framed garden, on the brand blue header wash.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -127,26 +106,25 @@ fun GardenOverviewScreen(
         ) {
             GardenScene(
                 days = days,
-                columns = 5,
-                rows = 5,
+                columns = state.gridConfig.columns,
+                rows = state.gridConfig.rows,
                 interactive = true,
-                selectedTile = selectedTile,
-                onTileTap = { selectedTile = it },
+                selectedTile = state.selectedTile,
+                onTileTap = { viewModel.selectTile(it) },
                 modifier = Modifier.fillMaxWidth(),
             )
         }
 
         Spacer(Modifier.height(IremiaSpacing.S5))
 
-        val info = selectedTile?.let { tile ->
+        val info = state.selectedTile?.let { tile ->
             val count = days.getOrElse(tile) { 0 }
             if (count == 0) {
                 localized(SharedRes.strings.garden_no_entry).toString(context)
             } else {
-                // In this "one tree per entry" mode, clicking a tree represents a single entry.
                 localized(SharedRes.strings.garden_entry_singular).toString(context).replace("%1\$d", "1")
             }
-        } ?: localized(SharedRes.strings.garden_month_trees).toString(context).replace("%1\$d", trees.toString())
+        } ?: localized(SharedRes.strings.garden_month_trees).toString(context).replace("%1\$d", state.totalPlants.toString())
 
         Text(
             text = info,
@@ -155,18 +133,5 @@ fun GardenOverviewScreen(
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
-    }
-}
-
-/** Deterministic dummy garden for a month: 25 days with a mix of empty/small/big. */
-private fun gardenForMonth(year: Int, month: Int): List<Int> {
-    val random = Random(year * 100 + month)
-    return List(25) {
-        when (random.nextInt(10)) {
-            in 0..3 -> 0
-            in 4..6 -> 1
-            in 7..8 -> 2
-            else -> 3
-        }
     }
 }

@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import org.iremia.iremia.bridge.SharedFactory
 import org.iremia.iremia.db.DriverFactory
 import org.iremia.iremia.ui.journal.JournalViewModel
+import org.iremia.iremia.ui.garden.GardenViewModel
 import androidx.compose.runtime.collectAsState
 import org.iremia.iremia.controller.NotesState
 import androidx.compose.ui.unit.dp
@@ -73,12 +74,22 @@ fun JournalScreen(modifier: Modifier = Modifier) {
     val context = androidx.compose.ui.platform.LocalContext.current
     
     // Wire up the ViewModel with the SharedFactory
+    val driverFactory = remember { DriverFactory(context) }
+
     val viewModel: JournalViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                val driverFactory = DriverFactory(context)
                 val controller = SharedFactory.createNotesController(driverFactory)
                 JournalViewModel(controller)
+            }
+        }
+    )
+
+    val gardenViewModel: GardenViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                val gardenController = SharedFactory.createGardenController(driverFactory)
+                GardenViewModel(gardenController)
             }
         }
     )
@@ -194,9 +205,7 @@ fun JournalScreen(modifier: Modifier = Modifier) {
             properties = DialogProperties(usePlatformDefaultWidth = false),
         ) {
             GardenOverviewScreen(
-                initialYear = today.year,
-                initialMonth = today.monthNumber,
-                entryCounts = gardenEntries,
+                viewModel = gardenViewModel,
                 onClose = { showGarden = false },
             )
         }

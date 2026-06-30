@@ -4,6 +4,7 @@ package org.iremia.iremia.bridge
 
 import kotlin.native.ObjCName
 import com.iremia.UserData
+import org.iremia.iremia.controller.GardenController
 import org.iremia.iremia.controller.MantrasController
 import org.iremia.iremia.controller.NotesController
 import org.iremia.iremia.db.DriverFactory
@@ -88,6 +89,22 @@ object SharedFactory {
         val dao = NoteDao(db)
         val repo = NoteRepository(dao)
         return NotesController(repo)
+    }
+
+    /**
+     * Assembles the Garden feature (DAO → Repository → Controller) for Swift.
+     *
+     * Shares the same NoteRepository as [createNotesController] — garden tiles
+     * are derived from journal entries (one entry = one planted tile).
+     *
+     * @param driverFactory Platform driver provider.
+     * @return A `GardenController` ready to manage the garden overview state.
+     */
+    fun createGardenController(driverFactory: DriverFactory): GardenController {
+        val db = createDatabase(driverFactory)
+        val dao = NoteDao(db)
+        val repo = NoteRepository(dao)
+        return GardenController(repo)
     }
 
     // Example sketch for future features (keep for reference):
