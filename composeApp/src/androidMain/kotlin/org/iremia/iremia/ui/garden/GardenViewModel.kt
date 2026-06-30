@@ -45,13 +45,11 @@ class GardenViewModel(
             var prevNewlyPlanted: Int? = null
             gardenController.state.collect { currentState ->
                 if (prevNewlyPlanted != null && currentState.newlyPlantedTileIndex == null) {
-                    // Planting animation finished! Trigger ambient overlay with 80% chance
-                    val chanceAfterPlanting = 0.80f
-                    if (kotlin.random.Random.nextFloat() < chanceAfterPlanting) {
-                        // Small delay so it begins just as the zoom-out ends
-                        delay(600)
-                        triggerAmbient()
-                    }
+                    // Planting animation finished -> always follow up with an ambient
+                    // surprise, so after the tree grows the user reliably sees a
+                    // second, different animation (falling leaves, birds, …).
+                    delay(400)
+                    triggerAmbient()
                 }
                 prevNewlyPlanted = currentState.newlyPlantedTileIndex
             }
