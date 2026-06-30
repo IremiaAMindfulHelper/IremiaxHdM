@@ -12,8 +12,9 @@ typealias Color = SwiftUI.Color
 
 // MARK: - Color Constants
 
-private let grassLight = Color(red: 0x8F / 255.0, green: 0xCB / 255.0, blue: 0x9B / 255.0)
-private let grassDark  = Color(red: 0x79 / 255.0, green: 0xBE / 255.0, blue: 0x8B / 255.0)
+// NOTE: A single uniform grass tone for every tile so the top surface reads as
+// one seamless meadow instead of a two-tone checkerboard.
+private let grassTop  = Color(red: 0x8F / 255.0, green: 0xCB / 255.0, blue: 0x9B / 255.0)
 private let grassEdge  = Color(red: 0x5F / 255.0, green: 0xA8 / 255.0, blue: 0x77 / 255.0)
 private let soilLeft   = Color(red: 0x5E / 255.0, green: 0x4A / 255.0, blue: 0x38 / 255.0)
 private let soilRight  = Color(red: 0x7A / 255.0, green: 0x5C / 255.0, blue: 0x46 / 255.0)
@@ -124,8 +125,7 @@ struct GardenSceneView: View {
             for row in 0..<rows {
                 for col in 0..<columns {
                     let c = center(l, col: col, row: row)
-                    let fill = (col + row) % 2 == 0 ? grassLight : grassDark
-                    drawDiamond(ctx: ctx, c: c, w: l.tileW, h: l.tileH, fill: fill)
+                    drawDiamond(ctx: ctx, c: c, w: l.tileW, h: l.tileH, fill: grassTop)
                     drawGrassTufts(ctx: ctx, c: c, tileW: l.tileW, tileH: l.tileH, index: row * columns + col)
                 }
             }

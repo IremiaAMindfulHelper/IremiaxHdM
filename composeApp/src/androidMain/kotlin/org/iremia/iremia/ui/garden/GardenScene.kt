@@ -43,8 +43,9 @@ import kotlin.math.roundToInt
 // Support zoom-in, lottie growth, and crossfade planting animations.
 // =============================================================================
 
-private val GrassLight = Color(0xFF8FCB9B)
-private val GrassDark = Color(0xFF79BE8B)
+// NOTE: A single uniform grass tone for every tile so the top surface reads as
+// one seamless meadow instead of a two-tone checkerboard.
+private val GrassTop = Color(0xFF8FCB9B)
 private val GrassEdge = Color(0xFF5FA877)
 private val SoilLeft = Color(0xFF5E4A38)
 private val SoilRight = Color(0xFF7A5C46)
@@ -226,7 +227,7 @@ fun GardenScene(
             for (row in 0 until rows) {
                 for (col in 0 until columns) {
                     val c = l.center(col, row)
-                    drawDiamond(c, l.tileW, l.tileH, if ((col + row) % 2 == 0) GrassLight else GrassDark)
+                    drawDiamond(c, l.tileW, l.tileH, GrassTop)
                     drawGrassTufts(c, l.tileW, l.tileH, row * columns + col)
                 }
             }
