@@ -62,15 +62,11 @@ private data class GardenLayout(
     val depth: Float,
 )
 
-// How much bigger the plot is than the canvas width. >1 lets the isometric
-// diamond extend slightly past the sides (the corners are empty anyway), which
-// makes the whole bed noticeably larger.
-private const val PLOT_SCALE = 1.45f
-
 private fun layoutFor(width: Float, columns: Int, rows: Int): GardenLayout {
-    val tileW = width * PLOT_SCALE * 2f / (columns + rows)
+    val margin = width * 0.02f
+    val tileW = (width - 2 * margin) * 2f / (columns + rows)
     val tileH = tileW / 2f
-    val treeHeadroom = tileW * 0.65f // room above the top tile for the tallest tree
+    val treeHeadroom = tileW * 0.6f // room above the top tile for the tallest tree
     return GardenLayout(
         originX = width / 2f,
         originY = treeHeadroom + tileH / 2f,
@@ -206,7 +202,7 @@ fun GardenScene(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(1.0f)
+            .aspectRatio(1.2f)
             .then(tap),
     ) {
         val l = layoutFor(size.width, columns, rows)

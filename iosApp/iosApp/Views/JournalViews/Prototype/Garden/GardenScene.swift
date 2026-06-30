@@ -58,14 +58,11 @@ private struct GardenLayout {
     let depth: CGFloat
 }
 
-// How much bigger the plot is than the canvas width (>1 lets the isometric
-// diamond extend slightly past the sides), making the whole bed much larger.
-private let plotScale: CGFloat = 1.45
-
 private func layoutFor(width: CGFloat, columns: Int, rows: Int) -> GardenLayout {
-    let tileW = width * plotScale * 2 / CGFloat(columns + rows)
+    let margin = width * 0.02
+    let tileW = (width - 2 * margin) * 2 / CGFloat(columns + rows)
     let tileH = tileW / 2
-    let treeHeadroom = tileW * 0.65
+    let treeHeadroom = tileW * 0.6
     return GardenLayout(
         originX: width / 2,
         originY: treeHeadroom + tileH / 2,
@@ -198,7 +195,7 @@ struct GardenSceneView: View {
                 }
             }
         }
-        .aspectRatio(1.0, contentMode: .fit)
+        .aspectRatio(1.2, contentMode: .fit)
         .contentShape(Rectangle())
         // Tap handling needs the actual rendered size, so it lives in this overlay
         // GeometryReader rather than a plain .onTapGesture on the Canvas.
