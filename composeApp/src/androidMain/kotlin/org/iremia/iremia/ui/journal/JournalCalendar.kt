@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -90,20 +91,33 @@ fun JournalCalendar(
             .animateContentSize(),
     ) {
         // --- Month / year + "today" shortcut ---
+        // NOTE: The month/year title toggles expand/collapse too. It is always at the
+        // top and never covered by the scrollable month list, so it stays a reliable
+        // close target even when the calendar is expanded.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { expanded = !expanded },
+            ) {
                 Text(monthName(selectedDate.monthNumber), style = IremiaText.H1, color = IremiaColors.Ink)
                 Text(selectedDate.year.toString(), style = IremiaText.H1, color = IremiaColors.Gray400)
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = IremiaColors.Gray500,
+                )
             }
             Text(
                 text = localized(SharedRes.strings.today).toString(context),
                 style = IremiaText.Body,
                 color = IremiaColors.Teal700,
-                modifier = Modifier.clickable { onTodayClick() },
+                modifier = Modifier
+                    .clickable { onTodayClick() }
+                    .padding(IremiaSpacing.S2),
             )
         }
 
@@ -201,9 +215,12 @@ private fun ExpandHandle(expanded: Boolean, onToggle: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            // Min 44dp tall so the handle is a comfortable, reliable tap target.
+            .heightIn(min = 44.dp)
             .clickable { onToggle() }
             .padding(top = IremiaSpacing.S1),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier

@@ -29,21 +29,36 @@ struct JournalCalendarView: View {
         let selYear = cal.component(.year, from: selectedDate)
 
         VStack(spacing: 0) {
-            // Month / year + "today" shortcut
+            // Month / year + "today" shortcut.
+            // The title toggles expand/collapse; it sits above the scrollable month
+            // list and stays a reliable close target even when expanded.
             HStack {
-                HStack(spacing: 4) {
-                    Text(monthName(month: selMonth))
-                        .font(IremiaText.h1)
-                        .foregroundColor(IremiaColors.ink)
-                    Text(String(selYear))
-                        .font(IremiaText.h1)
-                        .foregroundColor(IremiaColors.gray400)
+                Button {
+                    withAnimation(.easeInOut(duration: IremiaMotion.dur)) {
+                        expanded.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(monthName(month: selMonth))
+                            .font(IremiaText.h1)
+                            .foregroundColor(IremiaColors.ink)
+                        Text(String(selYear))
+                            .font(IremiaText.h1)
+                            .foregroundColor(IremiaColors.gray400)
+                        Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 14))
+                            .foregroundColor(IremiaColors.gray500)
+                    }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
                 Spacer()
                 Button(action: onTodayClick) {
                     Text("Heute")
                         .font(IremiaText.body)
                         .foregroundColor(IremiaColors.teal700)
+                        .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -198,8 +213,12 @@ private struct ExpandHandleView: View {
                     .foregroundColor(IremiaColors.gray500)
                     .font(.system(size: 16))
             }
-            .frame(maxWidth: .infinity)
+            // Fill the full width and a 44pt-tall row, then make the whole area
+            // hit-testable so the handle reliably toggles (a plain Button otherwise
+            // only registers taps on the small capsule + chevron).
+            .frame(maxWidth: .infinity, minHeight: 44)
             .padding(.top, IremiaSpacing.s1)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
