@@ -98,8 +98,12 @@ struct JournalPrototypeScreen: View {
                 entryCount: notesObservable.entryCount,
                 onClose: { showCaptureFlow = false },
                 onFinished: { showCaptureFlow = false },
-                onSaveNote: { content in
-                    notesObservable.add(content: content)
+                onViewGarden: {
+                    showCaptureFlow = false
+                    showGarden = true
+                },
+                onSaveEpisode: { draft in
+                    notesObservable.addEpisode(draft)
                 }
             )
         }

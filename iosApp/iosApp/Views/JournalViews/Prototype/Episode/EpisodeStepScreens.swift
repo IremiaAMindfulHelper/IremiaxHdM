@@ -279,20 +279,15 @@ struct EpisodeSavedScreenView: View {
     let goal: Int
     let onInsights: () -> Void
     let onHome: () -> Void
+    var onViewGarden: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer().frame(height: IremiaSpacing.s8)
+            Spacer().frame(height: IremiaSpacing.s6)
 
-            // Check icon
-            Circle()
-                .fill(IremiaColors.teal50)
-                .frame(width: 64, height: 64)
-                .overlay(
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(IremiaColors.teal700)
-                )
+            // Growth animation so the user sees their new tree grow after saving.
+            GrowthLottieView(asset: .treeGrow)
+                .frame(width: 160, height: 160)
 
             Spacer().frame(height: IremiaSpacing.s4)
 
@@ -367,10 +362,14 @@ struct EpisodeSavedScreenView: View {
             Spacer()
 
             PrimaryButton(
-                text: PS.episode_saved_insights,
-                action: onInsights,
-                trailingIcon: "arrow.right"
+                text: PS.episode_saved_view_garden,
+                action: onViewGarden,
+                trailingIcon: "leaf.fill"
             )
+
+            Spacer().frame(height: IremiaSpacing.s1)
+
+            SecondaryTextButton(text: PS.episode_saved_insights, action: onInsights)
 
             Spacer().frame(height: IremiaSpacing.s1)
 

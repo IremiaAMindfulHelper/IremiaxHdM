@@ -111,8 +111,9 @@ struct GardenSceneView: View {
     var newlyPlantedTileIndex: Int? = nil
     var onGrowthFinished: (() -> Void)? = nil
 
-    /// 0 → 1 growth progress for the newly planted sprite (scale + fade-in).
-    @State private var plantProgress: CGFloat = 1
+    /// True while the growth Lottie plays for the newly planted tile; the static
+    /// sprite is suppressed in the Canvas so only the animation is visible there.
+    @State private var isGrowing = false
 
     var body: some View {
         Canvas { ctx, size in
@@ -164,28 +165,25 @@ struct GardenSceneView: View {
                 } else {
                     drawShadow(ctx: ctx, base: base, tileW: l.tileW)
                     
-                    if let plantType = tile?.plantType,
+                    // While this tile is growing, the Lottie overlay draws it instead.
+                    let suppressForGrowth = (index == newlyPlantedTileIndex) && isGrowing
+                    if suppressForGrowth {
+                        // drawn by the growth Lottie overlay below
+                    } else if let plantType = tile?.plantType,
                        let uiImage = plantType.image.toUIImage() {
                         let scale = scaleFor(Int(count))
-                        // The just-planted sprite grows from the ground: it scales up
-                        // and fades in via plantProgress, others stay at full size.
-                        let isGrowing = index == newlyPlantedTileIndex
-                        let growth: CGFloat = isGrowing ? max(0.05, plantProgress) : 1
-                        let spriteWidth = l.tileW * scale * growth
+                        let spriteWidth = l.tileW * scale
                         let aspect = uiImage.size.height / uiImage.size.width
                         let spriteHeight = spriteWidth * aspect
 
                         let left = base.x - spriteWidth / 2
-                        // Keep the trunk pinned to the tile while the crown grows up.
                         let top = (base.y + l.tileH / 2) - spriteHeight
 
                         let rect = CGRect(x: left, y: top, width: spriteWidth, height: spriteHeight)
-                        var spriteCtx = ctx
-                        if isGrowing { spriteCtx.opacity = Double(plantProgress) }
-                        let resolvedImage = spriteCtx.resolve(Image(uiImage: uiImage))
-                        spriteCtx.draw(resolvedImage, in: rect)
-                    } else {
-                        // Fallback to procedural
+                        let resolvedImage = ctx.resolve(Image(uiImage: uiImage))
+                        ctx.draw(resolvedImage, in: rect)
+                    } else if !suppressForGrowth {
+                        // Fallback to procedural (sprite image unavailable)
                         let foliage = foliagePalettes[(index * 5 + 2) % foliagePalettes.count]
                         let scale = scaleFor(Int(count))
                         if index % 2 == 0 {
@@ -215,13 +213,35 @@ struct GardenSceneView: View {
             }
             : nil
         )
+        // Growth Lottie, positioned at the exact same tile center as the static
+        // sprite, so the plant grows and then the sprite stays on that very tile.
+        .overlay(growthOverlay)
         .onChange(of: newlyPlantedTileIndex) { idx in
             guard idx != nil else { return }
-            // Grow the new sprite from the ground, then clear the marker.
-            plantProgress = 0
-            withAnimation(.easeOut(duration: 1.4)) { plantProgress = 1 }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-                onGrowthFinished?()
+            isGrowing = true
+        }
+    }
+
+    /// The growth animation overlaid on the newly planted tile.
+    @ViewBuilder
+    private var growthOverlay: some View {
+        if isGrowing, let idx = newlyPlantedTileIndex,
+           let plantType = (idx < tiles.count ? tiles[idx].plantType : nil) {
+            GeometryReader { geo in
+                let l = layoutFor(width: geo.size.width, columns: columns, rows: rows)
+                let col = idx % columns
+                let row = idx / columns
+                let c = center(l, col: col, row: row)
+                let size = l.tileW * scaleFor(Int(idx < tiles.count ? tiles[idx].entryCount : 1))
+                let asset: LottieAsset = plantType.isTree ? .treeGrow : .plantGrow
+
+                GrowthLottieView(asset: asset) {
+                    isGrowing = false
+                    onGrowthFinished?()
+                }
+                .frame(width: size * 1.6, height: size * 1.6)
+                // Anchor the animation's base to the tile (bottom of the sprite).
+                .position(x: c.x, y: (c.y + l.tileH / 2) - size * 0.8)
             }
         }
     }

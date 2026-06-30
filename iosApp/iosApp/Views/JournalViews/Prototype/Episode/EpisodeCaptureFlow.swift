@@ -12,6 +12,17 @@ private enum EpisodeStep {
 /// Goal for the insights dataset.
 private let insightsGoal = 30
 
+/// The metadata the wizard collects for one episode before saving.
+struct EpisodeDraftData {
+    let content: String
+    let strength: Int?
+    let places: [String]
+    let activities: [String]
+    let bodySignals: [String]
+    let moodBefore: Int?
+    let moodAfter: Int?
+}
+
 /// Self-contained "Episode festhalten" wizard.
 ///
 /// Holds the in-progress draft in UI state and saves the note to the database
@@ -20,7 +31,8 @@ struct EpisodeCaptureFlow: View {
     let entryCount: Int
     let onClose: () -> Void
     let onFinished: () -> Void
-    let onSaveNote: (String) -> Void
+    let onViewGarden: () -> Void
+    let onSaveEpisode: (EpisodeDraftData) -> Void
 
     @State private var step: EpisodeStep = .intensity
     @State private var hour: Int = Calendar.current.component(.hour, from: Date())
@@ -35,11 +47,12 @@ struct EpisodeCaptureFlow: View {
 
     @State private var finalEntryCount: Int
 
-    init(entryCount: Int, onClose: @escaping () -> Void, onFinished: @escaping () -> Void, onSaveNote: @escaping (String) -> Void) {
+    init(entryCount: Int, onClose: @escaping () -> Void, onFinished: @escaping () -> Void, onViewGarden: @escaping () -> Void, onSaveEpisode: @escaping (EpisodeDraftData) -> Void) {
         self.entryCount = entryCount
         self.onClose = onClose
         self.onFinished = onFinished
-        self.onSaveNote = onSaveNote
+        self.onViewGarden = onViewGarden
+        self.onSaveEpisode = onSaveEpisode
         // Lock final entry count at init time to avoid double increments on DB sync
         _finalEntryCount = State(initialValue: entryCount + 1)
     }
@@ -76,7 +89,17 @@ struct EpisodeCaptureFlow: View {
                     moodAfter: $moodAfter,
                     onBack: { step = .context },
                     onSave: {
-                        onSaveNote(note)
+                        onSaveEpisode(
+                            EpisodeDraftData(
+                                content: note,
+                                strength: Int(strength),
+                                places: places,
+                                activities: activities,
+                                bodySignals: bodySignals,
+                                moodBefore: moodBefore >= 0 ? moodBefore : nil,
+                                moodAfter: moodAfter >= 0 ? moodAfter : nil
+                            )
+                        )
                         step = .saved
                     }
                 )
@@ -86,7 +109,8 @@ struct EpisodeCaptureFlow: View {
                     entryCount: finalEntryCount,
                     goal: insightsGoal,
                     onInsights: onFinished,
-                    onHome: onFinished
+                    onHome: onFinished,
+                    onViewGarden: onViewGarden
                 )
             }
         }

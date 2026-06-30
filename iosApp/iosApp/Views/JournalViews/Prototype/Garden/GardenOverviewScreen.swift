@@ -95,6 +95,16 @@ struct GardenOverviewScreen: View {
         .padding(.horizontal, IremiaSpacing.screenGutter)
         .padding(.vertical, IremiaSpacing.s3)
         .background(IremiaColors.gray100.ignoresSafeArea())
+        // Fullscreen ambient surprise overlay (leaves, birds, …), drawn above the
+        // whole screen so animations never get clipped by the garden card.
+        .overlay {
+            if let config = garden.activeAmbient {
+                AmbientSurpriseOverlayView(config: config) {
+                    garden.clearAmbient()
+                }
+                .transition(.opacity)
+            }
+        }
         // Tapping a planted tree reveals the journal entry it represents.
         .sheet(
             item: Binding(

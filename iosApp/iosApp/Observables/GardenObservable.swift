@@ -23,8 +23,13 @@ final class GardenObservable: ObservableObject {
     @Published var gridColumns: Int = 5
     @Published var gridRows: Int = 5
 
+    /// The currently playing fullscreen ambient surprise, or nil.
+    @Published var activeAmbient: AmbientConfig? = nil
+
     private let controller: GardenController
     private var cancelable: KmpCancelable?
+    private var ambientTimer: Timer?
+    private var lastNewlyPlanted: Int? = nil
 
     init() {
         controller = SharedFactory.shared.createGardenController(
@@ -54,16 +59,49 @@ final class GardenObservable: ObservableObject {
                 self.month = Int(s.month)
                 self.totalPlants = Int(s.totalPlants)
                 self.isLoading = s.isLoading
-                self.newlyPlantedTileIndex = s.newlyPlantedTileIndex?.intValue
+
+                let newPlanted = s.newlyPlantedTileIndex?.intValue
+                // A planting just finished -> likely trigger an ambient surprise.
+                if self.lastNewlyPlanted != nil && newPlanted == nil {
+                    if Double.random(in: 0..<1) < 0.8 {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                            self.triggerAmbient()
+                        }
+                    }
+                }
+                self.lastNewlyPlanted = newPlanted
+                self.newlyPlantedTileIndex = newPlanted
                 self.gridColumns = cols
                 self.gridRows = rows
+            }
+        }
+
+        // Periodically trigger an ambient surprise (every 20s, 15% chance),
+        // matching the Android GardenViewModel cadence.
+        ambientTimer = Timer.scheduledTimer(withTimeInterval: 20, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            if self.activeAmbient == nil && self.newlyPlantedTileIndex == nil {
+                if Double.random(in: 0..<1) < 0.15 { self.triggerAmbient() }
             }
         }
     }
 
     deinit {
+        ambientTimer?.invalidate()
         cancelable?.cancel()
         controller.clear()
+    }
+
+    /// Starts an ambient surprise if none is currently playing.
+    func triggerAmbient() {
+        if activeAmbient == nil {
+            activeAmbient = selectRandomAmbient()
+        }
+    }
+
+    /// Clears the ambient surprise once its animation finished.
+    func clearAmbient() {
+        activeAmbient = nil
     }
 
     // MARK: - Actions

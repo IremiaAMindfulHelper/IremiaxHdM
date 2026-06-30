@@ -57,6 +57,35 @@ final class NotesObservable: ObservableObject {
         controller.addAsync(content: trimmed, createdAt: nowMs) { _ in }
     }
 
+    /// Adds a full episode with captured metadata via the shared controller.
+    func addEpisode(_ draft: EpisodeDraftData) {
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+        controller.addEpisodeAsync(
+            content: draft.content.trimmingCharacters(in: .whitespacesAndNewlines),
+            createdAt: nowMs,
+            strength: draft.strength.map { KotlinInt(int: Int32($0)) },
+            places: draft.places,
+            activities: draft.activities,
+            bodySignals: draft.bodySignals,
+            moodBefore: draft.moodBefore.map { KotlinInt(int: Int32($0)) },
+            moodAfter: draft.moodAfter.map { KotlinInt(int: Int32($0)) }
+        ) { _ in }
+    }
+
+    /// Updates an episode and its metadata via the shared controller.
+    func updateEpisode(id: Int64, _ draft: EpisodeDraftData) {
+        controller.updateEpisodeAsync(
+            id: id,
+            content: draft.content.trimmingCharacters(in: .whitespacesAndNewlines),
+            strength: draft.strength.map { KotlinInt(int: Int32($0)) },
+            places: draft.places,
+            activities: draft.activities,
+            bodySignals: draft.bodySignals,
+            moodBefore: draft.moodBefore.map { KotlinInt(int: Int32($0)) },
+            moodAfter: draft.moodAfter.map { KotlinInt(int: Int32($0)) }
+        ) { _ in }
+    }
+
     /// Deletes a note by ID via the shared controller (async wrapper).
     func delete(id: Int64) {
         controller.deleteAsync(id: id) { _ in }
