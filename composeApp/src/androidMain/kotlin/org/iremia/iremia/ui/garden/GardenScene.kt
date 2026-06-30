@@ -1,10 +1,17 @@
 package org.iremia.iremia.ui.garden
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInOutCubic
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -13,13 +20,20 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.domain.garden.GardenTile
 import org.iremia.iremia.domain.garden.PlantType
 import org.iremia.iremia.domain.garden.image
-import androidx.compose.ui.res.painterResource
+import org.iremia.library.SharedRes
+import io.github.alexzhirkevich.compottie.LottieCompositionSpec
+import io.github.alexzhirkevich.compottie.rememberLottieComposition
+import io.github.alexzhirkevich.compottie.rememberLottiePainter
+import io.github.alexzhirkevich.compottie.DotLottie
 import kotlin.math.roundToInt
 
 // =============================================================================
@@ -27,6 +41,7 @@ import kotlin.math.roundToInt
 //
 // Fakes a 3-D plot with a 2.5-D isometric projection on a Compose Canvas.
 // Tiles can hold PlantType sprites, or procedural bushes and flowers if empty.
+// Support zoom-in, lottie growth, and crossfade planting animations.
 // =============================================================================
 
 private val GrassLight = Color(0xFF8FCB9B)
@@ -73,14 +88,20 @@ private fun GardenLayout.tileAt(p: Offset, columns: Int, rows: Int): Int? {
     return if (col in 0 until columns && row in 0 until rows) row * columns + col else null
 }
 
+private fun lerp(start: Float, stop: Float, fraction: Float): Float {
+    return start + fraction * (stop - start)
+}
+
 /**
- * Draws an isometric garden.
+ * Draws an isometric garden with optional planting animations.
  *
  * @param tiles Grid tile states, holding PlantType sprites if occupied.
  * @param columns / [rows] Plot dimensions (columns * rows tiles).
  * @param interactive Whether tiles respond to taps via [onTileTap].
  * @param selectedTile Tile index to highlight, or null.
  * @param onTileTap Invoked with the tapped tile index.
+ * @param newlyPlantedTileIndex Index of a tile that was just planted to animate growth.
+ * @param onAnimationFinished Callback when the planting animation completes.
  */
 @Composable
 fun GardenScene(
@@ -91,10 +112,77 @@ fun GardenScene(
     interactive: Boolean = false,
     selectedTile: Int? = null,
     onTileTap: (Int) -> Unit = {},
+    newlyPlantedTileIndex: Int? = null,
+    onAnimationFinished: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+
     // Pre-load painters for all PlantType enum variants using moko-resources
     val plantPainters = PlantType.entries.associateWith { plantType ->
         painterResource(id = plantType.image.drawableResId)
+    }
+
+    // Load growth animations from moko files
+    val plantGrowBytes = remember {
+        context.resources.openRawResource(SharedRes.files.animated_plant_loader_lottie.rawResId).use { it.readBytes() }
+    }
+    val treeGrowBytes = remember {
+        context.resources.openRawResource(SharedRes.files.tree_growth_without_background_lottie.rawResId).use { it.readBytes() }
+    }
+
+    val plantComposition by rememberLottieComposition {
+        LottieCompositionSpec.DotLottie(plantGrowBytes)
+    }
+    val treeComposition by rememberLottieComposition {
+        LottieCompositionSpec.DotLottie(treeGrowBytes)
+    }
+
+    // Animation progress states
+    val zoomProgress = remember { Animatable(0.0f) }
+    val lottieProgress = remember { Animatable(0.0f) }
+    val crossfadeAlpha = remember { Animatable(0.0f) }
+
+    val treeLottiePainter = rememberLottiePainter(
+        composition = treeComposition,
+        progress = { lottieProgress.value }
+    )
+    val plantLottiePainter = rememberLottiePainter(
+        composition = plantComposition,
+        progress = { lottieProgress.value }
+    )
+
+    LaunchedEffect(newlyPlantedTileIndex) {
+        if (newlyPlantedTileIndex != null) {
+            lottieProgress.snapTo(0.0f)
+            crossfadeAlpha.snapTo(0.0f)
+
+            // Step 1: Zoom in (800ms)
+            zoomProgress.animateTo(
+                targetValue = 1.0f,
+                animationSpec = tween(durationMillis = 800, easing = EaseInOutCubic)
+            )
+
+            // Step 2: Play growth animation (1800ms)
+            lottieProgress.animateTo(
+                targetValue = 1.0f,
+                animationSpec = tween(durationMillis = 1800, easing = LinearEasing)
+            )
+
+            // Step 3: Crossfade (400ms)
+            crossfadeAlpha.animateTo(
+                targetValue = 1.0f,
+                animationSpec = tween(durationMillis = 400, easing = EaseInOutCubic)
+            )
+
+            // Step 4: Zoom out (800ms)
+            zoomProgress.animateTo(
+                targetValue = 0.0f,
+                animationSpec = tween(durationMillis = 800, easing = EaseInOutCubic)
+            )
+
+            // Finished!
+            onAnimationFinished()
+        }
     }
 
     val tap = if (interactive) {
@@ -117,68 +205,143 @@ fun GardenScene(
     ) {
         val l = layoutFor(size.width, columns, rows)
 
-        // --- Raised soil walls with an earthy texture ---
-        val east = l.center(columns - 1, 0) + Offset(l.tileW / 2f, 0f)
-        val south = l.center(columns - 1, rows - 1) + Offset(0f, l.tileH / 2f)
-        val west = l.center(0, rows - 1) + Offset(-l.tileW / 2f, 0f)
-        val down = Offset(0f, l.depth)
-        drawPath(quad(west, south, south + down, west + down), SoilLeft)
-        drawPath(quad(south, east, east + down, south + down), SoilRight)
-        drawSoilTexture(west, south, east, down)
-
-        // --- Grass top faces with light tufts ---
-        for (row in 0 until rows) {
-            for (col in 0 until columns) {
-                val c = l.center(col, row)
-                drawDiamond(c, l.tileW, l.tileH, if ((col + row) % 2 == 0) GrassLight else GrassDark)
-                drawGrassTufts(c, l.tileW, l.tileH, row * columns + col)
-            }
+        val targetCenter = if (newlyPlantedTileIndex != null) {
+            val col = newlyPlantedTileIndex % columns
+            val row = newlyPlantedTileIndex / columns
+            l.center(col, row)
+        } else {
+            Offset.Zero
         }
 
-        // --- Selection highlight ---
-        if (selectedTile != null) {
-            val col = selectedTile % columns
-            val row = selectedTile / columns
-            if (row < rows) {
-                val path = diamondPath(l.center(col, row), l.tileW, l.tileH)
-                drawPath(path, IremiaColors.Teal100.copy(alpha = 0.55f))
-                drawPath(path, IremiaColors.Teal700, style = Stroke(width = 2.5f))
+        val drawBlock: DrawScope.() -> Unit = {
+            // --- Raised soil walls with an earthy texture ---
+            val east = l.center(columns - 1, 0) + Offset(l.tileW / 2f, 0f)
+            val south = l.center(columns - 1, rows - 1) + Offset(0f, l.tileH / 2f)
+            val west = l.center(0, rows - 1) + Offset(-l.tileW / 2f, 0f)
+            val down = Offset(0f, l.depth)
+            drawPath(quad(west, south, south + down, west + down), SoilLeft)
+            drawPath(quad(south, east, east + down, south + down), SoilRight)
+            drawSoilTexture(west, south, east, down)
+
+            // --- Grass top faces with light tufts ---
+            for (row in 0 until rows) {
+                for (col in 0 until columns) {
+                    val c = l.center(col, row)
+                    drawDiamond(c, l.tileW, l.tileH, if ((col + row) % 2 == 0) GrassLight else GrassDark)
+                    drawGrassTufts(c, l.tileW, l.tileH, row * columns + col)
+                }
             }
-        }
 
-        // --- Plants & decorations, back-to-front ---
-        val gridOrder = buildList {
-            for (row in 0 until rows) for (col in 0 until columns) add(col to row)
-        }.sortedBy { (col, row) -> col + row }
+            // --- Selection highlight ---
+            if (selectedTile != null) {
+                val col = selectedTile % columns
+                val row = selectedTile / columns
+                if (row < rows) {
+                    val path = diamondPath(l.center(col, row), l.tileW, l.tileH)
+                    drawPath(path, IremiaColors.Teal100.copy(alpha = 0.55f))
+                    drawPath(path, IremiaColors.Teal700, style = Stroke(width = 2.5f))
+                }
+            }
 
-        gridOrder.forEach { (col, row) ->
-            val index = row * columns + col
-            val base = l.center(col, row)
-            val tile = tiles.getOrNull(index)
-            val plantType = tile?.plantType
+            // --- Plants & decorations, back-to-front ---
+            val gridOrder = buildList {
+                for (row in 0 until rows) for (col in 0 until columns) add(col to row)
+            }.sortedBy { (col, row) -> col + row }
 
-            if (plantType == null) {
-                drawDecoration(base, l.tileW, index)
-            } else {
-                drawShadow(base, l.tileW)
-                val painter = plantPainters[plantType]
-                if (painter != null) {
+            gridOrder.forEach { (col, row) ->
+                val index = row * columns + col
+                val base = l.center(col, row)
+                val tile = tiles.getOrNull(index)
+                val plantType = tile?.plantType
+
+                if (plantType == null) {
+                    drawDecoration(base, l.tileW, index)
+                } else if (index == newlyPlantedTileIndex) {
+                    drawShadow(base, l.tileW)
+
+                    val activeLottiePainter = if (plantType.isTree) treeLottiePainter else plantLottiePainter
                     val count = tile.entryCount
                     val scale = scaleFor(count)
                     val spriteWidth = l.tileW * scale
-                    val aspect = painter.intrinsicSize.height / painter.intrinsicSize.width
-                    val spriteHeight = spriteWidth * aspect
 
-                    val left = base.x - spriteWidth / 2f
-                    val top = (base.y + l.tileH / 2f) - spriteHeight
+                    // 1. Draw Lottie growth animation (fading out during crossfade)
+                    if (crossfadeAlpha.value < 1.0f) {
+                        val lottieAspect = activeLottiePainter.intrinsicSize.height / activeLottiePainter.intrinsicSize.width
+                        val lottieHeight = spriteWidth * lottieAspect
+                        val lottieLeft = base.x - spriteWidth / 2f
+                        val lottieTop = (base.y + l.tileH / 2f) - lottieHeight
 
-                    translate(left, top) {
-                        with(painter) {
-                            draw(size = Size(spriteWidth, spriteHeight))
+                        translate(lottieLeft, lottieTop) {
+                            with(activeLottiePainter) {
+                                draw(
+                                    size = Size(spriteWidth, lottieHeight),
+                                    alpha = 1.0f - crossfadeAlpha.value
+                                )
+                            }
+                        }
+                    }
+
+                    // 2. Draw static sprite (fading in during crossfade)
+                    if (crossfadeAlpha.value > 0.0f) {
+                        val painter = plantPainters[plantType]
+                        if (painter != null) {
+                            val staticAspect = painter.intrinsicSize.height / painter.intrinsicSize.width
+                            val staticHeight = spriteWidth * staticAspect
+                            val staticLeft = base.x - spriteWidth / 2f
+                            val staticTop = (base.y + l.tileH / 2f) - staticHeight
+
+                            translate(staticLeft, staticTop) {
+                                with(painter) {
+                                    draw(
+                                        size = Size(spriteWidth, staticHeight),
+                                        alpha = crossfadeAlpha.value
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    drawShadow(base, l.tileW)
+                    val painter = plantPainters[plantType]
+                    if (painter != null) {
+                        val count = tile.entryCount
+                        val scale = scaleFor(count)
+                        val spriteWidth = l.tileW * scale
+                        val aspect = painter.intrinsicSize.height / painter.intrinsicSize.width
+                        val spriteHeight = spriteWidth * aspect
+
+                        val left = base.x - spriteWidth / 2f
+                        val top = (base.y + l.tileH / 2f) - spriteHeight
+
+                        translate(left, top) {
+                            with(painter) {
+                                draw(size = Size(spriteWidth, spriteHeight))
+                            }
                         }
                     }
                 }
             }
+        }
+
+        // Apply scale/translate transformations if zooming
+        if (zoomProgress.value > 0.0f && newlyPlantedTileIndex != null) {
+            val scaleVal = lerp(1.0f, 1.8f, zoomProgress.value)
+            val canvasCenterX = size.width / 2f
+            val canvasCenterY = size.height / 2f
+
+            val neededOffsetX = canvasCenterX - targetCenter.x
+            val neededOffsetY = canvasCenterY - targetCenter.y
+
+            val currentOffsetX = lerp(0f, neededOffsetX, zoomProgress.value)
+            val currentOffsetY = lerp(0f, neededOffsetY, zoomProgress.value)
+
+            translate(currentOffsetX, currentOffsetY) {
+                scale(scaleVal, pivot = targetCenter) {
+                    drawBlock()
+                }
+            }
+        } else {
+            drawBlock()
         }
     }
 }

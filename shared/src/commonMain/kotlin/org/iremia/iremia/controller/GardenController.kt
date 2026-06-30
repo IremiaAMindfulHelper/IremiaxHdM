@@ -52,13 +52,29 @@ class GardenController(
         _state.value = _state.value.copy(year = now.year, month = now.monthNumber)
 
         scope.launch {
+            var previousIds: List<Long>? = null
             repo.observeAll().collect { notes ->
                 val count = notes.size
-                val tiles = GardenRandomizer.buildGrid(notes.map { it.id }, gridConfig.totalTiles)
+                val currentIds = notes.map { it.id }
+                val tiles = GardenRandomizer.buildGrid(currentIds, gridConfig.totalTiles)
+
+                var newPlantedIndex: Int? = null
+                if (previousIds != null && currentIds.size > previousIds!!.size) {
+                    val previousOccupied = _state.value.tiles.filter { it.plantType != null }.map { it.index }.toSet()
+                    val currentlyOccupied = tiles.filter { it.plantType != null }.map { it.index }.toSet()
+                    val newlyOccupied = currentlyOccupied.firstOrNull { it !in previousOccupied }
+                    if (newlyOccupied != null) {
+                        newPlantedIndex = newlyOccupied
+                    }
+                }
+
+                previousIds = currentIds
+
                 _state.value = _state.value.copy(
                     tiles = tiles,
                     totalPlants = count,
                     isLoading = false,
+                    newlyPlantedTileIndex = newPlantedIndex ?: _state.value.newlyPlantedTileIndex
                 )
             }
         }
