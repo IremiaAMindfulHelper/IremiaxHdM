@@ -11,18 +11,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import org.iremia.iremia.domain.note.Note
 import org.iremia.iremia.ui.components.IremiaCard
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaShapes
 import org.iremia.iremia.ui.theme.IremiaText
+import org.iremia.iremia.utils.localized
+import org.iremia.library.SharedRes
 
 /**
  * "Letzte Notizen" section: a header with an add affordance and a list of recent
@@ -30,21 +38,23 @@ import org.iremia.iremia.ui.theme.IremiaText
  */
 @Composable
 fun RecentNotesSection(
-    notes: List<JournalNote>,
+    notes: List<Note>,
     onAdd: () -> Unit,
-    onNoteClick: (JournalNote) -> Unit,
+    onNoteClick: (Note) -> Unit,
+    onDelete: (Note) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Letzte Notizen", style = IremiaText.H2, color = IremiaColors.Ink)
+            Text(localized(SharedRes.strings.recent_notes_title).toString(context), style = IremiaText.H2, color = IremiaColors.Ink)
             Icon(
                 Icons.Filled.Add,
-                contentDescription = "Notiz hinzufügen",
+                contentDescription = localized(SharedRes.strings.recent_notes_add).toString(context),
                 tint = IremiaColors.Teal700,
                 modifier = Modifier
                     .size(28.dp)
@@ -55,14 +65,23 @@ fun RecentNotesSection(
         Spacer(Modifier.height(12.dp))
 
         notes.forEach { note ->
-            NoteCard(note, onClick = { onNoteClick(note) })
+            NoteCard(note, onClick = { onNoteClick(note) }, onDelete = { onDelete(note) })
             Spacer(Modifier.height(10.dp))
         }
     }
 }
 
 @Composable
-private fun NoteCard(note: JournalNote, onClick: () -> Unit) {
+private fun NoteCard(note: Note, onClick: () -> Unit, onDelete: () -> Unit) {
+    val dateTime = remember(note.createdAt) {
+        Instant.fromEpochMilliseconds(note.createdAt)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+    }
+    
+    // Simple formatting for prototype
+    val dateStr = "${dateTime.dayOfMonth}. ${dateTime.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }}"
+    val timeStr = "${dateTime.hour.toString().padStart(2, '0')}:${dateTime.minute.toString().padStart(2, '0')}"
+
     IremiaCard(
         shape = IremiaShapes.CardSm,
         modifier = Modifier
@@ -83,26 +102,44 @@ private fun NoteCard(note: JournalNote, onClick: () -> Unit) {
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.size(6.dp))
-                    Text("${note.date} · ${note.time}", style = IremiaText.Caption, color = IremiaColors.Gray500)
+                    Text("$dateStr · $timeStr", style = IremiaText.Caption, color = IremiaColors.Gray500)
                 }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = IremiaColors.Gray400,
-                    modifier = Modifier.size(20.dp),
-                )
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = "Löschen",
+                        tint = IremiaColors.Gray400,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable(onClick = onDelete),
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = IremiaColors.Gray400,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
             }
 
             Spacer(Modifier.height(6.dp))
-            Text(note.title, style = IremiaText.CardTitle, color = IremiaColors.Ink)
-            Spacer(Modifier.height(2.dp))
-            Text(
-                note.preview,
-                style = IremiaText.Body,
-                color = IremiaColors.Gray500,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            // We use the first line as title or a default
+            val title = note.content.lineSequence().firstOrNull() ?: ""
+            val preview = note.content.lineSequence().drop(1).firstOrNull() ?: ""
+            
+            Text(title, style = IremiaText.CardTitle, color = IremiaColors.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (preview.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    preview,
+                    style = IremiaText.Body,
+                    color = IremiaColors.Gray500,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

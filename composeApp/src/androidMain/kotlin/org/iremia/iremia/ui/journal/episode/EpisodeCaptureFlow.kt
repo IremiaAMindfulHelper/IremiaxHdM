@@ -30,9 +30,12 @@ private const val INSIGHTS_GOAL = 30
  */
 @Composable
 fun EpisodeCaptureFlow(
+    entryCount: Int,
     onClose: () -> Unit,
     onFinished: () -> Unit,
+    onSaveNote: (String) -> Unit,
 ) {
+    val finalEntryCount = remember { entryCount + 1 }
     var step by rememberSaveable { mutableStateOf(EpisodeStep.Intensity) }
 
     // --- Draft state (no persistence) ---
@@ -84,11 +87,14 @@ fun EpisodeCaptureFlow(
                 moodAfter = moodAfter,
                 onMoodAfter = { moodAfter = it },
                 onBack = { step = EpisodeStep.Context },
-                onSave = { step = EpisodeStep.Saved },
+                onSave = {
+                    onSaveNote(note)
+                    step = EpisodeStep.Saved
+                },
             )
 
             EpisodeStep.Saved -> EpisodeSavedScreen(
-                entryCount = SAMPLE_ENTRY_COUNT,
+                entryCount = finalEntryCount,
                 goal = INSIGHTS_GOAL,
                 onInsights = onFinished,
                 onHome = onFinished,

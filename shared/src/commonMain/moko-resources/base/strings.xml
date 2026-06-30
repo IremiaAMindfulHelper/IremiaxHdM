@@ -14,4 +14,93 @@
     <string name="wellbeing">Wellbeing</string>
     <!-- Journal screen -->
     <string name="today">Today</string>
+    <string name="journal_capture_cta">+   Record Episode</string>
+
+    <!-- Tree overview card -->
+    <string name="tree_overview_title">TREE OVERVIEW</string>
+    <string name="tree_overview_period">Last 30 days</string>
+    <string name="tree_overview_planted">Trees planted</string>
+    <string name="tree_overview_encouragement">Empty days are perfectly fine — your garden grows at your pace.</string>
+
+    <!-- Recent notes section -->
+    <string name="recent_notes_title">Recent Notes</string>
+    <string name="recent_notes_add">Add note</string>
+
+    <!-- Episode capture: Step 1 — Intensity -->
+    <string name="episode_title">Record Episode</string>
+    <string name="episode_subtitle">No pressure — you are just noting what happened.</string>
+    <string name="episode_next">Next</string>
+    <string name="episode_skip_step">Skip step</string>
+    <string name="episode_when">When was it?</string>
+    <string name="episode_today_time">Today, %1$s</string>
+    <string name="episode_strength_label">Intensity (1–10)</string>
+    <string name="episode_strength_low">barely noticeable</string>
+    <string name="episode_strength_high">very strong</string>
+
+    <!-- Episode capture: Step 2 — Context -->
+    <string name="episode_context_title">Context</string>
+    <string name="episode_context_where">Where were you?</string>
+    <string name="episode_context_activity">What were you doing?</string>
+    <string name="episode_context_body">Body signals (optional)</string>
+    <string name="episode_place_home">Home</string>
+    <string name="episode_place_work">Work</string>
+    <string name="episode_place_public">Public</string>
+    <string name="episode_place_outside">Outdoors</string>
+    <string name="episode_place_commute">Commuting</string>
+    <string name="episode_activity_sleeping">Sleeping</string>
+    <string name="episode_activity_working">Working</string>
+    <string name="episode_activity_sports">Sports</string>
+    <string name="episode_activity_social">Social Media</string>
+    <string name="episode_activity_eating">Eating</string>
+    <string name="episode_activity_traveling">Traveling</string>
+    <string name="episode_body_heart">Racing heart</string>
+    <string name="episode_body_dizzy">Dizziness</string>
+    <string name="episode_body_breathless">Breathless</string>
+    <string name="episode_body_shaking">Trembling</string>
+
+    <!-- Episode capture: Step 3 — Reflection -->
+    <string name="episode_reflection_title">Reflection</string>
+    <string name="episode_reflection_save">Save entry</string>
+    <string name="episode_reflection_save_no_note">Save without note</string>
+    <string name="episode_reflection_prompt">Would you like to note something?</string>
+    <string name="episode_reflection_placeholder">e.g. what happened before, thoughts …</string>
+    <string name="episode_mood_title">Mood before / after</string>
+    <string name="episode_mood_before">Before</string>
+    <string name="episode_mood_after">After</string>
+
+    <!-- Episode capture: Saved confirmation -->
+    <string name="episode_saved_title">Saved</string>
+    <string name="episode_saved_body">Your entry has been recorded. You decide how much you share.</string>
+    <string name="episode_saved_tree_badge">A tree has been planted in your garden</string>
+    <string name="episode_saved_dataset_title">YOUR DATASET IS GROWING</string>
+    <string name="episode_saved_entries">Entries</string>
+    <string name="episode_saved_goal_hint">With %1$d entries, frequent outliers become visible</string>
+    <string name="episode_saved_insights">View insights</string>
+    <string name="episode_saved_home">Back to home</string>
+
+    <!-- Time picker dialog -->
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <!-- Navigation content descriptions -->
+    <string name="nav_back">Back</string>
+    <string name="nav_close">Close</string>
+
+    <!-- Garden overview -->
+    <string name="garden_title">My Garden</string>
+    <string name="garden_prev_month">Previous month</string>
+    <string name="garden_next_month">Next month</string>
+    <string name="garden_no_entry">no entry</string>
+    <string name="garden_entry_singular">%1$d entry</string>
+    <string name="garden_entry_plural">%1$d entries</string>
+    <string name="garden_day_label">Day %1$d</string>
+    <string name="garden_month_trees">%1$d trees planted this month</string>
+
+    <!-- Sample journal notes (prototype) -->
+    <string name="sample_note_title_1">Insight from therapy</string>
+    <string name="sample_note_preview_1">Accepting anxiety feelings instead of pushing them away…</string>
+    <string name="sample_note_title_2">Morning reflection</string>
+    <string name="sample_note_preview_2">After the breathing exercise things went straight…</string>
+    <string name="sample_note_title_3">Before sleeping</string>
+    <string name="sample_note_preview_3">Today two calm moments consciously…</string>
 </resources>

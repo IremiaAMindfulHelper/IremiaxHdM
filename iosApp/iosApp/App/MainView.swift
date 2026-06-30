@@ -1,131 +1,192 @@
 import SwiftUI
 import Shared
 
-struct MainView: View {
-    // Falls du das Wrapper-VM noch brauchst (z.B. später), lassen wir es drin,
-    // aber wir syncen die Tab-Auswahl NICHT über route.
-    @StateObject private var vm = MainViewModelWrapper()
+// =============================================================================
+// MainView — Custom frosted bottom navigation:
+//   Start | Training | Journal | Wohlbefinden
+// =============================================================================
 
-    // Mini player (falls genutzt)
+/// The four tabs matching the current app navigation.
+enum MainTab: Int, CaseIterable, Identifiable {
+    case start = 0
+    case training = 1
+    case journal = 2
+    case wellbeing = 3
+
+    var id: Int { rawValue }
+
+    var label: String {
+        switch self {
+        case .start: return "Start"
+        case .training: return "Training"
+        case .journal: return "Journal"
+        case .wellbeing: return "Wohlbefinden"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .start: return "house.fill"
+        case .training: return "books.vertical.fill"
+        case .journal: return "book.fill"
+        case .wellbeing: return "figure.mind.and.body"
+        }
+    }
+}
+
+struct MainView: View {
+    @State private var selectedTab: MainTab = .start
+
+    // Mini player state (preserved from the original)
     @State private var showSoundPlayer = false
     @State private var currentSoundTitle = ""
 
-    // SOS overlay (student style)
-    @State private var showingEmergencyOverlay = false
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Group {
+                switch selectedTab {
+                case .start:
+                    NavigationStack {
+                        HomeView(
+                            showSoundPlayer: $showSoundPlayer,
+                            currentSoundTitle: $currentSoundTitle
+                        )
+                    }
 
-    // Student tab layout uses Int tags
-    @State private var selectedTab: Int = 0
+                case .training:
+                    NavigationStack {
+                        Text(Strings.training)
+                            .font(IremiaText.h1)
+                            .foregroundColor(IremiaColors.ink)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(IremiaColors.gray100)
+                    }
+
+                case .journal:
+                    NavigationStack {
+                        JournalPrototypeScreen()
+                    }
+
+                case .wellbeing:
+                    NavigationStack {
+                        Text(Strings.wellbeing)
+                            .font(IremiaText.h1)
+                            .foregroundColor(IremiaColors.ink)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(IremiaColors.gray100)
+                    }
+                }
+            }
+
+            if showSoundPlayer {
+                HStack {
+                    SoundPlayerMini(title: currentSoundTitle) {
+                        withAnimation { showSoundPlayer = false }
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 92)
+                .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+
+            GlassyTabBar(selectedTab: $selectedTab)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+                .ignoresSafeArea(.keyboard)
+        }
+    }
+}
+
+// MARK: - Glassy Tab Bar
+
+private struct GlassyTabBar: View {
+    @Binding var selectedTab: MainTab
+    @Namespace private var selectionAnimation
 
     var body: some View {
-        ZStack {
-            TabView(selection: $selectedTab) {
-
-                // 0) Start
-                NavigationStack {
-                    HomeView(
-                        showSoundPlayer: $showSoundPlayer,
-                        currentSoundTitle: $currentSoundTitle
-                    )
-                }
-                .tabItem {
-                    Label(
-                        StringsKt.localized(res: SharedRes.strings().home).localized(),
-                        systemImage: "house.fill"
-                    )
-                }
-                .tag(0)
-
-                // 1) Journal (wichtig: JournalNavigationView beibehalten)
-                NavigationStack {
-                    JournalNavigationView()
-                }
-                .tabItem {
-                    Label("Journal", systemImage: "book.closed")
-                }
-                .tag(1)
-
-                // 99) Center placeholder (für den mittigen SOS Button)
-                Color.clear
-                    .tabItem { Text("") }
-                    .tag(99)
-
-                // 2) Mein Plan (hier ggf. euren echten View einsetzen)
-                NavigationStack {
-                    Text("Mein Plan")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.background)
-                }
-                .tabItem {
-                    Label("Mein Plan", systemImage: "checklist")
-                }
-                .tag(2)
-
-                // 3) Profil
-                NavigationStack {
-                    ProfileView()
-                }
-                .tabItem {
-                    Label(
-                        StringsKt.localized(res: SharedRes.strings().profile).localized(),
-                        systemImage: "person"
-                    )
-                }
-                .tag(3)
-            }
-
-            // Mini Player
-            VStack {
-                Spacer()
-                if showSoundPlayer {
-                    HStack {
-                        SoundPlayerMini(title: currentSoundTitle) {
-                            withAnimation { showSoundPlayer = false }
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 75)
-                    .transition(.move(edge: .leading).combined(with: .opacity))
-                }
-            }
-
-            // Floating SOS Button (mittig)
-            VStack {
-                Spacer()
-                Button {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                        showingEmergencyOverlay = true
-                    }
-                } label: {
-                    VStack(spacing: 4) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 60, height: 60)
-                                .shadow(radius: 6)
-
-                            Image("NotfallButton")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 50, height: 50)
-                        }
-                        Text("SOS")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color.primary500)
+        HStack(spacing: 0) {
+            ForEach(MainTab.allCases) { tab in
+                GlassyTabBarItem(
+                    tab: tab,
+                    isSelected: selectedTab == tab,
+                    namespace: selectionAnimation
+                ) {
+                    withAnimation(.spring(response: 0.34, dampingFraction: 0.84)) {
+                        selectedTab = tab
                     }
                 }
-                .buttonStyle(.plain)
-                .offset(y: 5)
-            }
-            .zIndex(5)
-
-            // SOS Overlay (student EmergencyPlanView)
-            if showingEmergencyOverlay {
-                EmergencyPlanView(isShowing: $showingEmergencyOverlay)
-                    .transition(.move(edge: .bottom))
-                    .zIndex(10)
             }
         }
+        .frame(height: 68)
+        .padding(.horizontal, 6)
+        .background {
+            ZStack {
+                Capsule(style: .continuous)
+                    .fill(.ultraThinMaterial)
+
+                Capsule(style: .continuous)
+                    .fill(SwiftUI.Color.white.opacity(0.74))
+
+                Capsule(style: .continuous)
+                    .stroke(SwiftUI.Color.black.opacity(0.10), lineWidth: 0.8)
+
+                Capsule(style: .continuous)
+                    .inset(by: 1)
+                    .stroke(SwiftUI.Color.white.opacity(0.82), lineWidth: 1)
+            }
+        }
+        .clipShape(Capsule(style: .continuous))
+        .shadow(color: SwiftUI.Color.black.opacity(0.20), radius: 18, x: 0, y: 8)
+        .shadow(color: SwiftUI.Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
+    }
+}
+
+private struct GlassyTabBarItem: View {
+    let tab: MainTab
+    let isSelected: Bool
+    let namespace: Namespace.ID
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                if isSelected {
+                    Capsule(style: .continuous)
+                        .fill(SwiftUI.Color.white.opacity(0.62))
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(.regularMaterial)
+                        )
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .stroke(SwiftUI.Color.white.opacity(0.75), lineWidth: 0.7)
+                        )
+                        .shadow(color: SwiftUI.Color.black.opacity(0.07), radius: 10, x: 0, y: 4)
+                        .matchedGeometryEffect(id: "selectedTabBackground", in: namespace)
+                        .frame(width: 78, height: 48)
+                }
+
+                VStack(spacing: 0) {
+                    Image(systemName: tab.icon)
+                        .font(.system(size: 25, weight: .heavy))
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundColor(isSelected ? IremiaColors.teal700 : SwiftUI.Color.black.opacity(0.88))
+                        .frame(height: 30)
+
+                    Text(tab.label)
+                        .font(.system(size: 12, weight: .bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .foregroundColor(isSelected ? IremiaColors.teal700 : SwiftUI.Color.black.opacity(0.88))
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(tab.label)
     }
 }
 

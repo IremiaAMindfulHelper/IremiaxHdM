@@ -16,11 +16,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import org.iremia.iremia.ui.components.IremiaCard
 import org.iremia.iremia.ui.garden.GardenScene
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaText
+import org.iremia.iremia.utils.localized
+import org.iremia.library.SharedRes
 
 /**
  * "Baumübersicht" card: a compact isometric preview of this month's garden.
@@ -39,6 +42,7 @@ fun TreeOverviewCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     IremiaCard(modifier = modifier.clickable(onClick = onClick)) {
         Column(Modifier.fillMaxWidth()) {
             Row(
@@ -46,8 +50,8 @@ fun TreeOverviewCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("BAUMÜBERSICHT", style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
-                Text("Letzte 30 Tage", style = IremiaText.Caption, color = IremiaColors.Gray500)
+                Text(localized(SharedRes.strings.tree_overview_title).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
+                Text(localized(SharedRes.strings.tree_overview_period).toString(context), style = IremiaText.Caption, color = IremiaColors.Gray500)
             }
 
             Spacer(Modifier.height(12.dp))
@@ -56,7 +60,7 @@ fun TreeOverviewCard(
                 Text(treesPlanted.toString(), style = IremiaText.NumXl, color = IremiaColors.Ink)
                 Spacer(Modifier.size(8.dp))
                 Text(
-                    "Bäume gepflanzt",
+                    localized(SharedRes.strings.tree_overview_planted).toString(context),
                     style = IremiaText.Body,
                     color = IremiaColors.Gray600,
                     modifier = Modifier.padding(bottom = 6.dp),
@@ -84,7 +88,7 @@ fun TreeOverviewCard(
                 )
                 Spacer(Modifier.size(6.dp))
                 Text(
-                    "Leere Tage sind völlig okay — dein Garten wächst in deinem Tempo.",
+                    localized(SharedRes.strings.tree_overview_encouragement).toString(context),
                     style = IremiaText.Caption,
                     color = IremiaColors.Gray500,
                 )

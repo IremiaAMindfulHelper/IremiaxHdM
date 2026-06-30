@@ -147,9 +147,8 @@ if (OperatingSystem.current().isMacOsX) {
         dependsOn("assembleSharedXCFramework")
 
         commandLine(
-            "cp", "-R",
-            "${layout.buildDirectory.get()}/XCFrameworks/release/Shared.xcframework",
-            "${rootProject.projectDir}/iosApp/Shared.xcframework"
+            "sh", "-c",
+            "rm -rf \"${rootProject.projectDir}/iosApp/Shared.xcframework\" && cp -R \"${layout.buildDirectory.get()}/XCFrameworks/release/Shared.xcframework\" \"${rootProject.projectDir}/iosApp/Shared.xcframework\""
         )
         doLast {
             println("Shared.xcframework successfully copied to iosApp")

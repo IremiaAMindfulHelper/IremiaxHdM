@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.iremia.iremia.ui.journal.monthName
@@ -36,6 +37,8 @@ import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaShapes
 import org.iremia.iremia.ui.theme.IremiaSpacing
 import org.iremia.iremia.ui.theme.IremiaText
+import org.iremia.iremia.utils.localized
+import org.iremia.library.SharedRes
 import kotlin.random.Random
 
 /**
@@ -51,13 +54,21 @@ import kotlin.random.Random
 fun GardenOverviewScreen(
     initialYear: Int,
     initialMonth: Int,
+    entryCounts: List<Int>,
     onClose: () -> Unit,
 ) {
+    val context = LocalContext.current
     var year by rememberSaveable { mutableIntStateOf(initialYear) }
     var month by rememberSaveable { mutableIntStateOf(initialMonth) }
     var selectedTile by remember { mutableStateOf<Int?>(null) }
-    val days = remember(year, month) { gardenForMonth(year, month) }
-    val trees = days.count { it > 0 }
+    
+    // If year/month matches current, we could filter entryCounts, 
+    // but for now the user asked to plant trees if there are entries.
+    // To keep it simple and dynamic as requested: 1 tree per entry.
+    val days = entryCounts.take(25).let { 
+        if (it.size < 25) it + List(25 - it.size) { 0 } else it 
+    }
+    val trees = entryCounts.sum() 
 
     Column(
         modifier = Modifier
@@ -72,9 +83,9 @@ fun GardenOverviewScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Mein Garten", style = IremiaText.H2, color = IremiaColors.Ink)
+            Text(localized(SharedRes.strings.garden_title).toString(context), style = IremiaText.H2, color = IremiaColors.Ink)
             IconButton(onClick = onClose) {
-                Icon(Icons.Filled.Close, contentDescription = "Schließen", tint = IremiaColors.Ink900)
+                Icon(Icons.Filled.Close, contentDescription = localized(SharedRes.strings.nav_close).toString(context), tint = IremiaColors.Ink900)
             }
         }
 
@@ -88,7 +99,7 @@ fun GardenOverviewScreen(
             IconButton(onClick = {
                 month--; if (month < 1) { month = 12; year-- }; selectedTile = null
             }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Vorheriger Monat", tint = IremiaColors.Teal700)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = localized(SharedRes.strings.garden_prev_month).toString(context), tint = IremiaColors.Teal700)
             }
             Text(
                 text = "${monthName(month)} $year",
@@ -100,7 +111,7 @@ fun GardenOverviewScreen(
             IconButton(onClick = {
                 month++; if (month > 12) { month = 1; year++ }; selectedTile = null
             }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Nächster Monat", tint = IremiaColors.Teal700)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = localized(SharedRes.strings.garden_next_month).toString(context), tint = IremiaColors.Teal700)
             }
         }
 
@@ -129,9 +140,13 @@ fun GardenOverviewScreen(
 
         val info = selectedTile?.let { tile ->
             val count = days.getOrElse(tile) { 0 }
-            val label = if (count == 0) "kein Eintrag" else "$count Eintrag${if (count > 1) "e" else ""}"
-            "Tag ${tile + 1} · $label"
-        } ?: "$trees Bäume in diesem Monat gepflanzt"
+            if (count == 0) {
+                localized(SharedRes.strings.garden_no_entry).toString(context)
+            } else {
+                // In this "one tree per entry" mode, clicking a tree represents a single entry.
+                localized(SharedRes.strings.garden_entry_singular).toString(context).replace("%1\$d", "1")
+            }
+        } ?: localized(SharedRes.strings.garden_month_trees).toString(context).replace("%1\$d", trees.toString())
 
         Text(
             text = info,

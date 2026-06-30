@@ -15,3 +15,9 @@ allprojects {
         mavenCentral()
     }
 }
+
+tasks.register("assembleXCFramework") {
+    dependsOn(":shared:copyXCFrameworkToIosApp")
+    group = "build"
+    description = "Builds and copies the shared XCFramework to the iOS app"
+}

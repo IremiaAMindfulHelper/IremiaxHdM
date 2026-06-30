@@ -5,9 +5,12 @@ package org.iremia.iremia.bridge
 import kotlin.native.ObjCName
 import com.iremia.UserData
 import org.iremia.iremia.controller.MantrasController
+import org.iremia.iremia.controller.NotesController
 import org.iremia.iremia.db.DriverFactory
 import org.iremia.iremia.data.mantra.MantraDao
 import org.iremia.iremia.data.mantra.MantraRepository
+import org.iremia.iremia.data.note.NoteDao
+import org.iremia.iremia.data.note.NoteRepository
 
 /**
  * Bridge entry points for iOS/Swift.
@@ -72,6 +75,19 @@ object SharedFactory {
 
         // Return controller consumed by Swift
         return MantrasController(repo)
+    }
+
+    /**
+     * Assembles the Notes feature (DAO → Repository → Controller) for Swift.
+     *
+     * @param driverFactory Platform driver provider.
+     * @return A `NotesController` ready to manage journal notes.
+     */
+    fun createNotesController(driverFactory: DriverFactory): NotesController {
+        val db = createDatabase(driverFactory)
+        val dao = NoteDao(db)
+        val repo = NoteRepository(dao)
+        return NotesController(repo)
     }
 
     // Example sketch for future features (keep for reference):

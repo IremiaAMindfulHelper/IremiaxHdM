@@ -1,0 +1,132 @@
+import SwiftUI
+import Shared
+
+// =============================================================================
+// "Letzte Notizen" section — 1:1 translation of RecentNotesSection.kt.
+// =============================================================================
+
+/// Recent journal notes section with header and add button.
+struct RecentNotesSectionView: View {
+    let notes: [NoteUI]
+    let onAdd: () -> Void
+    let onNoteClick: (NoteUI) -> Void
+    let onDelete: (Int64) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(PS.recent_notes_title)
+                    .font(IremiaText.h2)
+                    .foregroundColor(IremiaColors.ink)
+                Spacer()
+                Button(action: onAdd) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(IremiaColors.teal700)
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(PS.recent_notes_add)
+            }
+
+            Spacer().frame(height: 12)
+
+            ForEach(notes) { note in
+                NoteCardView(
+                    note: note,
+                    onClick: { onNoteClick(note) },
+                    onDelete: { onDelete(note.id) }
+                )
+                Spacer().frame(height: 10)
+            }
+        }
+    }
+}
+
+// MARK: - Note Card
+
+private struct NoteCardView: View {
+    let note: NoteUI
+    let onClick: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        IremiaCard(cornerRadius: IremiaShapes.cardSm) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "note.text")
+                            .font(.system(size: 16))
+                            .foregroundColor(IremiaColors.gray400)
+                        Text("\(formattedDate(note.createdAt)) · \(formattedTime(note.createdAt))")
+                            .font(IremiaText.caption)
+                            .foregroundColor(IremiaColors.gray500)
+                    }
+                    Spacer()
+
+                    Button(action: onDelete) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 16))
+                            .foregroundColor(IremiaColors.gray400)
+                            .padding(.horizontal, 4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Löschen")
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14))
+                        .foregroundColor(IremiaColors.gray400)
+                }
+
+                Spacer().frame(height: 6)
+
+                let title = titleOf(note.content)
+                let preview = previewOf(note.content)
+
+                Text(title)
+                    .font(IremiaText.cardTitle)
+                    .foregroundColor(IremiaColors.ink)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                if !preview.isEmpty {
+                    Spacer().frame(height: 2)
+
+                    Text(preview)
+                        .font(IremiaText.body)
+                        .foregroundColor(IremiaColors.gray500)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+        }
+        .onTapGesture(perform: onClick)
+    }
+
+    private func formattedDate(_ ms: Int64) -> String {
+        let date = Date(timeIntervalSince1970: Double(ms) / 1000.0)
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "de_DE")
+        fmt.dateFormat = "d. MMM"
+        return fmt.string(from: date)
+    }
+
+    private func formattedTime(_ ms: Int64) -> String {
+        let date = Date(timeIntervalSince1970: Double(ms) / 1000.0)
+        let fmt = DateFormatter()
+        fmt.dateFormat = "HH:mm"
+        return fmt.string(from: date)
+    }
+
+    private func titleOf(_ content: String) -> String {
+        content.components(separatedBy: .newlines).first ?? ""
+    }
+
+    private func previewOf(_ content: String) -> String {
+        let lines = content.components(separatedBy: .newlines)
+        if lines.count > 1 {
+            return lines[1]
+        }
+        return ""
+    }
+}

@@ -1,0 +1,23 @@
+CREATE TABLE note (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  content TEXT NOT NULL,
+  createdAt INTEGER NOT NULL -- timestamp in millis
+);
+
+selectAll:
+SELECT *
+FROM note
+ORDER BY createdAt DESC;
+
+insert:
+INSERT INTO note(content, createdAt)
+VALUES (?, ?);
+
+updateById:
+UPDATE note
+SET content = ?
+WHERE id = ?;
+
+deleteById:
+DELETE FROM note
+WHERE id = ?;

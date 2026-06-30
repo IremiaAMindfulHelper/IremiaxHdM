@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +19,17 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import org.iremia.iremia.bridge.SharedFactory
+import org.iremia.iremia.db.DriverFactory
+import org.iremia.iremia.ui.journal.JournalViewModel
+import androidx.compose.runtime.collectAsState
+import org.iremia.iremia.controller.NotesState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -35,6 +43,14 @@ import org.iremia.iremia.ui.journal.episode.EpisodeCaptureFlow
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaSpacing
 import org.iremia.iremia.utils.DateService
+import org.iremia.iremia.utils.localized
+import org.iremia.library.SharedRes
+
+import androidx.compose.runtime.derivedStateOf
+import org.iremia.iremia.domain.note.Note
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /** Saver so the selected [LocalDate] survives configuration changes. */
 private val LocalDateSaver: Saver<LocalDate, Any> = listSaver(
@@ -54,20 +70,42 @@ private val STICKY_BUTTON_CLEARANCE = 96.dp
  */
 @Composable
 fun JournalScreen(modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    
+    // Wire up the ViewModel with the SharedFactory
+    val viewModel: JournalViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                val driverFactory = DriverFactory(context)
+                val controller = SharedFactory.createNotesController(driverFactory)
+                JournalViewModel(controller)
+            }
+        }
+    )
+
+    val state by viewModel.state.collectAsState()
     val today = remember { DateService().getToday() }
     var selectedDate by rememberSaveable(stateSaver = LocalDateSaver) { mutableStateOf(today) }
     var showCaptureFlow by rememberSaveable { mutableStateOf(false) }
     var showGarden by rememberSaveable { mutableStateOf(false) }
 
-    // NOTE: dummy entry markers until the real journal repository is wired up.
-    val entryDates = remember(today) {
-        setOf(
-            today.minus(5, DateTimeUnit.DAY),
-            today.minus(2, DateTimeUnit.DAY),
-            today,
-            today.plus(2, DateTimeUnit.DAY),
-            today.plus(4, DateTimeUnit.DAY),
-        )
+    // Map real entries to calendar dots.
+    val entryDates by remember {
+        derivedStateOf {
+            state.items.map { note ->
+                Instant.fromEpochMilliseconds(note.createdAt)
+                    .toLocalDateTime(TimeZone.currentSystemDefault()).date
+            }.toSet()
+        }
+    }
+    
+    val gardenEntries by remember {
+        derivedStateOf {
+            state.gardenEntries
+        }
+    }
+    val treesPlanted by remember {
+        derivedStateOf { state.entryCount }
     }
 
     Box(
@@ -93,17 +131,18 @@ fun JournalScreen(modifier: Modifier = Modifier) {
             Column(Modifier.padding(horizontal = IremiaSpacing.ScreenGutter)) {
                 Spacer(Modifier.height(IremiaSpacing.SectionGap))
                 TreeOverviewCard(
-                    treesPlanted = sampleTreesPlanted,
-                    days = sampleGardenDays,
+                    treesPlanted = treesPlanted,
+                    days = gardenEntries,
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { showGarden = true },
                 )
 
                 Spacer(Modifier.height(IremiaSpacing.SectionGap))
                 RecentNotesSection(
-                    notes = sampleNotes,
+                    notes = state.items,
                     onAdd = { showCaptureFlow = true },
                     onNoteClick = { /* TODO: open note detail (later) */ },
+                    onDelete = { viewModel.deleteNote(it.id) }
                 )
 
                 Spacer(Modifier.height(STICKY_BUTTON_CLEARANCE))
@@ -124,7 +163,7 @@ fun JournalScreen(modifier: Modifier = Modifier) {
                 .padding(top = IremiaSpacing.S6, bottom = IremiaSpacing.S4),
         ) {
             PrimaryButton(
-                text = "+   Episode erfassen",
+                text = localized(SharedRes.strings.journal_capture_cta).toString(context),
                 onClick = { showCaptureFlow = true },
             )
         }
@@ -139,8 +178,12 @@ fun JournalScreen(modifier: Modifier = Modifier) {
             ),
         ) {
             EpisodeCaptureFlow(
+                entryCount = state.entryCount,
                 onClose = { showCaptureFlow = false },
                 onFinished = { showCaptureFlow = false },
+                onSaveNote = { content ->
+                    viewModel.addNote(content)
+                }
             )
         }
     }
@@ -153,6 +196,7 @@ fun JournalScreen(modifier: Modifier = Modifier) {
             GardenOverviewScreen(
                 initialYear = today.year,
                 initialMonth = today.monthNumber,
+                entryCounts = gardenEntries,
                 onClose = { showGarden = false },
             )
         }

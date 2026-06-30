@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.iremia.iremia.ui.components.ChoiceChip
@@ -61,11 +62,13 @@ import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaShapes
 import org.iremia.iremia.ui.theme.IremiaSpacing
 import org.iremia.iremia.ui.theme.IremiaText
+import org.iremia.iremia.utils.localized
+import org.iremia.library.SharedRes
 
 // =============================================================================
 // "Episode festhalten" wizard screens (SIC-24).
-// NOTE: German UI text is hardcoded for the prototype; to be extracted to
-// moko-resources in a later localization pass. No persistence yet.
+// All user-facing text is resolved through moko-resources (SharedRes.strings).
+// No persistence yet.
 // =============================================================================
 
 /** Shared chrome for a wizard step: back + progress header, title, content, actions. */
@@ -84,6 +87,7 @@ fun EpisodeStepScaffold(
     onSecondary: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val context = LocalContext.current
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -94,7 +98,7 @@ fun EpisodeStepScaffold(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück", tint = IremiaColors.Ink900)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = localized(SharedRes.strings.nav_back).toString(context), tint = IremiaColors.Ink900)
             }
             LinearProgressIndicator(
                 progress = { stepIndex.toFloat() / stepCount },
@@ -149,21 +153,22 @@ fun EpisodeIntensityStep(
     onNext: () -> Unit,
     onSkip: () -> Unit,
 ) {
+    val context = LocalContext.current
     EpisodeStepScaffold(
         stepIndex = 1,
         stepCount = 3,
-        title = "Episode festhalten",
-        subtitle = "Kein Druck — du hältst nur fest, was war.",
+        title = localized(SharedRes.strings.episode_title).toString(context),
+        subtitle = localized(SharedRes.strings.episode_subtitle).toString(context),
         onBack = onBack,
-        primaryLabel = "Weiter",
+        primaryLabel = localized(SharedRes.strings.episode_next).toString(context),
         primaryTrailingIcon = true,
         onPrimary = onNext,
-        secondaryLabel = "Schritt überspringen",
+        secondaryLabel = localized(SharedRes.strings.episode_skip_step).toString(context),
         onSecondary = onSkip,
     ) {
         var showTimePicker by rememberSaveable { mutableStateOf(false) }
 
-        Text("Wann war das?", style = IremiaText.CardTitle, color = IremiaColors.Ink)
+        Text(localized(SharedRes.strings.episode_when).toString(context), style = IremiaText.CardTitle, color = IremiaColors.Ink)
         Spacer(Modifier.height(IremiaSpacing.S2))
         Row(
             modifier = Modifier
@@ -174,8 +179,9 @@ fun EpisodeIntensityStep(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val timeStr = "%02d:%02d".format(hour, minute)
             Text(
-                text = "Heute, %02d:%02d".format(hour, minute),
+                text = localized(SharedRes.strings.episode_today_time).toString(context).replace("%1\$s", timeStr),
                 style = IremiaText.Body,
                 color = IremiaColors.Ink,
                 modifier = Modifier.weight(1f),
@@ -202,7 +208,7 @@ fun EpisodeIntensityStep(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom,
         ) {
-            Text("Stärke (1–10)", style = IremiaText.CardTitle, color = IremiaColors.Ink)
+            Text(localized(SharedRes.strings.episode_strength_label).toString(context), style = IremiaText.CardTitle, color = IremiaColors.Ink)
             Text(strength.toInt().toString(), style = IremiaText.H1, color = IremiaColors.Teal700)
         }
         Slider(
@@ -220,8 +226,8 @@ fun EpisodeIntensityStep(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("wenig spürbar", style = IremiaText.Caption, color = IremiaColors.Gray400)
-            Text("sehr stark", style = IremiaText.Caption, color = IremiaColors.Gray400)
+            Text(localized(SharedRes.strings.episode_strength_low).toString(context), style = IremiaText.Caption, color = IremiaColors.Gray400)
+            Text(localized(SharedRes.strings.episode_strength_high).toString(context), style = IremiaText.Caption, color = IremiaColors.Gray400)
         }
     }
 }
@@ -239,22 +245,23 @@ fun EpisodeContextStep(
     onNext: () -> Unit,
     onSkip: () -> Unit,
 ) {
+    val context = LocalContext.current
     EpisodeStepScaffold(
         stepIndex = 2,
         stepCount = 3,
-        title = "Kontext",
+        title = localized(SharedRes.strings.episode_context_title).toString(context),
         onBack = onBack,
-        primaryLabel = "Weiter",
+        primaryLabel = localized(SharedRes.strings.episode_next).toString(context),
         primaryTrailingIcon = true,
         onPrimary = onNext,
-        secondaryLabel = "Schritt überspringen",
+        secondaryLabel = localized(SharedRes.strings.episode_skip_step).toString(context),
         onSecondary = onSkip,
     ) {
-        ChipGroup("Wo warst du?", placeOptions, places, onTogglePlace)
+        ChipGroup(localized(SharedRes.strings.episode_context_where).toString(context), placeOptions(context), places, onTogglePlace)
         Spacer(Modifier.height(IremiaSpacing.S5))
-        ChipGroup("Was hast du gemacht?", activityOptions, activities, onToggleActivity)
+        ChipGroup(localized(SharedRes.strings.episode_context_activity).toString(context), activityOptions(context), activities, onToggleActivity)
         Spacer(Modifier.height(IremiaSpacing.S5))
-        ChipGroup("Körpersignale (optional)", bodySignalOptions, bodySignals, onToggleSignal)
+        ChipGroup(localized(SharedRes.strings.episode_context_body).toString(context), bodySignalOptions(context), bodySignals, onToggleSignal)
     }
 }
 
@@ -295,17 +302,18 @@ fun EpisodeReflectionStep(
     onBack: () -> Unit,
     onSave: () -> Unit,
 ) {
+    val context = LocalContext.current
     EpisodeStepScaffold(
         stepIndex = 3,
         stepCount = 3,
-        title = "Reflexion",
+        title = localized(SharedRes.strings.episode_reflection_title).toString(context),
         onBack = onBack,
-        primaryLabel = "Eintrag speichern",
+        primaryLabel = localized(SharedRes.strings.episode_reflection_save).toString(context),
         onPrimary = onSave,
-        secondaryLabel = "Ohne Notiz speichern",
+        secondaryLabel = localized(SharedRes.strings.episode_reflection_save_no_note).toString(context),
         onSecondary = onSave,
     ) {
-        Text("Möchtest du etwas festhalten?", style = IremiaText.CardTitle, color = IremiaColors.Ink)
+        Text(localized(SharedRes.strings.episode_reflection_prompt).toString(context), style = IremiaText.CardTitle, color = IremiaColors.Ink)
         Spacer(Modifier.height(IremiaSpacing.S2))
         OutlinedTextField(
             value = note,
@@ -313,16 +321,16 @@ fun EpisodeReflectionStep(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp),
-            placeholder = { Text("z. B. was davor passiert ist, Gedanken …", style = IremiaText.Body, color = IremiaColors.Gray400) },
+            placeholder = { Text(localized(SharedRes.strings.episode_reflection_placeholder).toString(context), style = IremiaText.Body, color = IremiaColors.Gray400) },
             shape = IremiaShapes.Field,
         )
 
         Spacer(Modifier.height(IremiaSpacing.S6))
-        Text("Stimmung davor / danach", style = IremiaText.CardTitle, color = IremiaColors.Ink)
+        Text(localized(SharedRes.strings.episode_mood_title).toString(context), style = IremiaText.CardTitle, color = IremiaColors.Ink)
         Spacer(Modifier.height(IremiaSpacing.S3))
-        MoodRow("Davor", moodBefore, onMoodBefore)
+        MoodRow(localized(SharedRes.strings.episode_mood_before).toString(context), moodBefore, onMoodBefore)
         Spacer(Modifier.height(IremiaSpacing.S3))
-        MoodRow("Danach", moodAfter, onMoodAfter)
+        MoodRow(localized(SharedRes.strings.episode_mood_after).toString(context), moodAfter, onMoodAfter)
     }
 }
 
@@ -363,6 +371,7 @@ private fun TimePickerDialog(
     onConfirm: (Int, Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val context = LocalContext.current
     val state = rememberTimePickerState(
         initialHour = initialHour,
         initialMinute = initialMinute,
@@ -372,12 +381,12 @@ private fun TimePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = { onConfirm(state.hour, state.minute) }) {
-                Text("OK", color = IremiaColors.Teal700)
+                Text(localized(SharedRes.strings.dialog_ok).toString(context), color = IremiaColors.Teal700)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Abbrechen", color = IremiaColors.Gray500)
+                Text(localized(SharedRes.strings.dialog_cancel).toString(context), color = IremiaColors.Gray500)
             }
         },
         text = { TimePicker(state = state) },
@@ -392,6 +401,7 @@ fun EpisodeSavedScreen(
     onInsights: () -> Unit,
     onHome: () -> Unit,
 ) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -412,10 +422,10 @@ fun EpisodeSavedScreen(
             Icon(Icons.Filled.Check, contentDescription = null, tint = IremiaColors.Teal700, modifier = Modifier.size(36.dp))
         }
         Spacer(Modifier.height(IremiaSpacing.S4))
-        Text("Gespeichert", style = IremiaText.H1, color = IremiaColors.Ink)
+        Text(localized(SharedRes.strings.episode_saved_title).toString(context), style = IremiaText.H1, color = IremiaColors.Ink)
         Spacer(Modifier.height(IremiaSpacing.S2))
         Text(
-            "Dein Eintrag ist erfasst. Du entscheidest, wie viel du teilst.",
+            localized(SharedRes.strings.episode_saved_body).toString(context),
             style = IremiaText.Body,
             color = IremiaColors.Gray500,
         )
@@ -430,21 +440,25 @@ fun EpisodeSavedScreen(
         ) {
             Icon(Icons.Filled.Eco, contentDescription = null, tint = IremiaColors.Garden700, modifier = Modifier.size(18.dp))
             Spacer(Modifier.size(8.dp))
-            Text("Ein Baum wurde in deinem Garten gepflanzt", style = IremiaText.Caption, color = IremiaColors.Garden900)
+            Text(localized(SharedRes.strings.episode_saved_tree_badge).toString(context), style = IremiaText.Caption, color = IremiaColors.Garden900)
         }
 
         Spacer(Modifier.height(IremiaSpacing.S6))
         IremiaCard(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth()) {
-                Text("DEIN DATENSATZ WÄCHST", style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
+                Text(localized(SharedRes.strings.episode_saved_dataset_title).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
                 Spacer(Modifier.height(IremiaSpacing.S2))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(entryCount.toString(), style = IremiaText.NumXl, color = IremiaColors.Ink)
                     Spacer(Modifier.size(8.dp))
-                    Text("Einträge", style = IremiaText.Body, color = IremiaColors.Gray600, modifier = Modifier.padding(bottom = 6.dp))
+                    Text(localized(SharedRes.strings.episode_saved_entries).toString(context), style = IremiaText.Body, color = IremiaColors.Gray600, modifier = Modifier.padding(bottom = 6.dp))
                 }
                 Spacer(Modifier.height(IremiaSpacing.S2))
-                Text("Mit $goal Einträgen werden häufige Ausreißer sichtbar", style = IremiaText.Caption, color = IremiaColors.Gray500)
+                Text(
+                    localized(SharedRes.strings.episode_saved_goal_hint).toString(context).replace("%1\$d", goal.toString()),
+                    style = IremiaText.Caption,
+                    color = IremiaColors.Gray500,
+                )
                 Spacer(Modifier.height(IremiaSpacing.S3))
                 LinearProgressIndicator(
                     progress = { entryCount.toFloat() / goal },
@@ -461,8 +475,8 @@ fun EpisodeSavedScreen(
         }
 
         Spacer(Modifier.weight(1f))
-        PrimaryButton("Insights ansehen", onInsights, trailingIcon = Icons.AutoMirrored.Filled.ArrowForward)
+        PrimaryButton(localized(SharedRes.strings.episode_saved_insights).toString(context), onInsights, trailingIcon = Icons.AutoMirrored.Filled.ArrowForward)
         Spacer(Modifier.height(IremiaSpacing.S1))
-        SecondaryTextButton("Zurück zur Startseite", onHome)
+        SecondaryTextButton(localized(SharedRes.strings.episode_saved_home).toString(context), onHome)
     }
 }
