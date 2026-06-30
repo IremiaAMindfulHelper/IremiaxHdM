@@ -11,6 +11,9 @@ import kotlin.native.ObjCName
  * @property entryCount Number of journal entries mapped to this tile (0 = empty).
  * @property isNewlyPlanted True when a plant was just placed here and the growth
  *           animation should play. Reset to false after the animation completes.
+ * @property plantType The sprite shown on this tile, or null when the tile is empty.
+ * @property entryId Id of the journal entry this plant represents, or null when empty.
+ *           Used to open the matching entry when the plant is tapped.
  */
 @ObjCName("GardenTile", exact = true)
 data class GardenTile(
@@ -18,6 +21,7 @@ data class GardenTile(
     val entryCount: Int = 0,
     val isNewlyPlanted: Boolean = false,
     val plantType: PlantType? = null,
+    val entryId: Long? = null,
 )
 
 /**

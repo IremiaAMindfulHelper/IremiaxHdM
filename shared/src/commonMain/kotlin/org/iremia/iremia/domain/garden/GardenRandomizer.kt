@@ -47,10 +47,13 @@ object GardenRandomizer {
     /**
      * Builds a complete garden grid from a list of entry IDs.
      *
-     * Each entry gets a deterministic position and plant type. Entries are
-     * processed in order; earlier entries claim positions first.
+     * Placement is append-only and stable: entries are processed in ascending
+     * id order (oldest first, since ids are AUTOINCREMENT), so the first planted
+     * entry always claims its slot first and no existing plant ever moves when a
+     * new entry is added. The caller may pass ids in any order (the journal lists
+     * them newest-first) — sorting here keeps positions fixed across recomposes.
      *
-     * @param entryIds List of journal entry IDs that contribute plants.
+     * @param entryIds Journal entry IDs that contribute plants, in any order.
      * @param gridSize Total tiles in the grid (default 25 for a 5×5 grid).
      * @return List of [GardenTile] covering the full grid.
      */
@@ -58,7 +61,7 @@ object GardenRandomizer {
         val tiles = Array(gridSize) { GardenTile(index = it) }
         val occupied = mutableSetOf<Int>()
 
-        for (id in entryIds) {
+        for (id in entryIds.sorted()) {
             if (occupied.size >= gridSize) break
 
             val position = assignPosition(id, occupied, gridSize)
@@ -69,6 +72,7 @@ object GardenRandomizer {
                 index = position,
                 entryCount = 1,
                 plantType = plantType,
+                entryId = id,
             )
             occupied.add(position)
         }

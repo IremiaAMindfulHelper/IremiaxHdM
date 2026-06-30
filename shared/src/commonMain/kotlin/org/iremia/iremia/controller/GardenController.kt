@@ -52,23 +52,26 @@ class GardenController(
         _state.value = _state.value.copy(year = now.year, month = now.monthNumber)
 
         scope.launch {
-            var previousIds: List<Long>? = null
+            var previousIds: Set<Long>? = null
             repo.observeAll().collect { notes ->
                 val count = notes.size
                 val currentIds = notes.map { it.id }
+                val currentIdSet = currentIds.toSet()
                 val tiles = GardenRandomizer.buildGrid(currentIds, gridConfig.totalTiles)
 
+                // A growth animation should only play for a genuinely new entry
+                // (not on the first load, a recompose, or a deletion). Stable
+                // placement guarantees the new id lands on exactly one tile.
                 var newPlantedIndex: Int? = null
-                if (previousIds != null && currentIds.size > previousIds!!.size) {
-                    val previousOccupied = _state.value.tiles.filter { it.plantType != null }.map { it.index }.toSet()
-                    val currentlyOccupied = tiles.filter { it.plantType != null }.map { it.index }.toSet()
-                    val newlyOccupied = currentlyOccupied.firstOrNull { it !in previousOccupied }
-                    if (newlyOccupied != null) {
-                        newPlantedIndex = newlyOccupied
+                val previous = previousIds
+                if (previous != null) {
+                    val addedId = (currentIdSet - previous).singleOrNull()
+                    if (addedId != null) {
+                        newPlantedIndex = tiles.firstOrNull { it.entryId == addedId }?.index
                     }
                 }
 
-                previousIds = currentIds
+                previousIds = currentIdSet
 
                 _state.value = _state.value.copy(
                     tiles = tiles,
