@@ -365,10 +365,24 @@ private func drawBroadleaf(ctx: GraphicsContext, base: CGPoint, tileW: CGFloat, 
 private func drawDecoration(ctx: GraphicsContext, base: CGPoint, tileW: CGFloat, index: Int) {
     switch (index * 31 + 7) % 10 {
     case 0...5:
+        // A small cluster of flowers so the tile reads as a flower bed, not a dot.
         let color = flowerColors[index % flowerColors.count]
-        ctx.fill(Path(CGRect(x: base.x - tileW * 0.012, y: base.y - tileW * 0.14, width: tileW * 0.024, height: tileW * 0.14)), with: .color(IremiaColors.garden500))
-        let center = CGPoint(x: base.x, y: base.y - tileW * 0.16)
-        ctx.fill(Path(ellipseIn: CGRect(x: center.x - tileW * 0.05, y: center.y - tileW * 0.05, width: tileW * 0.1, height: tileW * 0.1)), with: .color(color))
+        let color2 = flowerColors[(index + 2) % flowerColors.count]
+        let stems: [(CGFloat, CGFloat, Color)] = [
+            (0, tileW * 0.30, color),
+            (-tileW * 0.16, tileW * 0.24, color2),
+            (tileW * 0.16, tileW * 0.22, color2),
+        ]
+        for (dx, stemH, blossom) in stems {
+            let sx = base.x + dx
+            ctx.fill(Path(CGRect(x: sx - tileW * 0.02, y: base.y - stemH, width: tileW * 0.04, height: stemH)), with: .color(IremiaColors.garden500))
+            let top = CGPoint(x: sx, y: base.y - stemH)
+            let petal = tileW * 0.06
+            for off in [CGSize(width: -petal, height: 0), CGSize(width: petal, height: 0), CGSize(width: 0, height: -petal), CGSize(width: 0, height: petal)] {
+                ctx.fill(Path(ellipseIn: CGRect(x: top.x + off.width - petal, y: top.y + off.height - petal, width: petal * 2, height: petal * 2)), with: .color(blossom.opacity(0.9)))
+            }
+            ctx.fill(Path(ellipseIn: CGRect(x: top.x - petal * 0.8, y: top.y - petal * 0.8, width: petal * 1.6, height: petal * 1.6)), with: .color(Color(red: 0xF6/255, green: 0xC4/255, blue: 0x53/255)))
+        }
     case 6...7:
         let c1 = CGPoint(x: base.x, y: base.y - tileW * 0.05)
         ctx.fill(Path(ellipseIn: CGRect(x: c1.x - tileW * 0.1, y: c1.y - tileW * 0.1, width: tileW * 0.2, height: tileW * 0.2)), with: .color(IremiaColors.garden500))

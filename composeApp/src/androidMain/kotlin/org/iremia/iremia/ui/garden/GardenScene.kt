@@ -431,18 +431,36 @@ private fun DrawScope.drawShadow(base: Offset, tileW: Float) {
 private fun DrawScope.drawDecoration(base: Offset, tileW: Float, index: Int) {
     when ((index * 31 + 7) % 10) {
         in 0..5 -> {
+            // A small cluster of flowers so the tile reads as a flower bed, not a dot.
             val color = FlowerColors[index % FlowerColors.size]
-            drawPath(
-                Path().apply {
-                    moveTo(base.x - tileW * 0.012f, base.y)
-                    lineTo(base.x - tileW * 0.012f, base.y - tileW * 0.14f)
-                    lineTo(base.x + tileW * 0.012f, base.y - tileW * 0.14f)
-                    lineTo(base.x + tileW * 0.012f, base.y)
-                    close()
-                },
-                IremiaColors.Garden500
+            val color2 = FlowerColors[(index + 2) % FlowerColors.size]
+            // Three stems with blossoms at slightly different offsets and heights.
+            val stems = listOf(
+                Triple(0f, tileW * 0.30f, color),
+                Triple(-tileW * 0.16f, tileW * 0.24f, color2),
+                Triple(tileW * 0.16f, tileW * 0.22f, color2),
             )
-            drawCircle(color, tileW * 0.05f, base + Offset(0f, -tileW * 0.16f))
+            stems.forEach { (dx, stemH, blossom) ->
+                val sx = base.x + dx
+                drawPath(
+                    Path().apply {
+                        moveTo(sx - tileW * 0.02f, base.y)
+                        lineTo(sx - tileW * 0.02f, base.y - stemH)
+                        lineTo(sx + tileW * 0.02f, base.y - stemH)
+                        lineTo(sx + tileW * 0.02f, base.y)
+                        close()
+                    },
+                    IremiaColors.Garden500
+                )
+                // Blossom: a center plus four petals.
+                val top = base.y - stemH
+                val petal = tileW * 0.06f
+                drawCircle(blossom.copy(alpha = 0.9f), petal, Offset(sx - petal, top))
+                drawCircle(blossom.copy(alpha = 0.9f), petal, Offset(sx + petal, top))
+                drawCircle(blossom.copy(alpha = 0.9f), petal, Offset(sx, top - petal))
+                drawCircle(blossom.copy(alpha = 0.9f), petal, Offset(sx, top + petal))
+                drawCircle(Color(0xFFF6C453), petal * 0.8f, Offset(sx, top))
+            }
         }
         in 6..7 -> {
             drawCircle(IremiaColors.Garden500, tileW * 0.1f, base + Offset(0f, -tileW * 0.05f))
