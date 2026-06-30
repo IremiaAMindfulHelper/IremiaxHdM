@@ -13,7 +13,12 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -57,9 +62,26 @@ fun RecentNotesSection(
                 contentDescription = localized(SharedRes.strings.recent_notes_add).toString(context),
                 tint = IremiaColors.Teal700,
                 modifier = Modifier
-                    .size(28.dp)
-                    .clickable(onClick = onAdd),
+                    .size(44.dp)
+                    .clickable(onClick = onAdd)
+                    .padding(8.dp),
             )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        // Prominent labeled add button beside the small header icon.
+        OutlinedButton(
+            onClick = onAdd,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp),
+            border = BorderStroke(1.5.dp, IremiaColors.Teal700),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = IremiaColors.Teal700),
+        ) {
+            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.size(8.dp))
+            Text(localized(SharedRes.strings.recent_notes_add).toString(context), style = IremiaText.CardTitle)
         }
 
         Spacer(Modifier.height(12.dp))

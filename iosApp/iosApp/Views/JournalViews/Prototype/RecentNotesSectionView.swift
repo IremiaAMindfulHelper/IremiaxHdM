@@ -23,11 +23,33 @@ struct RecentNotesSectionView: View {
                     Image(systemName: "plus")
                         .font(.system(size: 20, weight: .medium))
                         .foregroundColor(IremiaColors.teal700)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 44, height: 44, alignment: .trailing)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(PS.recent_notes_add)
             }
+
+            Spacer().frame(height: 12)
+
+            // Prominent labeled add button so the affordance matches Android, not
+            // only the small plus icon in the header.
+            Button(action: onAdd) {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text(PS.recent_notes_add)
+                        .font(IremiaText.cardTitle)
+                }
+                .foregroundColor(IremiaColors.teal700)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .background(
+                    RoundedRectangle(cornerRadius: IremiaShapes.field, style: .continuous)
+                        .stroke(IremiaColors.teal700, lineWidth: 1.5)
+                )
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
 
             Spacer().frame(height: 12)
 

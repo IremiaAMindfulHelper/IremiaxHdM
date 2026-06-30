@@ -23,8 +23,8 @@
     <string name="tree_overview_encouragement">Empty days are perfectly fine — your garden grows at your pace.</string>
 
     <!-- Recent notes section -->
-    <string name="recent_notes_title">Recent Notes</string>
-    <string name="recent_notes_add">Add note</string>
+    <string name="recent_notes_title">Recent Episodes</string>
+    <string name="recent_notes_add">Add episode</string>
 
     <!-- Episode capture: Step 1 — Intensity -->
     <string name="episode_title">Record Episode</string>
@@ -77,6 +77,7 @@
     <string name="episode_saved_goal_hint">With %1$d entries, frequent outliers become visible</string>
     <string name="episode_saved_insights">View insights</string>
     <string name="episode_saved_home">Back to home</string>
+    <string name="episode_saved_view_garden">View in garden</string>
 
     <!-- Time picker dialog -->
     <string name="dialog_ok">OK</string>

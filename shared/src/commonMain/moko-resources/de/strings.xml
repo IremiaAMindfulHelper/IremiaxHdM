@@ -23,8 +23,8 @@
     <string name="tree_overview_encouragement">Leere Tage sind völlig okay — dein Garten wächst in deinem Tempo.</string>
 
     <!-- Recent notes section -->
-    <string name="recent_notes_title">Letzte Notizen</string>
-    <string name="recent_notes_add">Notiz hinzufügen</string>
+    <string name="recent_notes_title">Letzte Episoden</string>
+    <string name="recent_notes_add">Episode hinzufügen</string>
 
     <!-- Episode capture: Step 1 — Intensity -->
     <string name="episode_title">Episode festhalten</string>
@@ -61,7 +61,7 @@
     <!-- Episode capture: Step 3 — Reflection -->
     <string name="episode_reflection_title">Reflexion</string>
     <string name="episode_reflection_save">Eintrag speichern</string>
-    <string name="episode_reflection_save_no_note">Ohne Notiz speichern</string>
+    <string name="episode_reflection_save_no_note">Ohne Text speichern</string>
     <string name="episode_reflection_prompt">Möchtest du etwas festhalten?</string>
     <string name="episode_reflection_placeholder">z. B. was davor passiert ist, Gedanken …</string>
     <string name="episode_mood_title">Stimmung davor / danach</string>
@@ -77,6 +77,7 @@
     <string name="episode_saved_goal_hint">Mit %1$d Einträgen werden häufige Ausreißer sichtbar</string>
     <string name="episode_saved_insights">Insights ansehen</string>
     <string name="episode_saved_home">Zurück zur Startseite</string>
+    <string name="episode_saved_view_garden">Im Garten ansehen</string>
 
     <!-- Time picker dialog -->
     <string name="dialog_ok">OK</string>
