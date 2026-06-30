@@ -63,10 +63,10 @@ private data class GardenLayout(
 )
 
 private fun layoutFor(width: Float, columns: Int, rows: Int): GardenLayout {
-    val margin = width * 0.06f
+    val margin = width * 0.02f
     val tileW = (width - 2 * margin) * 2f / (columns + rows)
     val tileH = tileW / 2f
-    val treeHeadroom = tileW * 0.95f // room above the top tile for the tallest tree
+    val treeHeadroom = tileW * 0.6f // room above the top tile for the tallest tree
     return GardenLayout(
         originX = width / 2f,
         originY = treeHeadroom + tileH / 2f,
@@ -202,7 +202,7 @@ fun GardenScene(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(1.35f)
+            .aspectRatio(1.2f)
             .then(tap),
     ) {
         val l = layoutFor(size.width, columns, rows)

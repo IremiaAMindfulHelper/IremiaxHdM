@@ -75,7 +75,7 @@ struct GardenOverviewScreen: View {
                 newlyPlantedTileIndex: garden.newlyPlantedTileIndex,
                 onGrowthFinished: { garden.clearNewlyPlanted() }
             )
-            .padding(IremiaSpacing.s3)
+            .padding(IremiaSpacing.s1)
             .background(
                 RoundedRectangle(cornerRadius: IremiaShapes.card, style: .continuous)
                     .fill(IremiaColors.blueHeader)

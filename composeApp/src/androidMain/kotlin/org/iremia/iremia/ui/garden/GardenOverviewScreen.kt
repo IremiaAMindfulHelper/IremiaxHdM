@@ -118,7 +118,7 @@ fun GardenOverviewScreen(
                     .fillMaxWidth()
                     .clip(IremiaShapes.Card)
                     .background(IremiaColors.BlueHeader)
-                    .padding(IremiaSpacing.S3),
+                    .padding(IremiaSpacing.S1),
             ) {
                 GardenScene(
                     tiles = state.tiles,

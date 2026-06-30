@@ -59,10 +59,10 @@ private struct GardenLayout {
 }
 
 private func layoutFor(width: CGFloat, columns: Int, rows: Int) -> GardenLayout {
-    let margin = width * 0.06
+    let margin = width * 0.02
     let tileW = (width - 2 * margin) * 2 / CGFloat(columns + rows)
     let tileH = tileW / 2
-    let treeHeadroom = tileW * 0.95
+    let treeHeadroom = tileW * 0.6
     return GardenLayout(
         originX: width / 2,
         originY: treeHeadroom + tileH / 2,
@@ -195,7 +195,7 @@ struct GardenSceneView: View {
                 }
             }
         }
-        .aspectRatio(1.35, contentMode: .fit)
+        .aspectRatio(1.2, contentMode: .fit)
         .contentShape(Rectangle())
         // Tap handling needs the actual rendered size, so it lives in this overlay
         // GeometryReader rather than a plain .onTapGesture on the Canvas.
