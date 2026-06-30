@@ -1,12 +1,20 @@
 import Foundation
 import Shared
 
+/// The journal entry behind a tapped plant, in a SwiftUI-friendly shape.
+struct GardenEntry: Identifiable, Equatable {
+    let id: Int64
+    let content: String
+    let createdAt: Int64
+}
+
 /// ObservableObject that bridges the shared KMP GardenController state
 /// into SwiftUI-friendly properties. Follows the same pattern as
 /// `NotesObservable` — subscribes to the Kotlin StateFlow via `Interop`.
 final class GardenObservable: ObservableObject {
     @Published var tiles: [GardenTile] = []
     @Published var selectedTile: Int? = nil
+    @Published var selectedEntry: GardenEntry? = nil
     @Published var year: Int = 0
     @Published var month: Int = 0
     @Published var totalPlants: Int = 0
@@ -30,6 +38,10 @@ final class GardenObservable: ObservableObject {
 
             let selectedIdx: Int? = s.selectedTile?.intValue
 
+            let entry: GardenEntry? = s.selectedEntry.map {
+                GardenEntry(id: $0.id, content: $0.content, createdAt: $0.createdAt)
+            }
+
             let rawConfig = s.gridConfig
             let cols = Int(rawConfig.columns)
             let rows = Int(rawConfig.rows)
@@ -37,6 +49,7 @@ final class GardenObservable: ObservableObject {
             DispatchQueue.main.async {
                 self.tiles = rawTiles
                 self.selectedTile = selectedIdx
+                self.selectedEntry = entry
                 self.year = Int(s.year)
                 self.month = Int(s.month)
                 self.totalPlants = Int(s.totalPlants)

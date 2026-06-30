@@ -93,6 +93,17 @@ struct GardenOverviewScreen: View {
         .padding(.horizontal, IremiaSpacing.screenGutter)
         .padding(.vertical, IremiaSpacing.s3)
         .background(IremiaColors.gray100.ignoresSafeArea())
+        // Tapping a planted tree reveals the journal entry it represents.
+        .sheet(
+            item: Binding(
+                get: { garden.selectedEntry },
+                set: { if $0 == nil { garden.selectTile(nil) } }
+            )
+        ) { entry in
+            GardenEntrySheet(entry: entry)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
     }
 
     private func infoText(trees: Int) -> String {
@@ -105,5 +116,40 @@ struct GardenOverviewScreen: View {
             }
         }
         return PS.garden_month_trees.replacingOccurrences(of: "%1$d", with: "\(trees)")
+    }
+}
+
+/// Sheet showing the journal entry behind a tapped plant: its date and full content.
+private struct GardenEntrySheet: View {
+    let entry: GardenEntry
+
+    private var dateText: String {
+        let date = Date(timeIntervalSince1970: Double(entry.createdAt) / 1000.0)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d. MMM yyyy · HH:mm"
+        return formatter.string(from: date)
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: IremiaSpacing.s3) {
+                Text(PS.garden_entry_sheet_title)
+                    .font(IremiaText.h2)
+                    .foregroundColor(IremiaColors.ink)
+
+                Text(dateText)
+                    .font(IremiaText.caption)
+                    .foregroundColor(IremiaColors.gray500)
+
+                let content = entry.content.trimmingCharacters(in: .whitespacesAndNewlines)
+                Text(content.isEmpty ? PS.garden_entry_sheet_empty : content)
+                    .font(IremiaText.body)
+                    .foregroundColor(IremiaColors.ink700)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, IremiaSpacing.screenGutter)
+            .padding(.vertical, IremiaSpacing.s5)
+        }
+        .background(IremiaColors.white.ignoresSafeArea())
     }
 }

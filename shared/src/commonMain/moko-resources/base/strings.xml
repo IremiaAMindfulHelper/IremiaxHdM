@@ -95,6 +95,8 @@
     <string name="garden_entry_plural">%1$d entries</string>
     <string name="garden_day_label">Day %1$d</string>
     <string name="garden_month_trees">%1$d trees planted this month</string>
+    <string name="garden_entry_sheet_title">This entry</string>
+    <string name="garden_entry_sheet_empty">No text for this entry.</string>
 
     <!-- Sample journal notes (prototype) -->
     <string name="sample_note_title_1">Insight from therapy</string>

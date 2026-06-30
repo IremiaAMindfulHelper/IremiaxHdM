@@ -15,6 +15,13 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,12 +29,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.iremia.iremia.controller.GardenState
+import org.iremia.iremia.domain.note.Note
 import org.iremia.iremia.ui.journal.monthName
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.ui.theme.IremiaShapes
@@ -145,5 +159,97 @@ fun GardenOverviewScreen(
                 onAnimationFinished = { viewModel.clearAmbient() }
             )
         }
+
+        // Tapping a planted tree reveals the journal entry it represents. Rendered
+        // as an in-layout overlay (not ModalBottomSheet) because the garden is
+        // already hosted inside a Dialog and nested platform windows misbehave.
+        state.selectedEntry?.let { entry ->
+            GardenEntrySheet(
+                entry = entry,
+                onDismiss = { viewModel.selectTile(null) },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
     }
+}
+
+/**
+ * Bottom-sheet-style overlay showing the journal entry behind a tapped plant:
+ * its date and the full content. A scrim dims the garden; tapping the scrim or
+ * the close button clears the tile selection.
+ */
+@Composable
+private fun GardenEntrySheet(
+    entry: Note,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val dateText = remember(entry.createdAt) { formatEntryDate(entry.createdAt) }
+    val content = entry.content.trim()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Scrim: tap to dismiss.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.32f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss,
+                ),
+        )
+
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .background(IremiaColors.White)
+                .navigationBarsPadding()
+                .padding(horizontal = IremiaSpacing.ScreenGutter)
+                .padding(top = IremiaSpacing.S4, bottom = IremiaSpacing.S6),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = localized(SharedRes.strings.garden_entry_sheet_title).toString(context),
+                    style = IremiaText.H2,
+                    color = IremiaColors.Ink,
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = localized(SharedRes.strings.nav_close).toString(context),
+                        tint = IremiaColors.Gray600,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            Text(text = dateText, style = IremiaText.Caption, color = IremiaColors.Gray500)
+            Spacer(Modifier.height(IremiaSpacing.S4))
+            Text(
+                text = content.ifEmpty {
+                    localized(SharedRes.strings.garden_entry_sheet_empty).toString(context)
+                },
+                style = IremiaText.Body,
+                color = IremiaColors.Ink700,
+                modifier = Modifier
+                    .heightIn(max = 280.dp)
+                    .verticalScroll(rememberScrollState()),
+            )
+        }
+    }
+}
+
+/** Formats an epoch-millis timestamp like "5. Jun 2026 · 14:30" in the system zone. */
+private fun formatEntryDate(epochMillis: Long): String {
+    val dt = Instant.fromEpochMilliseconds(epochMillis)
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+    val month = dt.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+    val time = "${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+    return "${dt.dayOfMonth}. $month ${dt.year} · $time"
 }

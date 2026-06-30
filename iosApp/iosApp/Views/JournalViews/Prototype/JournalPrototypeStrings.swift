@@ -22,6 +22,8 @@ struct JournalPrototypeStringProxy {
         "garden_entry_plural": "%1$d Eintraege",
         "garden_day_label": "Tag %1$d",
         "garden_month_trees": "%1$d Baeume in diesem Monat",
+        "garden_entry_sheet_title": "Dieser Eintrag",
+        "garden_entry_sheet_empty": "Kein Text fuer diesen Eintrag.",
         "episode_title": "Episode festhalten",
         "episode_next": "Weiter",
         "episode_subtitle": "Halte kurz fest, was passiert ist.",
