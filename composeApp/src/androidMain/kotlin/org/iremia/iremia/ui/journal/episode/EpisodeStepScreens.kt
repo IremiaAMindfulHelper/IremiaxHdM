@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -323,6 +324,18 @@ fun EpisodeReflectionStep(
                 .height(120.dp),
             placeholder = { Text(localized(SharedRes.strings.episode_reflection_placeholder).toString(context), style = IremiaText.Body, color = IremiaColors.Gray400) },
             shape = IremiaShapes.Field,
+            textStyle = IremiaText.Body,
+            // NOTE: Explicit colors so the typed text is dark on the white field;
+            // the Material3 default text color rendered near-white on this surface.
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = IremiaColors.Ink900,
+                unfocusedTextColor = IremiaColors.Ink900,
+                cursorColor = IremiaColors.Teal700,
+                focusedContainerColor = IremiaColors.White,
+                unfocusedContainerColor = IremiaColors.White,
+                focusedBorderColor = IremiaColors.Teal700,
+                unfocusedBorderColor = IremiaColors.Gray300,
+            ),
         )
 
         Spacer(Modifier.height(IremiaSpacing.S6))
