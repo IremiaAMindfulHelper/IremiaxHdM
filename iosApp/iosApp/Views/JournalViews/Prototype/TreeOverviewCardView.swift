@@ -58,6 +58,8 @@ struct TreeOverviewCardView: View {
                 }
             }
         }
+        // Whole card (image + text) is one tap target, including empty space.
+        .contentShape(Rectangle())
         .onTapGesture(perform: onClick)
     }
 }

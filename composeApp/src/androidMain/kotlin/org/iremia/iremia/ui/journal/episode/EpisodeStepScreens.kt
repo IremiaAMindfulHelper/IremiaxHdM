@@ -58,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -153,6 +154,7 @@ fun EpisodeStepScaffold(
 }
 
 /** Step 1/3 — when it happened + intensity slider. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EpisodeIntensityStep(
     hour: Int,
@@ -232,6 +234,20 @@ fun EpisodeIntensityStep(
                 activeTrackColor = IremiaColors.Teal700,
                 inactiveTrackColor = IremiaColors.Gray200,
             ),
+            // A larger thumb with a white ring + drop shadow so the handle clearly
+            // stands out from the track.
+            thumb = {
+                Box(
+                    modifier = Modifier
+                        .size(26.dp)
+                        .shadow(4.dp, CircleShape)
+                        .clip(CircleShape)
+                        .background(IremiaColors.White)
+                        .padding(3.dp)
+                        .clip(CircleShape)
+                        .background(IremiaColors.Teal700),
+                )
+            },
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
