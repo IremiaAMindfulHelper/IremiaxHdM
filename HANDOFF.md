@@ -5,7 +5,40 @@
 
 ---
 
-## 1. Was bereits erledigt & committet ist (vorige Session)
+## 0. NEU: Großer Bugfix/Feature-Durchlauf abgeschlossen (P1–P3)
+
+Die komplette priorisierte Liste (P1 kritisch, P2 Garten/Lottie, P3 Usability)
+ist umgesetzt und committet. Reihenfolge der neuen Commits (oben = neuste):
+
+- `adf0466` fix(journal): sichtbarer Slider-Thumb + ganzflächig klickbare Garten-Card (P3.1/3.3)
+- `76a7110` feat(episode): reichere Cards (Datum/Vorschau/Emoji/Intensität) + Detail/Bearbeiten (P3.5, beide)
+- `0cbbd2e` feat(ios): Lottie-Parität (Growth+Ambient Fullscreen, Position), Metadaten, Garten nach Speichern (P2.1/2.3/2.4)
+- `ca37c50` feat(episode): DB-Migration Metadaten + Android-Erfassung + Erfolgs-Animation (P2.6 + Querschnitt)
+- `df3aa75` fix(garden): Untergrundfarbe an Sprite-Gras (#A8C060) + mehr Blumen (P2.2/2.5)
+- `f8d9728` feat(journal): echte Umlaute, Episode-Benennung, iOS-Add-Button (P1.3)
+- `9203408` fix(journal): Kalender zuverlässig zuklappbar (P1.1)
+- `9c2b13e` fix(journal): Reflexions-Textfeld lesbar (P1.2, Android)
+
+**Verifiziert hier:** Android (`:composeApp:compileDebugKotlin`) + shared (alle iOS-Targets)
+kompilieren; Unit-Tests grün (GardenRandomizerTest inkl. neuem Gewichtungs-Test).
+XCFramework neu gebaut + nach `iosApp/` kopiert.
+
+**NOCH OFFEN (nur lokal möglich):**
+1. **iOS-Build in Xcode**: `cd iosApp && pod install` (zieht neu `lottie-ios ~> 4.4`),
+   dann in Xcode bauen. Konnte hier nicht verifiziert werden (kein Xcode/CocoaPods).
+   - Hinweis: Im Plan war „dotLottie-ios (LottieFiles)" gewählt; umgesetzt wurde
+     `lottie-ios 4.x` (spielt `.lottie` nativ, deutlich robustere CocoaPods-Unterstützung).
+     Falls bewusst die LottieFiles-Rust-Lib gewünscht ist: in `iosApp/Podfile` tauschen
+     und `LottieFileView` in `Garden/LottieViews.swift` anpassen.
+2. Manuell prüfen: Kalender auf/zu, Textfarbe Reflexion, Umlaute, Garten-Farbe,
+   Pflanz-Animation an korrekter Kachel, Ambient Fullscreen ohne Clipping,
+   Card-Inhalte, Episode-Detail/Bearbeiten, nach Speichern Wachstum + „Im Garten ansehen".
+3. Bewusst NICHT angefasst: ASCII-Umlaute in Nicht-Journal-Bereichen (Breathing,
+   Calculation, Diary). Bei Bedarf separater Commit.
+
+---
+
+## 1. Was davor erledigt & committet ist (frühere Session)
 
 Vier Garten-Bugs gefixt, je ein Commit (deutsch, **ohne** Co-Authored-By – so vom User gewünscht):
 
