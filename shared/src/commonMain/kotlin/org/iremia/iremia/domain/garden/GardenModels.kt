@@ -17,6 +17,7 @@ data class GardenTile(
     val index: Int,
     val entryCount: Int = 0,
     val isNewlyPlanted: Boolean = false,
+    val plantType: PlantType? = null,
 )
 
 /**

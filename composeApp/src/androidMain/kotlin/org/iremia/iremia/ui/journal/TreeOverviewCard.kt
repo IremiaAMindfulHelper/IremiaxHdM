@@ -25,6 +25,8 @@ import org.iremia.iremia.ui.theme.IremiaText
 import org.iremia.iremia.utils.localized
 import org.iremia.library.SharedRes
 
+import org.iremia.iremia.domain.garden.GardenTile
+
 /**
  * "Baumübersicht" card: a compact isometric preview of this month's garden.
  *
@@ -32,13 +34,13 @@ import org.iremia.library.SharedRes
  * opens the full garden overview. Purely presentational with sample data for now.
  *
  * @param treesPlanted Number of trees planted in the period.
- * @param days Per-day entry counts, one tile each in the preview garden.
+ * @param tiles Grid tile states in the preview garden.
  * @param onClick Opens the full-screen garden overview.
  */
 @Composable
 fun TreeOverviewCard(
     treesPlanted: Int,
-    days: List<Int>,
+    tiles: List<GardenTile>,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
@@ -71,7 +73,7 @@ fun TreeOverviewCard(
 
             // Isometric garden preview (tap the card to open the full overview).
             GardenScene(
-                days = days,
+                tiles = tiles,
                 columns = 5,
                 rows = 5,
                 modifier = Modifier.fillMaxWidth(),

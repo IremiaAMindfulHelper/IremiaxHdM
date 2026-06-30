@@ -9,7 +9,7 @@ import Shared
 /// Shows trees-planted headline, a mini GardenScene, and encouraging footer.
 struct TreeOverviewCardView: View {
     let treesPlanted: Int
-    let days: [Int]
+    let tiles: [GardenTile]
     var onClick: () -> Void = {}
 
     var body: some View {
@@ -41,7 +41,7 @@ struct TreeOverviewCardView: View {
                 Spacer().frame(height: 14)
 
                 GardenSceneView(
-                    days: days,
+                    tiles: tiles,
                     columns: 5,
                     rows: 5
                 )

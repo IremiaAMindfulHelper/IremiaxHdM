@@ -1,4 +1,5 @@
 import SwiftUI
+import Shared
 
 // =============================================================================
 // Isometric "Forest"-style garden — 1:1 translation of GardenScene.kt (331 lines).
@@ -96,7 +97,7 @@ private func scaleFor(_ count: Int) -> CGFloat {
 
 /// Isometric garden rendered on a SwiftUI Canvas.
 struct GardenSceneView: View {
-    let days: [Int]
+    let tiles: [GardenTile]
     var columns: Int = 5
     var rows: Int = 5
     var interactive: Bool = false
@@ -140,24 +141,31 @@ struct GardenSceneView: View {
             }
 
             // --- Plants, back-to-front ---
-            var tiles: [(Int, Int)] = []
-            for row in 0..<rows { for col in 0..<columns { tiles.append((col, row)) } }
-            tiles.sort { $0.0 + $0.1 < $1.0 + $1.1 }
+            var gridOrder: [(Int, Int)] = []
+            for row in 0..<rows { for col in 0..<columns { gridOrder.append((col, row)) } }
+            gridOrder.sort { $0.0 + $0.1 < $1.0 + $1.1 }
 
-            for (col, row) in tiles {
+            for (col, row) in gridOrder {
                 let index = row * columns + col
                 let base = center(l, col: col, row: row)
-                let count = index < days.count ? days[index] : 0
+                let tile = index < tiles.count ? tiles[index] : nil
+                let count = tile?.entryCount ?? 0
                 if count == 0 {
                     drawDecoration(ctx: ctx, base: base, tileW: l.tileW, index: index)
                 } else {
                     drawShadow(ctx: ctx, base: base, tileW: l.tileW)
                     let foliage = foliagePalettes[(index * 5 + 2) % foliagePalettes.count]
-                    let scale = scaleFor(count)
-                    if index % 2 == 0 {
-                        drawPine(ctx: ctx, base: base, tileW: l.tileW, scale: scale, foliage: foliage)
+                    let scale = scaleFor(Int(count))
+                    let isTree = tile?.plantType?.isTree ?? true
+                    if isTree {
+                        if index % 2 == 0 {
+                            drawPine(ctx: ctx, base: base, tileW: l.tileW, scale: scale, foliage: foliage)
+                        } else {
+                            drawBroadleaf(ctx: ctx, base: base, tileW: l.tileW, scale: scale, foliage: foliage, index: index)
+                        }
                     } else {
-                        drawBroadleaf(ctx: ctx, base: base, tileW: l.tileW, scale: scale, foliage: foliage, index: index)
+                        // It's a flower crate! Draw a procedural flower
+                        drawDecoration(ctx: ctx, base: base, tileW: l.tileW, index: index)
                     }
                 }
             }

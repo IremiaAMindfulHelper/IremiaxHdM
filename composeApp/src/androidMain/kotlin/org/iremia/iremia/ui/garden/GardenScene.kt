@@ -13,18 +13,20 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import org.iremia.iremia.ui.theme.IremiaColors
+import org.iremia.iremia.domain.garden.GardenTile
+import org.iremia.iremia.domain.garden.PlantType
+import org.iremia.iremia.domain.garden.image
+import androidx.compose.ui.res.painterResource
 import kotlin.math.roundToInt
 
 // =============================================================================
-// Isometric "Forest"-style garden (prototype).
+// Isometric "Forest"-style garden.
 //
-// Fakes a 3-D plot with a 2.5-D isometric projection on a Compose Canvas — no 3-D
-// engine. Each tile is one day of the month; days with entries grow a plant (taller
-// and fuller with more entries), empty days get scattered grass, bushes and flowers.
-// Trees vary in color (several foliage palettes + occasional blossom) and the ground
-// has light grass tufts on top and an earthy texture on the front walls.
+// Fakes a 3-D plot with a 2.5-D isometric projection on a Compose Canvas.
+// Tiles can hold PlantType sprites, or procedural bushes and flowers if empty.
 // =============================================================================
 
 private val GrassLight = Color(0xFF8FCB9B)
@@ -33,18 +35,6 @@ private val GrassEdge = Color(0xFF5FA877)
 private val SoilLeft = Color(0xFF5E4A38)
 private val SoilRight = Color(0xFF7A5C46)
 private val FlowerColors = listOf(Color(0xFFE5A3B8), Color(0xFFF6C453), Color(0xFFB7E4C7), Color(0xFFC9A7EB))
-
-/** A foliage color set so trees are not all the same green. */
-private data class Foliage(val dark: Color, val mid: Color, val light: Color, val blossom: Color? = null)
-
-private val FoliagePalettes = listOf(
-    Foliage(Color(0xFF0F6E56), Color(0xFF2E9576), Color(0xFF7FC0A8)), // brand garden
-    Foliage(Color(0xFF3E7D3A), Color(0xFF5BA152), Color(0xFF9ED36B)), // fresh green
-    Foliage(Color(0xFF2E6B57), Color(0xFF3E9576), Color(0xFF8FD0B6)), // teal green
-    Foliage(Color(0xFF5C7A1E), Color(0xFF87A62F), Color(0xFFC2D257)), // olive
-    Foliage(Color(0xFF1F6E4C), Color(0xFF3E9576), Color(0xFFBfE3C8), blossom = Color(0xFFE5A3B8)), // blossom
-    Foliage(Color(0xFF235C46), Color(0xFF2E8466), Color(0xFF6FB89A)), // deep pine
-)
 
 /** Resolved pixel geometry of the plot for a given canvas size. */
 private data class GardenLayout(
@@ -84,9 +74,9 @@ private fun GardenLayout.tileAt(p: Offset, columns: Int, rows: Int): Int? {
 }
 
 /**
- * Draws an isometric garden for one month.
+ * Draws an isometric garden.
  *
- * @param days Entry counts per day (index 0 = first day), one tile each.
+ * @param tiles Grid tile states, holding PlantType sprites if occupied.
  * @param columns / [rows] Plot dimensions (columns * rows tiles).
  * @param interactive Whether tiles respond to taps via [onTileTap].
  * @param selectedTile Tile index to highlight, or null.
@@ -94,7 +84,7 @@ private fun GardenLayout.tileAt(p: Offset, columns: Int, rows: Int): Int? {
  */
 @Composable
 fun GardenScene(
-    days: List<Int>,
+    tiles: List<GardenTile>,
     modifier: Modifier = Modifier,
     columns: Int = 5,
     rows: Int = 5,
@@ -102,6 +92,11 @@ fun GardenScene(
     selectedTile: Int? = null,
     onTileTap: (Int) -> Unit = {},
 ) {
+    // Pre-load painters for all PlantType enum variants using moko-resources
+    val plantPainters = PlantType.entries.associateWith { plantType ->
+        painterResource(id = plantType.image.drawableResId)
+    }
+
     val tap = if (interactive) {
         Modifier.pointerInput(columns, rows) {
             detectTapGestures { offset ->
@@ -152,20 +147,36 @@ fun GardenScene(
         }
 
         // --- Plants & decorations, back-to-front ---
-        val tiles = buildList {
+        val gridOrder = buildList {
             for (row in 0 until rows) for (col in 0 until columns) add(col to row)
         }.sortedBy { (col, row) -> col + row }
 
-        tiles.forEach { (col, row) ->
+        gridOrder.forEach { (col, row) ->
             val index = row * columns + col
             val base = l.center(col, row)
-            when (val count = days.getOrElse(index) { 0 }) {
-                0 -> drawDecoration(base, l.tileW, index)
-                else -> {
-                    drawShadow(base, l.tileW)
-                    val foliage = FoliagePalettes[(index * 5 + 2) % FoliagePalettes.size]
-                    if (index % 2 == 0) drawPine(base, l.tileW, scaleFor(count), foliage)
-                    else drawBroadleaf(base, l.tileW, scaleFor(count), foliage, index)
+            val tile = tiles.getOrNull(index)
+            val plantType = tile?.plantType
+
+            if (plantType == null) {
+                drawDecoration(base, l.tileW, index)
+            } else {
+                drawShadow(base, l.tileW)
+                val painter = plantPainters[plantType]
+                if (painter != null) {
+                    val count = tile.entryCount
+                    val scale = scaleFor(count)
+                    val spriteWidth = l.tileW * scale
+                    val aspect = painter.intrinsicSize.height / painter.intrinsicSize.width
+                    val spriteHeight = spriteWidth * aspect
+
+                    val left = base.x - spriteWidth / 2f
+                    val top = (base.y + l.tileH / 2f) - spriteHeight
+
+                    translate(left, top) {
+                        with(painter) {
+                            draw(size = Size(spriteWidth, spriteHeight))
+                        }
+                    }
                 }
             }
         }
@@ -248,60 +259,20 @@ private fun DrawScope.drawShadow(base: Offset, tileW: Float) {
     )
 }
 
-/** A simple flat 2-D layered-cone pine in the given [foliage] palette. */
-private fun DrawScope.drawPine(base: Offset, tileW: Float, scale: Float, foliage: Foliage) {
-    val trunkW = tileW * 0.06f * scale
-    val trunkH = tileW * 0.12f * scale
-    drawRect(IremiaColors.Branch, Offset(base.x - trunkW / 2f, base.y - trunkH), Size(trunkW, trunkH))
-
-    val tierW = tileW * 0.52f * scale
-    val tierH = tileW * 0.30f * scale
-    var baseY = base.y - trunkH
-    for (tier in 0 until 3) {
-        val w = tierW * (1f - tier * 0.18f)
-        val apexY = baseY - tierH
-        val apex = Offset(base.x, apexY)
-        val baseLeft = Offset(base.x - w / 2f, baseY)
-        val baseRight = Offset(base.x + w / 2f, baseY)
-        drawPath(tri(apex, baseRight, baseLeft), foliage.dark)
-        // Flat left highlight wedge.
-        drawPath(tri(apex, baseLeft, Offset(base.x - w / 6f, baseY)), foliage.mid)
-        baseY = apexY + tierH * 0.38f
-    }
-}
-
-/** A simple flat 2-D broadleaf tree built from solid foliage circles. */
-private fun DrawScope.drawBroadleaf(base: Offset, tileW: Float, scale: Float, foliage: Foliage, index: Int) {
-    val trunkW = tileW * 0.07f * scale
-    val trunkH = tileW * 0.16f * scale
-    drawRect(IremiaColors.Branch, Offset(base.x - trunkW / 2f, base.y - trunkH), Size(trunkW, trunkH))
-
-    val r = tileW * 0.24f * scale
-    val crown = base.copy(y = base.y - trunkH - r * 0.5f)
-    drawCircle(foliage.dark, r, crown)
-    drawCircle(foliage.dark, r * 0.8f, crown + Offset(-r * 0.7f, r * 0.1f))
-    drawCircle(foliage.dark, r * 0.8f, crown + Offset(r * 0.7f, r * 0.1f))
-    drawCircle(foliage.mid, r * 0.85f, crown + Offset(-r * 0.25f, -r * 0.45f))
-    drawCircle(foliage.light.copy(alpha = 0.85f), r * 0.35f, crown + Offset(-r * 0.45f, -r * 0.55f))
-
-    // Occasional blossom dots.
-    foliage.blossom?.let { blossom ->
-        val spots = listOf(Offset(-r * 0.4f, -r * 0.1f), Offset(r * 0.45f, -r * 0.05f), Offset(0f, -r * 0.6f), Offset(r * 0.1f, r * 0.2f))
-        spots.forEachIndexed { i, off ->
-            if ((index + i) % 2 == 0) drawCircle(blossom, r * 0.12f, crown + off)
-        }
-    }
-}
-
 /** Ambient decoration for an empty day: a small bush or a flower (deterministic). */
 private fun DrawScope.drawDecoration(base: Offset, tileW: Float, index: Int) {
     when ((index * 31 + 7) % 10) {
         in 0..2 -> {
             val color = FlowerColors[index % FlowerColors.size]
-            drawRect(
-                IremiaColors.Garden500,
-                Offset(base.x - tileW * 0.012f, base.y - tileW * 0.14f),
-                Size(tileW * 0.024f, tileW * 0.14f),
+            drawPath(
+                Path().apply {
+                    moveTo(base.x - tileW * 0.012f, base.y)
+                    lineTo(base.x - tileW * 0.012f, base.y - tileW * 0.14f)
+                    lineTo(base.x + tileW * 0.012f, base.y - tileW * 0.14f)
+                    lineTo(base.x + tileW * 0.012f, base.y)
+                    close()
+                },
+                IremiaColors.Garden500
             )
             drawCircle(color, tileW * 0.05f, base + Offset(0f, -tileW * 0.16f))
         }
@@ -312,13 +283,6 @@ private fun DrawScope.drawDecoration(base: Offset, tileW: Float, index: Int) {
         }
         else -> Unit
     }
-}
-
-private fun tri(a: Offset, b: Offset, c: Offset): Path = Path().apply {
-    moveTo(a.x, a.y)
-    lineTo(b.x, b.y)
-    lineTo(c.x, c.y)
-    close()
 }
 
 private fun quad(a: Offset, b: Offset, c: Offset, d: Offset): Path = Path().apply {

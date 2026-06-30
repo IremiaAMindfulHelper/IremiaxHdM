@@ -95,6 +95,7 @@ fun JournalScreen(modifier: Modifier = Modifier) {
     )
 
     val state by viewModel.state.collectAsState()
+    val gardenState by gardenViewModel.state.collectAsState()
     val today = remember { DateService().getToday() }
     var selectedDate by rememberSaveable(stateSaver = LocalDateSaver) { mutableStateOf(today) }
     var showCaptureFlow by rememberSaveable { mutableStateOf(false) }
@@ -142,8 +143,8 @@ fun JournalScreen(modifier: Modifier = Modifier) {
             Column(Modifier.padding(horizontal = IremiaSpacing.ScreenGutter)) {
                 Spacer(Modifier.height(IremiaSpacing.SectionGap))
                 TreeOverviewCard(
-                    treesPlanted = treesPlanted,
-                    days = gardenEntries,
+                    treesPlanted = gardenState.totalPlants,
+                    tiles = gardenState.tiles,
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { showGarden = true },
                 )

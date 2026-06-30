@@ -52,8 +52,8 @@ struct JournalPrototypeScreen: View {
                     VStack(spacing: 0) {
                         // Tree Overview
                         TreeOverviewCardView(
-                            treesPlanted: treesPlanted,
-                            days: gardenEntries,
+                            treesPlanted: gardenObservable.totalPlants,
+                            tiles: gardenObservable.tiles,
                             onClick: { showGarden = true }
                         )
 

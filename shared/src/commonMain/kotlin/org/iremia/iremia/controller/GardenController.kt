@@ -11,6 +11,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.iremia.iremia.data.note.NoteRepository
 import org.iremia.iremia.domain.garden.GardenGridConfig
 import org.iremia.iremia.domain.garden.GardenTile
+import org.iremia.iremia.domain.garden.GardenRandomizer
 
 /**
  * Immutable UI state for the full-screen garden overview.
@@ -53,13 +54,7 @@ class GardenController(
         scope.launch {
             repo.observeAll().collect { notes ->
                 val count = notes.size
-                val tileCount = minOf(count, gridConfig.totalTiles)
-                val tiles = List(gridConfig.totalTiles) { index ->
-                    GardenTile(
-                        index = index,
-                        entryCount = if (index < tileCount) 1 else 0,
-                    )
-                }
+                val tiles = GardenRandomizer.buildGrid(notes.map { it.id }, gridConfig.totalTiles)
                 _state.value = _state.value.copy(
                     tiles = tiles,
                     totalPlants = count,

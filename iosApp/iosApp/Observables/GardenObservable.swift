@@ -5,7 +5,7 @@ import Shared
 /// into SwiftUI-friendly properties. Follows the same pattern as
 /// `NotesObservable` — subscribes to the Kotlin StateFlow via `Interop`.
 final class GardenObservable: ObservableObject {
-    @Published var tiles: [Int] = []
+    @Published var tiles: [GardenTile] = []
     @Published var selectedTile: Int? = nil
     @Published var year: Int = 0
     @Published var month: Int = 0
@@ -26,15 +26,7 @@ final class GardenObservable: ObservableObject {
         cancelable = Interop.shared.observeState(flow: controller.state) { anyValue in
             guard let s = anyValue as? GardenState else { return }
 
-            // Map tiles to entry counts (simple Int list for the scene)
-            let rawTiles = (s.tiles as? [Any]) ?? []
-            let tileCounts = rawTiles.compactMap { tile -> Int? in
-                let obj = tile as AnyObject
-                if let count = obj.value(forKey: "entryCount") as? NSNumber {
-                    return count.intValue
-                }
-                return 0
-            }
+            let rawTiles = (s.tiles as? [GardenTile]) ?? []
 
             let selectedIdx: Int? = s.selectedTile?.intValue
 
@@ -43,7 +35,7 @@ final class GardenObservable: ObservableObject {
             let rows = Int(rawConfig.rows)
 
             DispatchQueue.main.async {
-                self.tiles = tileCounts
+                self.tiles = rawTiles
                 self.selectedTile = selectedIdx
                 self.year = Int(s.year)
                 self.month = Int(s.month)

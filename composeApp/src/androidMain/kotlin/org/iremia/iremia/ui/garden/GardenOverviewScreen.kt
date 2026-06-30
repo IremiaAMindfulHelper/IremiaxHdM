@@ -105,7 +105,7 @@ fun GardenOverviewScreen(
                 .padding(IremiaSpacing.S3),
         ) {
             GardenScene(
-                days = days,
+                tiles = state.tiles,
                 columns = state.gridConfig.columns,
                 rows = state.gridConfig.rows,
                 interactive = true,
