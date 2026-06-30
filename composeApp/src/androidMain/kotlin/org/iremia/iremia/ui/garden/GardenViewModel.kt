@@ -1,21 +1,62 @@
 package org.iremia.iremia.ui.garden
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.iremia.iremia.controller.GardenController
 import org.iremia.iremia.controller.GardenState
 
 /**
  * ViewModel for the full-screen garden overview.
  *
- * Wraps [GardenController] and delegates state/actions. Composables stay stateless;
- * all randomizer, trigger, and animation-state logic lives here (or in the controller).
+ * Wraps [GardenController] and delegates state/actions. Handles triggering of
+ * ambient surprise animations (both randomly over time and after planting completed).
  */
 class GardenViewModel(
     private val gardenController: GardenController,
 ) : ViewModel() {
 
     val state: StateFlow<GardenState> = gardenController.state
+
+    private val _activeAmbient = MutableStateFlow<AmbientConfig?>(null)
+    val activeAmbient: StateFlow<AmbientConfig?> = _activeAmbient.asStateFlow()
+
+    init {
+        // 1. Periodically check for random ambient surprise trigger (every 20s, 15% probability)
+        viewModelScope.launch {
+            while (isActive) {
+                delay(20000)
+                if (_activeAmbient.value == null && gardenController.state.value.newlyPlantedTileIndex == null) {
+                    val triggerChance = 0.15f
+                    if (kotlin.random.Random.nextFloat() < triggerChance) {
+                        triggerAmbient()
+                    }
+                }
+            }
+        }
+
+        // 2. Listen to planting completion to trigger ambient animation with high probability
+        viewModelScope.launch {
+            var prevNewlyPlanted: Int? = null
+            gardenController.state.collect { currentState ->
+                if (prevNewlyPlanted != null && currentState.newlyPlantedTileIndex == null) {
+                    // Planting animation finished! Trigger ambient overlay with 80% chance
+                    val chanceAfterPlanting = 0.80f
+                    if (kotlin.random.Random.nextFloat() < chanceAfterPlanting) {
+                        // Small delay so it begins just as the zoom-out ends
+                        delay(600)
+                        triggerAmbient()
+                    }
+                }
+                prevNewlyPlanted = currentState.newlyPlantedTileIndex
+            }
+        }
+    }
 
     fun selectTile(index: Int?) = gardenController.selectTile(index)
 
@@ -24,6 +65,16 @@ class GardenViewModel(
     fun markNewlyPlanted(tileIndex: Int) = gardenController.markNewlyPlanted(tileIndex)
 
     fun clearNewlyPlanted() = gardenController.clearNewlyPlanted()
+
+    fun triggerAmbient() {
+        if (_activeAmbient.value == null) {
+            _activeAmbient.value = selectRandomAmbient()
+        }
+    }
+
+    fun clearAmbient() {
+        _activeAmbient.value = null
+    }
 
     override fun onCleared() {
         super.onCleared()

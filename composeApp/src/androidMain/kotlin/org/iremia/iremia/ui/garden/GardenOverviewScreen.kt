@@ -52,86 +52,98 @@ fun GardenOverviewScreen(
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsState()
+    val activeAmbient by viewModel.activeAmbient.collectAsState()
     val days = state.tiles.map { it.entryCount }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(IremiaColors.Gray100)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .padding(horizontal = IremiaSpacing.ScreenGutter, vertical = IremiaSpacing.S3),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(localized(SharedRes.strings.garden_title).toString(context), style = IremiaText.H2, color = IremiaColors.Ink)
-            IconButton(onClick = onClose) {
-                Icon(Icons.Filled.Close, contentDescription = localized(SharedRes.strings.nav_close).toString(context), tint = IremiaColors.Ink900)
-            }
-        }
-
-        Spacer(Modifier.height(IremiaSpacing.S3))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            IconButton(onClick = { viewModel.navigateMonth(-1) }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = localized(SharedRes.strings.garden_prev_month).toString(context), tint = IremiaColors.Teal700)
-            }
-            Text(
-                text = "${monthName(state.month)} ${state.year}",
-                style = IremiaText.CardTitle,
-                color = IremiaColors.Ink,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = IremiaSpacing.S4),
-            )
-            IconButton(onClick = { viewModel.navigateMonth(1) }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = localized(SharedRes.strings.garden_next_month).toString(context), tint = IremiaColors.Teal700)
-            }
-        }
-
-        Spacer(Modifier.height(IremiaSpacing.S5))
-
-        Box(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(IremiaShapes.Card)
-                .background(IremiaColors.BlueHeader)
-                .padding(IremiaSpacing.S3),
+                .fillMaxSize()
+                .background(IremiaColors.Gray100)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = IremiaSpacing.ScreenGutter, vertical = IremiaSpacing.S3),
         ) {
-            GardenScene(
-                tiles = state.tiles,
-                columns = state.gridConfig.columns,
-                rows = state.gridConfig.rows,
-                interactive = true,
-                selectedTile = state.selectedTile,
-                onTileTap = { viewModel.selectTile(it) },
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(localized(SharedRes.strings.garden_title).toString(context), style = IremiaText.H2, color = IremiaColors.Ink)
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Filled.Close, contentDescription = localized(SharedRes.strings.nav_close).toString(context), tint = IremiaColors.Ink900)
+                }
+            }
+
+            Spacer(Modifier.height(IremiaSpacing.S3))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                IconButton(onClick = { viewModel.navigateMonth(-1) }) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = localized(SharedRes.strings.garden_prev_month).toString(context), tint = IremiaColors.Teal700)
+                }
+                Text(
+                    text = "${monthName(state.month)} ${state.year}",
+                    style = IremiaText.CardTitle,
+                    color = IremiaColors.Ink,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = IremiaSpacing.S4),
+                )
+                IconButton(onClick = { viewModel.navigateMonth(1) }) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = localized(SharedRes.strings.garden_next_month).toString(context), tint = IremiaColors.Teal700)
+                }
+            }
+
+            Spacer(Modifier.height(IremiaSpacing.S5))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(IremiaShapes.Card)
+                    .background(IremiaColors.BlueHeader)
+                    .padding(IremiaSpacing.S3),
+            ) {
+                GardenScene(
+                    tiles = state.tiles,
+                    columns = state.gridConfig.columns,
+                    rows = state.gridConfig.rows,
+                    interactive = true,
+                    selectedTile = state.selectedTile,
+                    onTileTap = { viewModel.selectTile(it) },
+                    newlyPlantedTileIndex = state.newlyPlantedTileIndex,
+                    onAnimationFinished = { viewModel.clearNewlyPlanted() },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            Spacer(Modifier.height(IremiaSpacing.S5))
+
+            val info = state.selectedTile?.let { tile ->
+                val count = days.getOrElse(tile) { 0 }
+                if (count == 0) {
+                    localized(SharedRes.strings.garden_no_entry).toString(context)
+                } else {
+                    localized(SharedRes.strings.garden_entry_singular).toString(context).replace("%1\$d", "1")
+                }
+            } ?: localized(SharedRes.strings.garden_month_trees).toString(context).replace("%1\$d", state.totalPlants.toString())
+
+            Text(
+                text = info,
+                style = IremiaText.Body,
+                color = IremiaColors.Gray600,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
 
-        Spacer(Modifier.height(IremiaSpacing.S5))
-
-        val info = state.selectedTile?.let { tile ->
-            val count = days.getOrElse(tile) { 0 }
-            if (count == 0) {
-                localized(SharedRes.strings.garden_no_entry).toString(context)
-            } else {
-                localized(SharedRes.strings.garden_entry_singular).toString(context).replace("%1\$d", "1")
-            }
-        } ?: localized(SharedRes.strings.garden_month_trees).toString(context).replace("%1\$d", state.totalPlants.toString())
-
-        Text(
-            text = info,
-            style = IremiaText.Body,
-            color = IremiaColors.Gray600,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        activeAmbient?.let { config ->
+            AmbientSurpriseOverlay(
+                config = config,
+                onAnimationFinished = { viewModel.clearAmbient() }
+            )
+        }
     }
 }
