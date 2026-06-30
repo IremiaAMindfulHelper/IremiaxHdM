@@ -24,6 +24,7 @@ kotlinxCoroutinesCore = "1.11.0"
 
 # SQLDelight
 sqldelight = "2.3.2"
+compottie = "2.0.0-rc02"
 
 [libraries]
 # Kotlin / Test
@@ -46,6 +47,8 @@ sqldelight-coroutines    = { module = "app.cash.sqldelight:coroutines-extensions
 graphics = { module = "dev.icerock.moko:graphics", version.ref = "graphics" }
 resources = { module = "dev.icerock.moko:resources", version.ref = "resources" }
 resources-test = { module = "dev.icerock.moko:resources-test", version.ref = "resources" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version.ref = "compottie" }
+compottie-dot = { module = "io.github.alexzhirkevich:compottie-dot", version.ref = "compottie" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
