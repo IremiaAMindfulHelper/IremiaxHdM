@@ -21,6 +21,8 @@ struct LottieFileView: UIViewRepresentable {
     let asset: LottieAsset
     var loopMode: LottieLoopMode = .playOnce
     var speed: CGFloat = 1.0
+    /// Progress to start playback from (0..1); used to skip a slow intro.
+    var fromProgress: CGFloat = 0
     var onFinished: (() -> Void)? = nil
 
     func makeUIView(context: Context) -> LottieAnimationView {
@@ -35,7 +37,7 @@ struct LottieFileView: UIViewRepresentable {
             switch result {
             case .success(let dotLottie):
                 view.loadAnimation(from: dotLottie)
-                view.play { finished in
+                view.play(fromProgress: fromProgress, toProgress: 1, loopMode: loopMode) { finished in
                     if finished { onFinished?() }
                 }
             case .failure:
@@ -51,13 +53,14 @@ struct LottieFileView: UIViewRepresentable {
     }
 }
 
-/// Convenience growth animation: plays the plant/tree growth Lottie once.
+/// Convenience growth animation: plays the plant/tree growth Lottie once,
+/// skipping the slow sprouting intro so the tree shoots up fast.
 struct GrowthLottieView: View {
     let asset: LottieAsset
     var speed: CGFloat = 1.0
     var onFinished: (() -> Void)? = nil
 
     var body: some View {
-        LottieFileView(asset: asset, loopMode: .playOnce, speed: speed, onFinished: onFinished)
+        LottieFileView(asset: asset, loopMode: .playOnce, speed: speed, fromProgress: 0.2, onFinished: onFinished)
     }
 }

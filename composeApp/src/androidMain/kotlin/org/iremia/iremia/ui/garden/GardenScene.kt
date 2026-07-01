@@ -437,27 +437,27 @@ private fun DrawScope.drawDecoration(base: Offset, tileW: Float, index: Int) {
             // A small cluster of flowers so the tile reads as a flower bed, not a dot.
             val color = FlowerColors[index % FlowerColors.size]
             val color2 = FlowerColors[(index + 2) % FlowerColors.size]
-            // Three stems with blossoms at slightly different offsets and heights.
+            // Three small stems with blossoms at slightly different offsets/heights.
             val stems = listOf(
-                Triple(0f, tileW * 0.30f, color),
-                Triple(-tileW * 0.16f, tileW * 0.24f, color2),
-                Triple(tileW * 0.16f, tileW * 0.22f, color2),
+                Triple(0f, tileW * 0.18f, color),
+                Triple(-tileW * 0.10f, tileW * 0.14f, color2),
+                Triple(tileW * 0.10f, tileW * 0.13f, color2),
             )
             stems.forEach { (dx, stemH, blossom) ->
                 val sx = base.x + dx
                 drawPath(
                     Path().apply {
-                        moveTo(sx - tileW * 0.02f, base.y)
-                        lineTo(sx - tileW * 0.02f, base.y - stemH)
-                        lineTo(sx + tileW * 0.02f, base.y - stemH)
-                        lineTo(sx + tileW * 0.02f, base.y)
+                        moveTo(sx - tileW * 0.012f, base.y)
+                        lineTo(sx - tileW * 0.012f, base.y - stemH)
+                        lineTo(sx + tileW * 0.012f, base.y - stemH)
+                        lineTo(sx + tileW * 0.012f, base.y)
                         close()
                     },
                     IremiaColors.Garden500
                 )
                 // Blossom: a center plus four petals.
                 val top = base.y - stemH
-                val petal = tileW * 0.06f
+                val petal = tileW * 0.035f
                 drawCircle(blossom.copy(alpha = 0.9f), petal, Offset(sx - petal, top))
                 drawCircle(blossom.copy(alpha = 0.9f), petal, Offset(sx + petal, top))
                 drawCircle(blossom.copy(alpha = 0.9f), petal, Offset(sx, top - petal))

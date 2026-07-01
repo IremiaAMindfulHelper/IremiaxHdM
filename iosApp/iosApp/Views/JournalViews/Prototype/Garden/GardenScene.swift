@@ -371,15 +371,15 @@ private func drawDecoration(ctx: GraphicsContext, base: CGPoint, tileW: CGFloat,
         let color = flowerColors[index % flowerColors.count]
         let color2 = flowerColors[(index + 2) % flowerColors.count]
         let stems: [(CGFloat, CGFloat, Color)] = [
-            (0, tileW * 0.30, color),
-            (-tileW * 0.16, tileW * 0.24, color2),
-            (tileW * 0.16, tileW * 0.22, color2),
+            (0, tileW * 0.18, color),
+            (-tileW * 0.10, tileW * 0.14, color2),
+            (tileW * 0.10, tileW * 0.13, color2),
         ]
         for (dx, stemH, blossom) in stems {
             let sx = base.x + dx
-            ctx.fill(Path(CGRect(x: sx - tileW * 0.02, y: base.y - stemH, width: tileW * 0.04, height: stemH)), with: .color(IremiaColors.garden500))
+            ctx.fill(Path(CGRect(x: sx - tileW * 0.012, y: base.y - stemH, width: tileW * 0.024, height: stemH)), with: .color(IremiaColors.garden500))
             let top = CGPoint(x: sx, y: base.y - stemH)
-            let petal = tileW * 0.06
+            let petal = tileW * 0.035
             for off in [CGSize(width: -petal, height: 0), CGSize(width: petal, height: 0), CGSize(width: 0, height: -petal), CGSize(width: 0, height: petal)] {
                 ctx.fill(Path(ellipseIn: CGRect(x: top.x + off.width - petal, y: top.y + off.height - petal, width: petal * 2, height: petal * 2)), with: .color(blossom.opacity(0.9)))
             }

@@ -46,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import io.github.alexzhirkevich.compottie.DotLottie
+import io.github.alexzhirkevich.compottie.LottieClipSpec
 import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.animateLottieCompositionAsState
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
@@ -524,12 +525,14 @@ private fun EpisodeGrowthAnimation(modifier: Modifier = Modifier) {
     }
     val composition by rememberLottieComposition { LottieCompositionSpec.DotLottie(growBytes) }
     // Idiomatic Compottie auto-play: drives progress itself once the composition
-    // loads. A high speed makes the tree shoot up quickly.
+    // loads. High speed + clipping the slow first fifth makes the tree shoot up
+    // fast and skip the sluggish sprouting intro.
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = 1,
         isPlaying = true,
-        speed = 2.5f,
+        speed = 4f,
+        clipSpec = LottieClipSpec.Progress(0.2f, 1f),
     )
     val painter = rememberLottiePainter(composition = composition, progress = { progress })
 

@@ -29,12 +29,12 @@ struct AmbientConfig: Equatable {
 
 /// Weighted pool, matching AmbientSurpriseOverlay.kt.
 let ambientConfigs: [AmbientConfig] = [
-    AmbientConfig(asset: .leaves,      weight: 30, startX: 0.2, startY: -0.2, endX: 0.8, endY: 1.2, duration: 5.5, scale: 0.8, loop: true),
-    AmbientConfig(asset: .birds,       weight: 25, startX: -0.3, startY: 0.3, endX: 1.3, endY: 0.1, duration: 4.5, scale: 0.55, loop: true),
-    AmbientConfig(asset: .autumnFall,  weight: 20, startX: 0.6, startY: -0.2, endX: 0.2, endY: 1.2, duration: 6.0, scale: 0.8, loop: true),
-    AmbientConfig(asset: .butterflies, weight: 15, startX: 1.3, startY: 0.5, endX: -0.3, endY: 0.3, duration: 6.5, scale: 0.6, loop: true),
-    AmbientConfig(asset: .paperPlane,  weight: 8,  startX: 1.2, startY: 0.0, endX: -0.2, endY: 0.6, duration: 2.8, scale: 0.45, loop: true),
-    AmbientConfig(asset: .deer,        weight: 5,  startX: -0.4, startY: 0.72, endX: 1.4, endY: 0.72, duration: 7.0, scale: 0.7, loop: true),
+    AmbientConfig(asset: .leaves,      weight: 30, startX: 0.2, startY: -0.2, endX: 0.8, endY: 1.2, duration: 5.5, scale: 1.0, loop: true),
+    AmbientConfig(asset: .birds,       weight: 25, startX: -0.3, startY: 0.3, endX: 1.3, endY: 0.1, duration: 4.5, scale: 0.9, loop: true),
+    AmbientConfig(asset: .autumnFall,  weight: 20, startX: 0.6, startY: -0.2, endX: 0.2, endY: 1.2, duration: 6.0, scale: 1.0, loop: true),
+    AmbientConfig(asset: .butterflies, weight: 15, startX: 1.3, startY: 0.5, endX: -0.3, endY: 0.3, duration: 6.5, scale: 0.75, loop: true),
+    AmbientConfig(asset: .paperPlane,  weight: 8,  startX: 1.2, startY: 0.0, endX: -0.2, endY: 0.6, duration: 2.8, scale: 0.6, loop: true),
+    AmbientConfig(asset: .deer,        weight: 5,  startX: -0.4, startY: 0.72, endX: 1.4, endY: 0.72, duration: 7.0, scale: 1.0, loop: true),
 ]
 
 /// Picks a weighted-random config from the pool.

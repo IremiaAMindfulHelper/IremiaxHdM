@@ -73,25 +73,9 @@ struct JournalPrototypeScreen: View {
                     .padding(.horizontal, IremiaSpacing.screenGutter)
                     .padding(.top, IremiaSpacing.s5)
 
-                    Spacer().frame(height: IremiaSpacing.bottomNavClearance + 80)
+                    Spacer().frame(height: IremiaSpacing.bottomNavClearance)
                 }
             }
-
-            // Sticky CTA button
-            VStack(spacing: 0) {
-                PrimaryButton(
-                    text: PS.journal_capture_cta,
-                    action: { showCaptureFlow = true }
-                )
-                .padding(.horizontal, IremiaSpacing.screenGutter)
-                .padding(.top, IremiaSpacing.s6)
-                .padding(.bottom, IremiaSpacing.s4)
-            }
-            .background(
-                IremiaColors.white
-                    .opacity(0.95)
-                    .ignoresSafeArea(.container, edges: .bottom)
-            )
         }
         .background(IremiaColors.gray100.ignoresSafeArea())
         .fullScreenCover(isPresented: $showCaptureFlow) {

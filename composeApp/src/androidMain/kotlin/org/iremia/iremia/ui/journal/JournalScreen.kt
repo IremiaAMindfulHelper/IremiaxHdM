@@ -20,7 +20,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -38,7 +37,6 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import org.iremia.iremia.ui.components.PrimaryButton
 import org.iremia.iremia.ui.garden.GardenOverviewScreen
 import org.iremia.iremia.ui.journal.episode.EpisodeCaptureFlow
 import org.iremia.iremia.ui.theme.IremiaColors
@@ -59,8 +57,6 @@ private val LocalDateSaver: Saver<LocalDate, Any> = listSaver(
     restore = { LocalDate(it[0], it[1], it[2]) },
 )
 
-/** Bottom spacer so scrollable content can clear the sticky capture button. */
-private val STICKY_BUTTON_CLEARANCE = 96.dp
 
 /**
  * Journal screen (SIC-24): the collapsible calendar, the 30-day tree overview, the
@@ -158,27 +154,8 @@ fun JournalScreen(modifier: Modifier = Modifier) {
                     onDelete = { viewModel.deleteNote(it.id) }
                 )
 
-                Spacer(Modifier.height(STICKY_BUTTON_CLEARANCE))
+                Spacer(Modifier.height(IremiaSpacing.S6))
             }
-        }
-
-        // Sticky CTA: pinned above the bottom navigation, fades the content behind it.
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color.Transparent, IremiaColors.Gray100, IremiaColors.Gray100),
-                    )
-                )
-                .padding(horizontal = IremiaSpacing.ScreenGutter)
-                .padding(top = IremiaSpacing.S6, bottom = IremiaSpacing.S4),
-        ) {
-            PrimaryButton(
-                text = localized(SharedRes.strings.journal_capture_cta).toString(context),
-                onClick = { showCaptureFlow = true },
-            )
         }
     }
 
