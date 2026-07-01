@@ -286,8 +286,8 @@ struct EpisodeSavedScreenView: View {
             Spacer().frame(height: IremiaSpacing.s6)
 
             // Growth animation so the user sees their new tree grow after saving.
-            GrowthLottieView(asset: .treeGrow)
-                .frame(width: 160, height: 160)
+            GrowthLottieView(asset: .treeGrow, speed: 2.5)
+                .frame(width: 240, height: 240)
 
             Spacer().frame(height: IremiaSpacing.s4)
 

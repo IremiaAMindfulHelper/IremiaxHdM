@@ -237,7 +237,7 @@ struct GardenSceneView: View {
                 let size = l.tileW * scaleFor(Int(idx < tiles.count ? tiles[idx].entryCount : 1))
                 let asset: LottieAsset = plantType.isTree ? .treeGrow : .plantGrow
 
-                GrowthLottieView(asset: asset) {
+                GrowthLottieView(asset: asset, speed: 2.5) {
                     isGrowing = false
                     onGrowthFinished?()
                 }

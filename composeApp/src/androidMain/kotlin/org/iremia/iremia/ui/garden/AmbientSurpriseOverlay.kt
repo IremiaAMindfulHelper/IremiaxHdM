@@ -47,7 +47,7 @@ val AmbientConfigs = listOf(
         startX = 0.2f, startY = -0.2f,
         endX = 0.8f, endY = 1.2f,
         durationMillis = 5500,
-        scale = 0.45f
+        scale = 0.8f
     ),
     // 25% weight: flying birds (left -> right diagonal up)
     AmbientConfig(
@@ -56,7 +56,7 @@ val AmbientConfigs = listOf(
         startX = -0.3f, startY = 0.3f,
         endX = 1.3f, endY = 0.1f,
         durationMillis = 4500,
-        scale = 0.3f
+        scale = 0.55f
     ),
     // 20% weight: falling autumn red leaves (top -> bottom diagonal)
     AmbientConfig(
@@ -65,7 +65,7 @@ val AmbientConfigs = listOf(
         startX = 0.6f, startY = -0.2f,
         endX = 0.2f, endY = 1.2f,
         durationMillis = 6000,
-        scale = 0.45f
+        scale = 0.8f
     ),
     // 15% weight: floating butterflies (sinusoidal right -> left)
     AmbientConfig(
@@ -74,7 +74,7 @@ val AmbientConfigs = listOf(
         startX = 1.3f, startY = 0.5f,
         endX = -0.3f, endY = 0.3f,
         durationMillis = 6500,
-        scale = 0.35f
+        scale = 0.6f
     ),
     // 8% weight: paper plane (fast diagonal zip)
     AmbientConfig(
@@ -83,7 +83,7 @@ val AmbientConfigs = listOf(
         startX = 1.2f, startY = 0.0f,
         endX = -0.2f, endY = 0.6f,
         durationMillis = 2800,
-        scale = 0.25f
+        scale = 0.45f
     ),
     // 5% weight: running deer (horizontal along ground)
     AmbientConfig(
@@ -92,7 +92,7 @@ val AmbientConfigs = listOf(
         startX = -0.4f, startY = 0.72f,
         endX = 1.4f, endY = 0.72f,
         durationMillis = 7000,
-        scale = 0.45f
+        scale = 0.7f
     ),
 )
 

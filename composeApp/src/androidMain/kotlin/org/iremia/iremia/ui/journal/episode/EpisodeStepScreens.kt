@@ -451,7 +451,7 @@ fun EpisodeSavedScreen(
         Spacer(Modifier.height(IremiaSpacing.S6))
         // A large growth animation so the user actually sees their tree grow after
         // saving, without losing the app context (we stay on the saved screen).
-        EpisodeGrowthAnimation(modifier = Modifier.size(160.dp))
+        EpisodeGrowthAnimation(modifier = Modifier.size(240.dp))
         Spacer(Modifier.height(IremiaSpacing.S4))
         Text(localized(SharedRes.strings.episode_saved_title).toString(context), style = IremiaText.H1, color = IremiaColors.Ink)
         Spacer(Modifier.height(IremiaSpacing.S2))
@@ -523,11 +523,13 @@ private fun EpisodeGrowthAnimation(modifier: Modifier = Modifier) {
             .use { it.readBytes() }
     }
     val composition by rememberLottieComposition { LottieCompositionSpec.DotLottie(growBytes) }
-    // Idiomatic Compottie auto-play: drives progress itself once the composition loads.
+    // Idiomatic Compottie auto-play: drives progress itself once the composition
+    // loads. A high speed makes the tree shoot up quickly.
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = 1,
         isPlaying = true,
+        speed = 2.5f,
     )
     val painter = rememberLottiePainter(composition = composition, progress = { progress })
 

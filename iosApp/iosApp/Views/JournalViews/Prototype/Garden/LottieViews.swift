@@ -54,9 +54,10 @@ struct LottieFileView: UIViewRepresentable {
 /// Convenience growth animation: plays the plant/tree growth Lottie once.
 struct GrowthLottieView: View {
     let asset: LottieAsset
+    var speed: CGFloat = 1.0
     var onFinished: (() -> Void)? = nil
 
     var body: some View {
-        LottieFileView(asset: asset, loopMode: .playOnce, onFinished: onFinished)
+        LottieFileView(asset: asset, loopMode: .playOnce, speed: speed, onFinished: onFinished)
     }
 }
