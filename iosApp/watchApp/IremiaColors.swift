@@ -29,4 +29,6 @@ extension Color {
     static let iremiaDismiss = Color(red: 131.0 / 255.0, green: 186.0 / 255.0, blue: 184.0 / 255.0)
     /// Light teal for personalized response message text (#A4DFDD).
     static let iremiaResponseText = Color(red: 164.0 / 255.0, green: 223.0 / 255.0, blue: 221.0 / 255.0)
+    /// Near-black petrol used for the alternate home-menu bubbles and glow (#102A2E).
+    static let iremiaBubbleDark = Color(red: 0x10 / 255.0, green: 0x2A / 255.0, blue: 0x2E / 255.0)
 }

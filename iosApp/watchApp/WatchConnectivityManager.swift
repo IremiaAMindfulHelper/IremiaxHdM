@@ -13,6 +13,14 @@ enum VoiceSettings {
     }
 }
 
+/// User preference for the home-menu layout. `false` (default) keeps the
+/// original bubble menu; the Settings toggle flips it to the alternate
+/// pill-based concept. Stored as a Bool in UserDefaults so ContentView and the
+/// Settings toggle share one source of truth.
+enum HomeMenuSettings {
+    static let alternateLayoutKey = "homeMenuAlternateLayout"
+}
+
 struct WatchContact: Identifiable, Codable {
     let id: Int64
     let name: String
