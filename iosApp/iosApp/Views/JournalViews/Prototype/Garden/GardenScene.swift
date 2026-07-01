@@ -363,10 +363,10 @@ private func drawBroadleaf(ctx: GraphicsContext, base: CGPoint, tileW: CGFloat, 
     }
 }
 
-// Weighted toward flowers so the meadow looks lush; bushes rarer, bare tiles rarest.
+// Most tiles stay bare grass; only a few show small flowers or a bush.
 private func drawDecoration(ctx: GraphicsContext, base: CGPoint, tileW: CGFloat, index: Int) {
     switch (index * 31 + 7) % 10 {
-    case 0...5:
+    case 0...2:
         // A small cluster of flowers so the tile reads as a flower bed, not a dot.
         let color = flowerColors[index % flowerColors.count]
         let color2 = flowerColors[(index + 2) % flowerColors.count]
@@ -385,7 +385,7 @@ private func drawDecoration(ctx: GraphicsContext, base: CGPoint, tileW: CGFloat,
             }
             ctx.fill(Path(ellipseIn: CGRect(x: top.x - petal * 0.8, y: top.y - petal * 0.8, width: petal * 1.6, height: petal * 1.6)), with: .color(Color(red: 0xF6/255, green: 0xC4/255, blue: 0x53/255)))
         }
-    case 6...7:
+    case 3:
         let c1 = CGPoint(x: base.x, y: base.y - tileW * 0.05)
         ctx.fill(Path(ellipseIn: CGRect(x: c1.x - tileW * 0.1, y: c1.y - tileW * 0.1, width: tileW * 0.2, height: tileW * 0.2)), with: .color(IremiaColors.garden500))
         let c2 = CGPoint(x: base.x - tileW * 0.1, y: base.y - tileW * 0.02)

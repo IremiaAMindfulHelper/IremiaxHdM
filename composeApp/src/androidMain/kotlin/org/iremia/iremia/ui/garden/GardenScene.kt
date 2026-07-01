@@ -428,12 +428,12 @@ private fun DrawScope.drawShadow(base: Offset, tileW: Float) {
 }
 
 /**
- * Ambient decoration for an empty tile (deterministic). Weighted toward flowers
- * so the meadow looks lush; bushes are rarer and bare tiles rarest.
+ * Ambient decoration for an empty tile (deterministic). Most tiles stay bare
+ * grass; only a few show small flowers or a bush so the meadow looks open.
  */
 private fun DrawScope.drawDecoration(base: Offset, tileW: Float, index: Int) {
     when ((index * 31 + 7) % 10) {
-        in 0..5 -> {
+        in 0..2 -> {
             // A small cluster of flowers so the tile reads as a flower bed, not a dot.
             val color = FlowerColors[index % FlowerColors.size]
             val color2 = FlowerColors[(index + 2) % FlowerColors.size]
@@ -465,7 +465,7 @@ private fun DrawScope.drawDecoration(base: Offset, tileW: Float, index: Int) {
                 drawCircle(Color(0xFFF6C453), petal * 0.8f, Offset(sx, top))
             }
         }
-        in 6..7 -> {
+        3 -> {
             drawCircle(IremiaColors.Garden500, tileW * 0.1f, base + Offset(0f, -tileW * 0.05f))
             drawCircle(IremiaColors.Garden500, tileW * 0.08f, base + Offset(-tileW * 0.1f, -tileW * 0.02f))
             drawCircle(IremiaColors.Garden300, tileW * 0.06f, base + Offset(tileW * 0.08f, -tileW * 0.06f))
