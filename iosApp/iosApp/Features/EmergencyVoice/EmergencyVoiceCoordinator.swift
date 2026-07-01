@@ -35,10 +35,12 @@ final class EmergencyVoiceCoordinator {
         speech.append(data)
     }
 
-    /// Closes the stream, runs crisis → Claude, and returns the answer plus the
-    /// final transcript. Returns nil when nothing was understood or Claude is
-    /// unavailable, so the Watch surfaces an error.
-    func finishVoiceStream() async -> (response: String, transcript: String)? {
+    /// Closes the stream, runs crisis → Claude, and returns the final transcript
+    /// plus (when it could compute one) the answer. Returns nil only when nothing
+    /// was understood. When the iPhone can't produce an answer — e.g. it's locked
+    /// and can't read the API key from the Keychain — `response` is nil and the
+    /// Watch answers itself from the transcript, so voice still works.
+    func finishVoiceStream() async -> (response: String?, transcript: String)? {
         let transcript = await speech.finish()
         speech.onPartial = nil
         let text = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -53,9 +55,9 @@ final class EmergencyVoiceCoordinator {
         }
 
         print("[Voice] calling Claude with \(text.count) chars")
-        guard let answer = await assistant.respondToVoice(text) else {
-            print("[Voice] Claude unavailable → error")
-            return nil
+        let answer = await assistant.respondToVoice(text)
+        if answer == nil {
+            print("[Voice] Claude unavailable on iPhone → returning transcript for on-watch answer")
         }
         return (answer, text)
     }

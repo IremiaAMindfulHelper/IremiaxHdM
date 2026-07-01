@@ -81,9 +81,14 @@ class PhoneConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         case "voiceStop":
             Task {
                 if let result = await EmergencyVoiceCoordinator.shared.finishVoiceStream() {
-                    replyHandler(["response": result.response, "transcript": result.transcript])
+                    // Always return the transcript; include the answer only when
+                    // the iPhone could compute one. When it can't (e.g. locked),
+                    // the Watch answers itself from the transcript.
+                    var reply: [String: Any] = ["transcript": result.transcript]
+                    if let response = result.response { reply["response"] = response }
+                    replyHandler(reply)
                 } else {
-                    // Nothing understood or Claude unavailable — the Watch shows an error.
+                    // Nothing understood — the Watch shows an error.
                     replyHandler(["error": true])
                 }
             }

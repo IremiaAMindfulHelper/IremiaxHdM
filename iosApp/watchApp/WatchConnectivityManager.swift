@@ -86,18 +86,22 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         session.sendMessage(["voiceAudio": data], replyHandler: nil, errorHandler: nil)
     }
 
-    /// Tells the iPhone the user stopped speaking and awaits the final answer.
-    /// Returns nil when the phone is unreachable, nothing was understood, or
-    /// Claude failed — the caller surfaces an error (no local fallback).
-    func finishVoice() async -> (response: String, transcript: String)? {
+    /// Tells the iPhone the user stopped speaking and awaits the result. The
+    /// iPhone always returns the final `transcript` when it understood anything;
+    /// it also returns a `response` when it could compute one itself (typically
+    /// while unlocked). Returns nil only when the phone is unreachable or nothing
+    /// was understood. When `response` is nil the caller answers on the Watch
+    /// using the transcript — this is what keeps voice working while the iPhone
+    /// is locked (a locked phone can transcribe but can't read the API key).
+    func finishVoice() async -> (response: String?, transcript: String)? {
         let session = WCSession.default
         guard session.activationState == .activated, session.isReachable else { return nil }
         return await withCheckedContinuation { continuation in
             session.sendMessage(
                 ["action": "voiceStop"],
                 replyHandler: { reply in
-                    if let response = reply["response"] as? String {
-                        continuation.resume(returning: (response, reply["transcript"] as? String ?? ""))
+                    if let transcript = reply["transcript"] as? String, !transcript.isEmpty {
+                        continuation.resume(returning: (reply["response"] as? String, transcript))
                     } else {
                         continuation.resume(returning: nil)
                     }

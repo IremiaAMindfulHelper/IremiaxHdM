@@ -17,6 +17,8 @@
 		379332A12FC073F100D72D1C /* MoodCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379332A02FC073F100D72D1C /* MoodCheckView.swift */; };
 		379332B12FC073F100D72D1C /* MoodMicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379332B02FC073F100D72D1C /* MoodMicView.swift */; };
 		AA00000100000000000000D1 /* IremiaWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C1 /* IremiaWatchApp.swift */; };
+		AA0000010000000000000F12 /* WatchClaudeAssistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000F02 /* WatchClaudeAssistant.swift */; };
+		AA0000010000000000000F13 /* iremia_rag.json in Resources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000F03 /* iremia_rag.json */; };
 		AA00000100000000000000D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C2 /* ContentView.swift */; };
 		AA00000100000000000000D3 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C3 /* WatchConnectivityManager.swift */; };
 		AA00000100000000000000D4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C4 /* Assets.xcassets */; };
@@ -81,6 +83,8 @@
 		AA00000100000000000000C6 /* ContactsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsListView.swift; sourceTree = "<group>"; };
 		AA00000100000000000000C7 /* EmergencyVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyVoiceView.swift; sourceTree = "<group>"; };
 		AA00000100000000000000C8 /* EmergencyWatchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyWatchViewModel.swift; sourceTree = "<group>"; };
+		AA0000010000000000000F02 /* WatchClaudeAssistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchClaudeAssistant.swift; sourceTree = "<group>"; };
+		AA0000010000000000000F03 /* iremia_rag.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = iremia_rag.json; path = iosApp/Resources/iremia_rag.json; sourceTree = SOURCE_ROOT; };
 		AA0000010000000000000CF1 /* Configuration/Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration/Config.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -146,6 +150,7 @@
 				373D27302FCCCA070006C161 /* DailyMessageStore.swift */,
 				373D27232FCCCA230006C161 /* JourneyView.swift */,
 				373D27252FCCCFE70006C161 /* BreathingWatchView.swift */,
+				AA0000010000000000000F03 /* iremia_rag.json */,
 			);
 			path = watchApp;
 			sourceTree = "<group>";
@@ -155,6 +160,7 @@
 			children = (
 				AA00000100000000000000C7 /* EmergencyVoiceView.swift */,
 				AA00000100000000000000C8 /* EmergencyWatchViewModel.swift */,
+				AA0000010000000000000F02 /* WatchClaudeAssistant.swift */,
 			);
 			path = EmergencyVoice;
 			sourceTree = "<group>";
@@ -204,6 +210,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA00000100000000000000F /* Build configuration list for PBXNativeTarget "IremiaWatch" */;
 			buildPhases = (
+				AA0000010000000000000F20 /* Generate Secrets (Watch) */,
 				AA000001000000000000000B /* Sources */,
 				AA000001000000000000000C /* Resources */,
 				AA000001000000000000000D /* Frameworks */,
@@ -287,6 +294,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000100000000000000D4 /* Assets.xcassets in Resources */,
+				AA0000010000000000000F13 /* iremia_rag.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,6 +319,25 @@
 			inputPaths = (
 			);
 			name = "Generate Secrets";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"${SRCROOT}/scripts/generate-secrets.sh\"\n";
+		};
+		AA0000010000000000000F20 /* Generate Secrets (Watch) */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Secrets (Watch)";
 			outputFileListPaths = (
 			);
 			outputPaths = (
@@ -358,6 +385,7 @@
 				379332A12FC073F100D72D1C /* MoodCheckView.swift in Sources */,
 				379332B12FC073F100D72D1C /* MoodMicView.swift in Sources */,
 				AA00000100000000000000D8 /* EmergencyWatchViewModel.swift in Sources */,
+				AA0000010000000000000F12 /* WatchClaudeAssistant.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,15 +417,15 @@
 				DEVELOPMENT_TEAM = "$(DEV_TEAM_ID)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Iremia;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to visualise your voice during mood check-ins.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to hear your voice during mood check-ins and voice input.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_WKApplication = YES;
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = org.iremia.app;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(APP_BUNDLE_ID)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.iremia.app.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).watchkitapp";
 				PRODUCT_NAME = IremiaWatch;
 				SDKROOT = watchos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -417,15 +445,15 @@
 				DEVELOPMENT_TEAM = "$(DEV_TEAM_ID)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Iremia;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to visualise your voice during mood check-ins.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Iremia uses the microphone to hear your voice during mood check-ins and voice input.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_WKApplication = YES;
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = org.iremia.app;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(APP_BUNDLE_ID)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.iremia.app.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).watchkitapp";
 				PRODUCT_NAME = IremiaWatch;
 				SDKROOT = watchos;
 				SWIFT_EMIT_LOC_STRINGS = YES;

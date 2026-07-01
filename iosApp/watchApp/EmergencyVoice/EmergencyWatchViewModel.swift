@@ -1,11 +1,18 @@
 import Foundation
 import AVFoundation
 
-/// Shared engine behind every voice input in the Watch app. It records with the
-/// Watch microphone, streams the audio live to the iPhone for transcription
-/// (the phone pushes partials back into `WatchConnectivityManager.liveTranscript`),
-/// drives the waveform level, and on stop awaits the Claude answer. Any failure
-/// ends in `.error` — there are no canned fallback sentences.
+/// Shared engine behind every voice input in the Watch app.
+///
+/// The Watch records audio and streams it to the iPhone, which transcribes it
+/// live (pushing partials back into `WatchConnectivityManager.liveTranscript`).
+/// On stop the iPhone returns the transcript and, when it can, the Claude answer
+/// — the original path, used whenever the phone is unlocked.
+///
+/// A locked iPhone can still transcribe but can't read the API key, so it
+/// returns the transcript without an answer; in that case the Watch computes the
+/// answer itself with `WatchClaudeAssistant` (same model, system prompt and
+/// knowledge base). This is what keeps voice working while the iPhone is locked.
+/// Any failure ends in `.error`; there are no canned fallback sentences.
 @MainActor
 final class VoiceCaptureController: ObservableObject {
     enum Phase: Equatable {
@@ -39,7 +46,6 @@ final class VoiceCaptureController: ObservableObject {
             phase = .error("Can't reach your iPhone. Open the Iremia app on your phone and try again.")
             return
         }
-
         do {
             try startEngine()
             phase = .listening
@@ -49,7 +55,11 @@ final class VoiceCaptureController: ObservableObject {
         }
     }
 
-    /// User tapped stop — finish streaming and ask the iPhone for the answer.
+    /// User tapped stop — finish streaming and show the answer. The iPhone always
+    /// returns the transcript; it also returns the answer when it can compute one
+    /// (typically while unlocked). When it can't — e.g. it's locked and can't
+    /// read the API key — the Watch answers itself using the transcript, so voice
+    /// still works.
     func stopAndRespond() async {
         guard case .listening = phase else { return }
         stopEngine()
@@ -60,7 +70,27 @@ final class VoiceCaptureController: ObservableObject {
             return
         }
         transcript = result.transcript
-        phase = .responded(result.response)
+        if let response = result.response {
+            phase = .responded(response)
+        } else {
+            await respondOnWatch(to: result.transcript)
+        }
+    }
+
+    /// Runs the crisis check + Claude call on the Watch and updates `phase`.
+    /// Used when the iPhone transcribed but couldn't produce an answer itself.
+    private func respondOnWatch(to text: String) async {
+        if CrisisKeywords.contains(text) {
+            let msg = CrisisKeywords.helplineMessage
+            await WatchClaudeAssistant.shared.noteExchange(user: text, assistant: msg)
+            phase = .responded(msg)
+            return
+        }
+        guard let answer = await WatchClaudeAssistant.shared.respondToVoice(text) else {
+            phase = .error("Something didn't work. Please try again.")
+            return
+        }
+        phase = .responded(answer)
     }
 
     /// User cancelled — drop everything.
