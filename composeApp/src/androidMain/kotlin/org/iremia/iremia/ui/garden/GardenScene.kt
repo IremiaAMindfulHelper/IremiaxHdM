@@ -303,7 +303,9 @@ fun GardenScene(
                         }
                     }
                 } else {
-                    drawShadow(base, l.tileW)
+                    // Trees rest on the tile with a contact shadow; flower crates
+                    // sit flat and centered, so they get no shadow.
+                    if (plantType.isTree) drawShadow(base, l.tileW)
                     val painter = plantPainters[plantType]
                     if (painter != null) {
                         val count = tile.entryCount
@@ -313,7 +315,13 @@ fun GardenScene(
                         val spriteHeight = spriteWidth * aspect
 
                         val left = base.x - spriteWidth / 2f
-                        val top = (base.y + l.tileH / 2f) - spriteHeight
+                        // Trees are anchored at their trunk (tile front edge); flower
+                        // crates are anchored at their center so they sit on the tile.
+                        val top = if (plantType.isTree) {
+                            (base.y + l.tileH / 2f) - spriteHeight
+                        } else {
+                            base.y - spriteHeight / 2f
+                        }
 
                         translate(left, top) {
                             with(painter) {
@@ -349,7 +357,7 @@ fun GardenScene(
 }
 
 /** Flower crates are smaller assets than trees, so draw them noticeably larger. */
-private fun PlantType.sizeMultiplier(): Float = if (isTree) 1.0f else 1.7f
+private fun PlantType.sizeMultiplier(): Float = if (isTree) 1.0f else 2.2f
 
 private fun scaleFor(count: Int): Float = when (count) {
     1 -> 0.8f

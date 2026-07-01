@@ -163,28 +163,32 @@ struct GardenSceneView: View {
                 if count == 0 {
                     drawDecoration(ctx: ctx, base: base, tileW: l.tileW, index: index)
                 } else {
-                    drawShadow(ctx: ctx, base: base, tileW: l.tileW)
-                    
                     // While this tile is growing, the Lottie overlay draws it instead.
                     let suppressForGrowth = (index == newlyPlantedTileIndex) && isGrowing
                     if suppressForGrowth {
                         // drawn by the growth Lottie overlay below
                     } else if let plantType = tile?.plantType,
                        let uiImage = plantType.image.toUIImage() {
+                        // Trees get a contact shadow; flower crates sit flat/centered.
+                        if plantType.isTree { drawShadow(ctx: ctx, base: base, tileW: l.tileW) }
                         // Flower crates are smaller assets, so draw them larger.
-                        let sizeMult: CGFloat = plantType.isTree ? 1.0 : 1.7
+                        let sizeMult: CGFloat = plantType.isTree ? 1.0 : 2.2
                         let scale = scaleFor(Int(count)) * sizeMult
                         let spriteWidth = l.tileW * scale
                         let aspect = uiImage.size.height / uiImage.size.width
                         let spriteHeight = spriteWidth * aspect
 
                         let left = base.x - spriteWidth / 2
-                        let top = (base.y + l.tileH / 2) - spriteHeight
+                        // Trees anchored at trunk (tile front edge); crates centered.
+                        let top = plantType.isTree
+                            ? (base.y + l.tileH / 2) - spriteHeight
+                            : base.y - spriteHeight / 2
 
                         let rect = CGRect(x: left, y: top, width: spriteWidth, height: spriteHeight)
                         let resolvedImage = ctx.resolve(Image(uiImage: uiImage))
                         ctx.draw(resolvedImage, in: rect)
                     } else if !suppressForGrowth {
+                        drawShadow(ctx: ctx, base: base, tileW: l.tileW)
                         // Fallback to procedural (sprite image unavailable)
                         let foliage = foliagePalettes[(index * 5 + 2) % foliagePalettes.count]
                         let scale = scaleFor(Int(count))
