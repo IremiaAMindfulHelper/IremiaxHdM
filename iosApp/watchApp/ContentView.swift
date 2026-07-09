@@ -177,7 +177,7 @@ private struct HomeMenuView: View {
 
                 // Learn — mid left
                 NavigationLink {
-                    LearnPlaceholderView()
+                    LearnHomeView()
                 } label: {
                     BubbleButton(title: "Learn", size: 51 * s)
                 }
@@ -290,7 +290,7 @@ private struct AltHomeMenuView: View {
 
                 // Learn — dark pill with book icon, bottom
                 NavigationLink {
-                    LearnPlaceholderView()
+                    LearnHomeView()
                 } label: {
                     AltLearnButton(width: 63 * s, height: 26 * s)
                 }
@@ -533,13 +533,6 @@ private struct BottomGlow: View {
     }
 }
 
-private struct LearnPlaceholderView: View {
-    var body: some View {
-        PlaceholderContent(icon: "book.fill", title: "Learn")
-            .navigationTitle("Learn")
-    }
-}
-
 private struct SettingsView: View {
     // Off = German (default), On = English. Shared with the connectivity layer
     // via VoiceSettings; the choice is sent to the iPhone on each voice session.
@@ -566,23 +559,5 @@ private struct SettingsView: View {
                 .listRowBackground(Color.clear)
         }
         .navigationTitle("Settings")
-    }
-}
-
-private struct PlaceholderContent: View {
-    let icon: String
-    let title: String
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 34))
-                .foregroundStyle(Color.iremiaPrimary)
-            Text(title)
-                .font(.headline)
-            Text("Coming soon")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
     }
 }
