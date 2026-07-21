@@ -21,8 +21,6 @@
 
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import org.gradle.internal.os.OperatingSystem
 
 plugins {
@@ -30,6 +28,7 @@ plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.mokoResources)
+    kotlin("native.cocoapods")
 }
 
 kotlin {
@@ -45,22 +44,24 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
-    // XCFramework combines device + simulator into one distributable bundle
-    val xcf = XCFramework("Shared")
-
-    targets.withType(KotlinNativeTarget::class.java).configureEach {
-        binaries.framework {
-            baseName = "Shared"
+    cocoapods {
+        summary = "Shared business logic and data layer for Iremia"
+        homepage = "https://github.com/org/iremia"
+        version = "1.0"
+        ios.deploymentTarget = "14.0"
+        podfile = project.file("../iosApp/Podfile")
+        framework {
+            baseName = "shared"
             isStatic = true
-            freeCompilerArgs += listOf("-Xbinary=bundleId=org.iremia.shared")
-            linkerOpts("-lsqlite3")
-
-            // Export moko symbols so iOS/Swift can access generated resource classes
             export(libs.resources)
             export(libs.graphics)
-
-            xcf.add(this)
+            linkerOpts("-lsqlite3")
+            freeCompilerArgs += listOf("-Xbinary=bundleId=org.iremia.shared")
         }
+        // Static frameworks don't auto-copy resource bundles via CocoaPods.
+        // Declare the moko-resources bundle so it gets included in the app.
+        extraSpecAttributes["resources"] =
+            "'build/cocoapods/framework/shared.framework/*.bundle'"
     }
 
     sourceSets {
@@ -117,7 +118,7 @@ android {
 
 sqldelight {
     databases {
-        create("UserData") {
+        register("UserData") {
             packageName.set("com.iremia")
         }
     }
@@ -144,7 +145,7 @@ if (OperatingSystem.current().isMacOsX) {
         group = "build"
         description = "Copies the built XCFramework into the iosApp folder"
 
-        dependsOn("assembleSharedXCFramework")
+        dependsOn("podPublishReleaseXCFramework")
 
         commandLine(
             "sh", "-c",

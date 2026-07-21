@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// The entry point for the SOS workflow.
 /// Guides the user through an initial breathing exercise and features a high-intent cancel slider.

@@ -5,7 +5,7 @@
 //  Created by Maik on 09.12.25.
 //
 
-import Shared
+import shared
 
 /// Lightweight dynamic lookup wrapper for shared string resources.
 ///

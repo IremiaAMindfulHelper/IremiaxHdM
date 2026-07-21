@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A grid-based card representing a single wellness exercise.
 /// Handles the navigation logic to different exercise types like breathing, calculation, or memory.

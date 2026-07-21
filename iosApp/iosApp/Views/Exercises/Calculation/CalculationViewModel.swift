@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// Manages the state and logic for a calculation-based cognitive exercise.
 /// Interfaces with the Kotlin `CalculationEngine` to retrieve randomized math problems.

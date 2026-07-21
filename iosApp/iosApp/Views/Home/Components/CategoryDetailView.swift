@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A detailed list view for a specific wellness category.
 /// Filters and displays exercises, sounds, or mantras based on the selected category title.

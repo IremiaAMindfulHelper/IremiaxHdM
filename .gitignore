@@ -1,4 +1,5 @@
 *.iml
+CLAUDE.local.md
 .kotlin
 .gradle
 **/build/
@@ -17,3 +18,4 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 **/*.xcframework/
+iosApp/Pods/

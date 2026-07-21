@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A specialized icon view representing a single step in the SOS workflow.
 /// Dynamically adjusts its size, color, and label based on its active or completed state.

@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// An interactive view that guides the user through a breathing exercise.
 /// The exercise is controlled by dragging a cloud in sync with the breathing rhythm.

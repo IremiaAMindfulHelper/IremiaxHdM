@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A card component that displays a specific mantra.
 /// Used within lists to show the mantra's title and its inspirational quote.

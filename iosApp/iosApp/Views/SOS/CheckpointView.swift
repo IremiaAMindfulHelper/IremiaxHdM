@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A transition view shown between SOS exercises to provide positive reinforcement.
 /// Displays a horizontal progress tracker and handles navigation to subsequent exercises.

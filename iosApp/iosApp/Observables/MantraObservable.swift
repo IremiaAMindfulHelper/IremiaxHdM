@@ -1,5 +1,5 @@
 import Foundation
-import Shared
+import shared
 
 /// Lightweight UI model used on iOS to avoid direct dependency on
 /// Kotlin/Native-exported types (names can vary across builds).

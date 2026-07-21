@@ -35,6 +35,10 @@ struct PrimaryButton: View {
 }
 
 /// Quiet, full-width text button for the secondary action (e.g. "skip").
+///
+/// Matches Android's Material `TextButton`: full width, centered text, and a
+/// comfortable vertical padding / minimum touch target (~48pt) so the links read
+/// as clean, well-spaced, tappable elements instead of cramped text.
 struct SecondaryTextButton: View {
     let text: String
     let action: () -> Void
@@ -44,8 +48,10 @@ struct SecondaryTextButton: View {
             Text(text)
                 .font(IremiaText.body)
                 .foregroundColor(IremiaColors.gray500)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .padding(.vertical, 4)
                 .multilineTextAlignment(.center)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
