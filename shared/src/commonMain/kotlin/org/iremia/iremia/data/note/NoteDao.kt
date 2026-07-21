@@ -38,6 +38,9 @@ class NoteDao(private val db: UserData) {
 
     /**
      * Insert a new note with optional episode metadata.
+     *
+     * @return The id of the newly inserted row, so callers can link a garden
+     *         plant back to this entry.
      */
     fun insert(
         content: String,
@@ -48,7 +51,7 @@ class NoteDao(private val db: UserData) {
         bodySignals: List<String> = emptyList(),
         moodBefore: Int? = null,
         moodAfter: Int? = null,
-    ) {
+    ): Long = db.noteQueries.transactionWithResult {
         db.noteQueries.insert(
             content = content,
             createdAt = createdAt,
@@ -59,6 +62,7 @@ class NoteDao(private val db: UserData) {
             moodBefore = moodBefore?.toLong(),
             moodAfter = moodAfter?.toLong(),
         )
+        db.noteQueries.lastInsertedId().executeAsOne()
     }
 
     /**

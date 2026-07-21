@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 // =============================================================================
 // Main Journal screen — 1:1 translation of JournalScreen.kt.

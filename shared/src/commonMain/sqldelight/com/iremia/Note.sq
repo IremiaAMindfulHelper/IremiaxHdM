@@ -21,6 +21,11 @@ insert:
 INSERT INTO note(content, createdAt, strength, place, activity, bodySignals, moodBefore, moodAfter)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
+-- Row id of the most recently inserted note, used to link a freshly planted
+-- garden plant back to its source entry.
+lastInsertedId:
+SELECT last_insert_rowid();
+
 updateById:
 UPDATE note
 SET content = ?,

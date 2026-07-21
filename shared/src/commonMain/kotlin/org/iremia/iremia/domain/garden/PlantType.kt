@@ -29,12 +29,12 @@ enum class PlantType(val resourceName: String) {
     CYPRESS("sprite_2_4"),
     REDWOOD("sprite_2_5"),
 
-    // Flower crates
-    FLOWER_YELLOW("flower_gelb"),
+    // Flower crate (only purple — the yellow sprite is not centered in its frame
+    // and lands off-grid, so it was removed).
     FLOWER_PURPLE("flower_lila");
 
     /** True for all tree types, false for flower crates. */
-    val isTree: Boolean get() = this != FLOWER_YELLOW && this != FLOWER_PURPLE
+    val isTree: Boolean get() = this != FLOWER_PURPLE
 
     /** The moko ImageResource associated with this PlantType. */
     val image: dev.icerock.moko.resources.ImageResource
@@ -49,7 +49,6 @@ enum class PlantType(val resourceName: String) {
             CHERRY -> org.iremia.library.SharedRes.images.sprite_2_3
             CYPRESS -> org.iremia.library.SharedRes.images.sprite_2_4
             REDWOOD -> org.iremia.library.SharedRes.images.sprite_2_5
-            FLOWER_YELLOW -> org.iremia.library.SharedRes.images.flower_gelb
             FLOWER_PURPLE -> org.iremia.library.SharedRes.images.flower_lila
         }
 

@@ -81,6 +81,8 @@ private fun GardenLayout.center(col: Int, row: Int) = Offset(
     y = originY + (col + row) * (tileH / 2f),
 )
 
+// TODO: drag-and-drop edit mode — reuse this reverse projection to resolve the
+// drop cell, then call GardenController.movePlant(plantId, newPosition).
 /** Reverse projection: which tile index a tap landed on, or null if outside the plot. */
 private fun GardenLayout.tileAt(p: Offset, columns: Int, rows: Int): Int? {
     val a = (p.x - originX) / (tileW / 2f) // col - row
@@ -124,17 +126,11 @@ fun GardenScene(
         painterResource(id = plantType.image.drawableResId)
     }
 
-    // Load growth animations from moko files
-    val plantGrowBytes = remember {
-        context.resources.openRawResource(SharedRes.files.animated_plant_loader_lottie.rawResId).use { it.readBytes() }
-    }
+    // Every planting action uses the tree growth animation, regardless of plant type.
     val treeGrowBytes = remember {
         context.resources.openRawResource(SharedRes.files.tree_growth_without_background_lottie.rawResId).use { it.readBytes() }
     }
 
-    val plantComposition by rememberLottieComposition {
-        LottieCompositionSpec.DotLottie(plantGrowBytes)
-    }
     val treeComposition by rememberLottieComposition {
         LottieCompositionSpec.DotLottie(treeGrowBytes)
     }
@@ -148,22 +144,11 @@ fun GardenScene(
         composition = treeComposition,
         progress = { lottieProgress.value }
     )
-    val plantLottiePainter = rememberLottiePainter(
-        composition = plantComposition,
-        progress = { lottieProgress.value }
-    )
 
-    // The plant grows only for a tile that was just planted. We key on the index
-    // AND on whether the matching composition has loaded, so the growth step never
-    // runs against an empty (still-loading) painter — otherwise nothing is drawn.
-    val newPlantIsTree = newlyPlantedTileIndex?.let { idx ->
-        tiles.getOrNull(idx)?.plantType?.isTree
-    }
-    val activeComposition = when (newPlantIsTree) {
-        true -> treeComposition
-        false -> plantComposition
-        null -> null
-    }
+    // The growth animation runs only for a tile that was just planted. We key on the
+    // index AND on whether the composition has loaded, so the growth step never runs
+    // against an empty (still-loading) painter — otherwise nothing is drawn.
+    val activeComposition = if (newlyPlantedTileIndex != null) treeComposition else null
 
     LaunchedEffect(newlyPlantedTileIndex, activeComposition) {
         if (newlyPlantedTileIndex == null || activeComposition == null) return@LaunchedEffect
@@ -261,7 +246,7 @@ fun GardenScene(
                 } else if (index == newlyPlantedTileIndex) {
                     drawShadow(base, l.tileW)
 
-                    val activeLottiePainter = if (plantType.isTree) treeLottiePainter else plantLottiePainter
+                    val activeLottiePainter = treeLottiePainter
                     val count = tile.entryCount
                     val scale = scaleFor(count) * plantType.sizeMultiplier()
                     val spriteWidth = l.tileW * scale
@@ -315,13 +300,10 @@ fun GardenScene(
                         val spriteHeight = spriteWidth * aspect
 
                         val left = base.x - spriteWidth / 2f
-                        // Trees are anchored at their trunk (tile front edge); flower
-                        // crates are anchored at their center so they sit on the tile.
-                        val top = if (plantType.isTree) {
-                            (base.y + l.tileH / 2f) - spriteHeight
-                        } else {
-                            base.y - spriteHeight / 2f
-                        }
+                        // Both trees and flower crates rest on the tile's ground line
+                        // (front edge of the diamond) so they align with the isometric
+                        // cell instead of floating above its center.
+                        val top = (base.y + l.tileH / 2f) - spriteHeight
 
                         translate(left, top) {
                             with(painter) {
@@ -356,8 +338,12 @@ fun GardenScene(
     }
 }
 
-/** Flower crates are smaller assets than trees, so draw them noticeably larger. */
-private fun PlantType.sizeMultiplier(): Float = if (isTree) 1.0f else 2.2f
+/**
+ * The flower crate (Blumenbeet) sprite is now tightly cropped, so it sits centered
+ * in its cell. Draw it a bit smaller than a tile so there is a margin on all sides
+ * and it reads clearly inside the diamond, anchored at the tile ground line.
+ */
+private fun PlantType.sizeMultiplier(): Float = if (isTree) 1.0f else 0.72f
 
 private fun scaleFor(count: Int): Float = when (count) {
     1 -> 0.8f

@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 // =============================================================================
 // "Episode festhalten" wizard step screens — 1:1 translation of
@@ -99,6 +99,7 @@ struct EpisodeStepScaffold<Content: View>: View {
 // MARK: - Step 1: Intensity
 
 struct EpisodeIntensityStepView: View {
+    @Binding var selectedDate: Date
     @Binding var hour: Int
     @Binding var minute: Int
     @Binding var strength: Float
@@ -106,7 +107,15 @@ struct EpisodeIntensityStepView: View {
     let onNext: () -> Void
     let onSkip: () -> Void
 
+    @State private var showDatePicker = false
     @State private var showTimePicker = false
+
+    private var dateLabel: String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.dateFormat = "d. MMM yyyy"
+        return f.string(from: selectedDate)
+    }
 
     var body: some View {
         EpisodeStepScaffold(
@@ -127,26 +136,25 @@ struct EpisodeIntensityStepView: View {
 
             Spacer().frame(height: IremiaSpacing.s2)
 
-            // Time picker trigger
-            Button { showTimePicker = true } label: {
-                HStack {
-                    let timeStr = String(format: "%02d:%02d", hour, minute)
-                    Text(PS.episode_today_time.replacingOccurrences(of: "%1$s", with: timeStr))
-                        .font(IremiaText.body)
-                        .foregroundColor(IremiaColors.ink)
-                    Spacer()
-                    Image(systemName: "clock")
-                        .font(.system(size: 20))
-                        .foregroundColor(IremiaColors.gray500)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .background(
-                    RoundedRectangle(cornerRadius: IremiaShapes.field, style: .continuous)
-                        .stroke(IremiaColors.gray300, lineWidth: 1)
-                )
+            // Date picker trigger — pick the day (today or past, no future).
+            Button { showDatePicker = true } label: {
+                fieldRow(text: dateLabel, icon: "calendar")
             }
             .buttonStyle(.plain)
+
+            Spacer().frame(height: IremiaSpacing.s2)
+
+            // Time picker trigger — opens after the date is chosen.
+            Button { showTimePicker = true } label: {
+                fieldRow(text: String(format: "%02d:%02d", hour, minute), icon: "clock")
+            }
+            .buttonStyle(.plain)
+            .sheet(isPresented: $showDatePicker) {
+                DatePickerSheet(selectedDate: $selectedDate, isPresented: $showDatePicker) {
+                    // After choosing the date, prompt for the time next.
+                    showTimePicker = true
+                }
+            }
             .sheet(isPresented: $showTimePicker) {
                 TimePickerSheet(hour: $hour, minute: $minute, isPresented: $showTimePicker)
             }
@@ -176,6 +184,25 @@ struct EpisodeIntensityStepView: View {
                     .foregroundColor(IremiaColors.gray400)
             }
         }
+    }
+
+    /// A bordered field row with a label and a trailing SF symbol.
+    private func fieldRow(text: String, icon: String) -> some View {
+        HStack {
+            Text(text)
+                .font(IremiaText.body)
+                .foregroundColor(IremiaColors.ink)
+            Spacer()
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(IremiaColors.gray500)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: IremiaShapes.field, style: .continuous)
+                .stroke(IremiaColors.gray300, lineWidth: 1)
+        )
     }
 }
 
@@ -238,6 +265,11 @@ struct EpisodeReflectionStepView: View {
 
             TextEditor(text: $note)
                 .font(IremiaText.body)
+                // Explicit ink color so the entered text is always dark — without
+                // this the editor inherits a system color that renders white/invisible
+                // on-device against the white field background.
+                .foregroundColor(IremiaColors.ink)
+                .tint(IremiaColors.teal700)
                 .frame(height: 120)
                 .scrollContentBackground(.hidden)
                 .padding(12)
@@ -281,13 +313,20 @@ struct EpisodeSavedScreenView: View {
     let onHome: () -> Void
     var onViewGarden: () -> Void = {}
 
+    /// Growth animation size on this screen. Large enough to be a clear focal
+    /// point above the title, while still leaving room for the content below.
+    private let treeSize: CGFloat = 150
+
     var body: some View {
         VStack(spacing: 0) {
-            Spacer().frame(height: IremiaSpacing.s6)
+            // Balances the block vertically instead of letting it cling to the top,
+            // and keeps the tree clear of the status bar / Dynamic Island.
+            Spacer(minLength: IremiaSpacing.s3)
 
-            // Growth animation so the user sees their new tree grow after saving.
-            GrowthLottieView(asset: .treeGrow, speed: 4)
-                .frame(width: 240, height: 240)
+            // Growth animation in the normal layout flow (its own row), so it sits
+            // cleanly above the title with real spacing instead of overlapping it.
+            GrowthLottieView(asset: .treeGrow, speed: 6)
+                .frame(width: treeSize, height: treeSize)
 
             Spacer().frame(height: IremiaSpacing.s4)
 
@@ -359,7 +398,7 @@ struct EpisodeSavedScreenView: View {
                 }
             }
 
-            Spacer()
+            Spacer(minLength: IremiaSpacing.s5)
 
             PrimaryButton(
                 text: PS.episode_saved_view_garden,
@@ -492,6 +531,55 @@ private struct TimePickerSheet: View {
                 }
         }
         .presentationDetents([.medium])
+    }
+}
+
+// MARK: - Date Picker Sheet
+
+/// Graphical date picker for the day an episode happened. Only today or earlier
+/// dates are selectable; confirming calls [onConfirm] so the caller can chain to
+/// the time picker.
+private struct DatePickerSheet: View {
+    @Binding var selectedDate: Date
+    @Binding var isPresented: Bool
+    let onConfirm: () -> Void
+
+    @State private var draftDate: Date
+
+    init(selectedDate: Binding<Date>, isPresented: Binding<Bool>, onConfirm: @escaping () -> Void) {
+        _selectedDate = selectedDate
+        _isPresented = isPresented
+        self.onConfirm = onConfirm
+        _draftDate = State(initialValue: selectedDate.wrappedValue)
+    }
+
+    var body: some View {
+        NavigationView {
+            DatePicker(
+                "",
+                selection: $draftDate,
+                in: ...Date(), // no future dates
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+            .padding()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(PS.dialog_cancel) { isPresented = false }
+                        .foregroundColor(IremiaColors.gray500)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(PS.dialog_ok) {
+                        selectedDate = Calendar.current.startOfDay(for: draftDate)
+                        isPresented = false
+                        onConfirm()
+                    }
+                    .foregroundColor(IremiaColors.teal700)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 

@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 // =============================================================================
 // Collapsible Journal calendar — 1:1 translation of JournalCalendar.kt (300 lines).

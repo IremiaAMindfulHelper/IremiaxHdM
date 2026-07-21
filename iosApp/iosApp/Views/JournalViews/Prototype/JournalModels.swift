@@ -1,5 +1,5 @@
 import Foundation
-import Shared
+import shared
 
 // =============================================================================
 // Dummy data for the Journal prototype (SIC-24).

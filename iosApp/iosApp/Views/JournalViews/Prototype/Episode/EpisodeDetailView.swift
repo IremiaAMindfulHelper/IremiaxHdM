@@ -154,7 +154,9 @@ struct EpisodeDetailView: View {
                             activities: note.activities,
                             bodySignals: note.bodySignals,
                             moodBefore: note.moodBefore,
-                            moodAfter: moodAfter >= 0 ? moodAfter : nil
+                            moodAfter: moodAfter >= 0 ? moodAfter : nil,
+                            // Editing keeps the original timestamp; the update path ignores this.
+                            createdAt: note.createdAt
                         )
                     )
                     editing = false

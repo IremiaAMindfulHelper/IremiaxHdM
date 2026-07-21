@@ -25,21 +25,27 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -155,6 +161,8 @@ fun EpisodeStepScaffold(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EpisodeIntensityStep(
+    dateMillis: Long,
+    onDateChange: (Long) -> Unit,
     hour: Int,
     minute: Int,
     onTimeChange: (Int, Int) -> Unit,
@@ -177,10 +185,34 @@ fun EpisodeIntensityStep(
         secondaryLabel = localized(SharedRes.strings.episode_skip_step).toString(context),
         onSecondary = onSkip,
     ) {
+        var showDatePicker by rememberSaveable { mutableStateOf(false) }
         var showTimePicker by rememberSaveable { mutableStateOf(false) }
 
         Text(localized(SharedRes.strings.episode_when).toString(context), style = IremiaText.CardTitle, color = IremiaColors.Ink)
         Spacer(Modifier.height(IremiaSpacing.S2))
+
+        // Date field — pick the day it happened (today or in the past, no future).
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(IremiaShapes.Field)
+                .border(1.dp, IremiaColors.Gray300, IremiaShapes.Field)
+                .clickable { showDatePicker = true }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = formatEpisodeDate(dateMillis),
+                style = IremiaText.Body,
+                color = IremiaColors.Ink,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(Icons.Filled.CalendarToday, contentDescription = null, tint = IremiaColors.Gray500, modifier = Modifier.size(20.dp))
+        }
+
+        Spacer(Modifier.height(IremiaSpacing.S2))
+
+        // Time field — opens after the date is set, as requested.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -192,12 +224,25 @@ fun EpisodeIntensityStep(
         ) {
             val timeStr = "%02d:%02d".format(hour, minute)
             Text(
-                text = localized(SharedRes.strings.episode_today_time).toString(context).replace("%1\$s", timeStr),
+                text = timeStr,
                 style = IremiaText.Body,
                 color = IremiaColors.Ink,
                 modifier = Modifier.weight(1f),
             )
             Icon(Icons.Filled.Schedule, contentDescription = null, tint = IremiaColors.Gray500, modifier = Modifier.size(20.dp))
+        }
+
+        if (showDatePicker) {
+            EpisodeDatePickerDialog(
+                initialDateMillis = dateMillis,
+                onConfirm = { millis ->
+                    onDateChange(millis)
+                    showDatePicker = false
+                    // After choosing the date, prompt for the time next.
+                    showTimePicker = true
+                },
+                onDismiss = { showDatePicker = false },
+            )
         }
 
         if (showTimePicker) {
@@ -428,6 +473,66 @@ private fun TimePickerDialog(
         },
         text = { TimePicker(state = state) },
     )
+}
+
+/**
+ * Material 3 date picker for choosing the day an episode happened. Future dates are
+ * disabled — an episode can only be in the present or the past.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EpisodeDatePickerDialog(
+    initialDateMillis: Long,
+    onConfirm: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val todayEndUtc = remember { startOfTodayUtc() + 24L * 60 * 60 * 1000 - 1 }
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = initialDateMillis,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis <= todayEndUtc
+            override fun isSelectableYear(year: Int): Boolean = year <= java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+        },
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = { state.selectedDateMillis?.let(onConfirm) },
+                enabled = state.selectedDateMillis != null,
+            ) {
+                Text(localized(SharedRes.strings.dialog_ok).toString(context), color = IremiaColors.Teal700)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(localized(SharedRes.strings.dialog_cancel).toString(context), color = IremiaColors.Gray500)
+            }
+        },
+    ) {
+        DatePicker(state = state, colors = DatePickerDefaults.colors())
+    }
+}
+
+/** Today's start-of-day in UTC millis (bound for the date picker). */
+private fun startOfTodayUtc(): Long {
+    val utc = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+    utc.set(java.util.Calendar.HOUR_OF_DAY, 0)
+    utc.set(java.util.Calendar.MINUTE, 0)
+    utc.set(java.util.Calendar.SECOND, 0)
+    utc.set(java.util.Calendar.MILLISECOND, 0)
+    return utc.timeInMillis
+}
+
+/** Formats a UTC start-of-day millis as a short local date like "5. Jun 2026". */
+private fun formatEpisodeDate(dateMillis: Long): String {
+    val utc = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply { timeInMillis = dateMillis }
+    val months = listOf("Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez")
+    val day = utc.get(java.util.Calendar.DAY_OF_MONTH)
+    val month = months[utc.get(java.util.Calendar.MONTH)]
+    val year = utc.get(java.util.Calendar.YEAR)
+    return "$day. $month $year"
 }
 
 /** Final confirmation screen after saving an episode. */

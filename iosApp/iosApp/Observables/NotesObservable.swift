@@ -1,5 +1,5 @@
 import Foundation
-import Shared
+import shared
 
 /// Lightweight UI model used on iOS to avoid direct dependency on
 /// Kotlin/Native-exported types.
@@ -65,10 +65,10 @@ final class NotesObservable: ObservableObject {
 
     /// Adds a full episode with captured metadata via the shared controller.
     func addEpisode(_ draft: EpisodeDraftData) {
-        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
         controller.addEpisodeAsync(
             content: draft.content.trimmingCharacters(in: .whitespacesAndNewlines),
-            createdAt: nowMs,
+            // Use the date+time the user picked in the wizard.
+            createdAt: draft.createdAt,
             strength: draft.strength.map { KotlinInt(int: Int32($0)) },
             places: draft.places,
             activities: draft.activities,
@@ -99,6 +99,22 @@ final class NotesObservable: ObservableObject {
 
     // MARK: - Mapping Helpers
 
+    private static func stringArray(from value: Any?) -> [String] {
+        if let strings = value as? [String] { return strings }
+        if let string = value as? String {
+            return string
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+        }
+        return []
+    }
+
+    private static func stringArray(from any: Any, key: String) -> [String] {
+        let mirrorValue = Mirror(reflecting: any).children.first(where: { $0.label == key })?.value
+        return stringArray(from: mirrorValue)
+    }
+
     /// Converts an arbitrary KMP-exported Note object to `NoteUI`.
     /// Uses KVC/Mirror to read properties, making the bridge resilient to renames.
     private static func toUI(_ any: Any) -> NoteUI? {
@@ -109,9 +125,9 @@ final class NotesObservable: ObservableObject {
                 content: note.content,
                 createdAt: note.createdAt,
                 strength: note.strength?.intValue,
-                places: (note.places as? [String]) ?? [],
-                activities: (note.activities as? [String]) ?? [],
-                bodySignals: (note.bodySignals as? [String]) ?? [],
+                places: stringArray(from: any, key: "places"),
+                activities: stringArray(from: any, key: "activities"),
+                bodySignals: stringArray(from: note.bodySignals),
                 moodBefore: note.moodBefore?.intValue,
                 moodAfter: note.moodAfter?.intValue
             )

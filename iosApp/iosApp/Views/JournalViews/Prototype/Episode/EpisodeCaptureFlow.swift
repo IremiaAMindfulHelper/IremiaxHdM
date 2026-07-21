@@ -21,6 +21,8 @@ struct EpisodeDraftData {
     let bodySignals: [String]
     let moodBefore: Int?
     let moodAfter: Int?
+    /// When the episode happened (epoch millis), from the chosen date + time.
+    let createdAt: Int64
 }
 
 /// Self-contained "Episode festhalten" wizard.
@@ -35,6 +37,8 @@ struct EpisodeCaptureFlow: View {
     let onSaveEpisode: (EpisodeDraftData) -> Void
 
     @State private var step: EpisodeStep = .intensity
+    // The day the episode happened; defaults to today, past dates allowed.
+    @State private var selectedDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var hour: Int = Calendar.current.component(.hour, from: Date())
     @State private var minute: Int = Calendar.current.component(.minute, from: Date())
     @State private var strength: Float = 6
@@ -64,6 +68,7 @@ struct EpisodeCaptureFlow: View {
             switch step {
             case .intensity:
                 EpisodeIntensityStepView(
+                    selectedDate: $selectedDate,
                     hour: $hour,
                     minute: $minute,
                     strength: $strength,
@@ -97,7 +102,8 @@ struct EpisodeCaptureFlow: View {
                                 activities: activities,
                                 bodySignals: bodySignals,
                                 moodBefore: moodBefore >= 0 ? moodBefore : nil,
-                                moodAfter: moodAfter >= 0 ? moodAfter : nil
+                                moodAfter: moodAfter >= 0 ? moodAfter : nil,
+                                createdAt: episodeTimestampMs(date: selectedDate, hour: hour, minute: minute)
                             )
                         )
                         step = .saved
@@ -115,4 +121,15 @@ struct EpisodeCaptureFlow: View {
             }
         }
     }
+}
+
+/// Combines a chosen day with an hour/minute into an epoch-millis timestamp in the
+/// device's zone, so the entry lands on the chosen calendar day at the chosen time.
+func episodeTimestampMs(date: Date, hour: Int, minute: Int) -> Int64 {
+    var comps = Calendar.current.dateComponents([.year, .month, .day], from: date)
+    comps.hour = hour
+    comps.minute = minute
+    comps.second = 0
+    let combined = Calendar.current.date(from: comps) ?? date
+    return Int64(combined.timeIntervalSince1970 * 1000)
 }

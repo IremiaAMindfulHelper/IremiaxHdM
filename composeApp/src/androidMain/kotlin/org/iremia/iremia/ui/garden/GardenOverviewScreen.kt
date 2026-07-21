@@ -23,17 +23,27 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -69,6 +79,19 @@ fun GardenOverviewScreen(
     val activeAmbient by viewModel.activeAmbient.collectAsState()
     val days = state.tiles.map { it.entryCount }
 
+    var showResetConfirm by remember { mutableStateOf(false) }
+
+    // Pinch-to-zoom / pan state for the full garden view. Kept separate from the
+    // planting zoom animation inside GardenScene.
+    var zoomScale by remember { mutableFloatStateOf(1f) }
+    var panX by remember { mutableFloatStateOf(0f) }
+    var panY by remember { mutableFloatStateOf(0f) }
+
+    // Play a fresh ambient animation every time the garden is opened. Runs once per
+    // entry (the screen recomposes into existence), restarting even if a previous
+    // one was still playing.
+    LaunchedEffect(Unit) { viewModel.onEnterGarden() }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -84,8 +107,17 @@ fun GardenOverviewScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(localized(SharedRes.strings.garden_title).toString(context), style = IremiaText.H2, color = IremiaColors.Ink)
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Filled.Close, contentDescription = localized(SharedRes.strings.nav_close).toString(context), tint = IremiaColors.Ink900)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { showResetConfirm = true }) {
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = localized(SharedRes.strings.garden_reset).toString(context),
+                            tint = IremiaColors.Ink900,
+                        )
+                    }
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Filled.Close, contentDescription = localized(SharedRes.strings.nav_close).toString(context), tint = IremiaColors.Ink900)
+                    }
                 }
             }
 
@@ -118,7 +150,21 @@ fun GardenOverviewScreen(
                     .fillMaxWidth()
                     .clip(IremiaShapes.Card)
                     .background(IremiaColors.BlueHeader)
-                    .padding(IremiaSpacing.S1),
+                    .padding(IremiaSpacing.S1)
+                    // Pinch to zoom and drag to pan the garden. Scale is clamped so
+                    // the user can't lose the plot; pan resets to center at 1x.
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            zoomScale = (zoomScale * zoom).coerceIn(1f, 4f)
+                            if (zoomScale > 1f) {
+                                panX += pan.x
+                                panY += pan.y
+                            } else {
+                                panX = 0f
+                                panY = 0f
+                            }
+                        }
+                    },
             ) {
                 GardenScene(
                     tiles = state.tiles,
@@ -129,7 +175,14 @@ fun GardenOverviewScreen(
                     onTileTap = { viewModel.selectTile(it) },
                     newlyPlantedTileIndex = state.newlyPlantedTileIndex,
                     onAnimationFinished = { viewModel.clearNewlyPlanted() },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer(
+                            scaleX = zoomScale,
+                            scaleY = zoomScale,
+                            translationX = panX,
+                            translationY = panY,
+                        ),
                 )
             }
 
@@ -157,6 +210,27 @@ fun GardenOverviewScreen(
             AmbientSurpriseOverlay(
                 config = config,
                 onAnimationFinished = { viewModel.clearAmbient() }
+            )
+        }
+
+        if (showResetConfirm) {
+            AlertDialog(
+                onDismissRequest = { showResetConfirm = false },
+                title = { Text(localized(SharedRes.strings.garden_reset_confirm_title).toString(context)) },
+                text = { Text(localized(SharedRes.strings.garden_reset_confirm_message).toString(context)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.resetGarden()
+                        showResetConfirm = false
+                    }) {
+                        Text(localized(SharedRes.strings.garden_reset_confirm_action).toString(context))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResetConfirm = false }) {
+                        Text(localized(SharedRes.strings.garden_reset_cancel).toString(context))
+                    }
+                },
             )
         }
 

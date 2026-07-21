@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 typealias Color = SwiftUI.Color
 
@@ -79,6 +79,8 @@ private func center(_ l: GardenLayout, col: Int, row: Int) -> CGPoint {
     )
 }
 
+// TODO: drag-and-drop edit mode — reuse this reverse projection to resolve the
+// drop cell, then call GardenObservable.movePlant(plantId:newPosition:).
 /// Reverse projection: which tile index a tap landed on.
 private func tileAt(_ l: GardenLayout, point: CGPoint, columns: Int, rows: Int) -> Int? {
     let a = (point.x - l.originX) / (l.tileW / 2)
@@ -114,6 +116,16 @@ struct GardenSceneView: View {
     /// True while the growth Lottie plays for the newly planted tile; the static
     /// sprite is suppressed in the Canvas so only the animation is visible there.
     @State private var isGrowing = false
+    /// Opacity of the growth Lottie overlay. Held at 1 while growing, then eased
+    /// to 0 once the animation finishes so it dissolves into the static Canvas
+    /// sprite underneath instead of popping away instantly.
+    @State private var lottieOpacity: CGFloat = 1
+
+    // Planting zoom transition (mirrors Android GardenScene): the camera zooms in
+    // on the newly planted tile while the tree grows, then zooms back out.
+    @State private var zoomProgress: CGFloat = 0
+    /// Rendered size of the scene, needed to compute the pan that centers the tile.
+    @State private var sceneSize: CGSize = .zero
 
     var body: some View {
         Canvas { ctx, size in
@@ -163,26 +175,31 @@ struct GardenSceneView: View {
                 if count == 0 {
                     drawDecoration(ctx: ctx, base: base, tileW: l.tileW, index: index)
                 } else {
-                    // While this tile is growing, the Lottie overlay draws it instead.
-                    let suppressForGrowth = (index == newlyPlantedTileIndex) && isGrowing
+                    // Canvas content isn't animatable, so lottieOpacity flips this
+                    // check the instant the fade starts (not gradually) — but the
+                    // Lottie view's own `.opacity()` modifier animates smoothly on
+                    // top of it, so the static sprite appears right as the Lottie
+                    // begins dissolving away, producing a real crossfade.
+                    let suppressForGrowth = (index == newlyPlantedTileIndex) && isGrowing && lottieOpacity >= 1
                     if suppressForGrowth {
                         // drawn by the growth Lottie overlay below
                     } else if let plantType = tile?.plantType,
                        let uiImage = plantType.image.toUIImage() {
-                        // Trees get a contact shadow; flower crates sit flat/centered.
+                        // Trees get a contact shadow; flower crates sit flat.
                         if plantType.isTree { drawShadow(ctx: ctx, base: base, tileW: l.tileW) }
-                        // Flower crates are smaller assets, so draw them larger.
-                        let sizeMult: CGFloat = plantType.isTree ? 1.0 : 2.2
+                        // The flower crate (Blumenbeet) sprite is now tightly cropped,
+                        // so it sits centered. A bit smaller than a tile leaves a
+                        // margin on all sides, anchored at the ground line.
+                        let sizeMult: CGFloat = plantType.isTree ? 1.0 : 0.72
                         let scale = scaleFor(Int(count)) * sizeMult
                         let spriteWidth = l.tileW * scale
                         let aspect = uiImage.size.height / uiImage.size.width
                         let spriteHeight = spriteWidth * aspect
 
                         let left = base.x - spriteWidth / 2
-                        // Trees anchored at trunk (tile front edge); crates centered.
-                        let top = plantType.isTree
-                            ? (base.y + l.tileH / 2) - spriteHeight
-                            : base.y - spriteHeight / 2
+                        // Both trees and crates rest on the tile's ground line (front
+                        // edge of the diamond) so they align with the isometric cell.
+                        let top = (base.y + l.tileH / 2) - spriteHeight
 
                         let rect = CGRect(x: left, y: top, width: spriteWidth, height: spriteHeight)
                         let resolvedImage = ctx.resolve(Image(uiImage: uiImage))
@@ -222,10 +239,80 @@ struct GardenSceneView: View {
         // Growth Lottie, positioned at the exact same tile center as the static
         // sprite, so the plant grows and then the sprite stays on that very tile.
         .overlay(growthOverlay)
+        // Track the rendered size so the planting zoom can center on the new tile.
+        .background(
+            GeometryReader { geo in
+                Color.clear.onAppear { sceneSize = geo.size }
+                    .onChange(of: geo.size) { sceneSize = $0 }
+            }
+        )
+        // Zoom the whole scene in on the newly planted tile, then back out.
+        .scaleEffect(1 + 0.8 * zoomProgress, anchor: plantingAnchor)
         .onChange(of: newlyPlantedTileIndex) { idx in
             guard idx != nil else { return }
-            isGrowing = true
+            startGrowthSequence()
         }
+        // When the garden opens with a plant already marked (e.g. right after
+        // saving), the value doesn't "change", so onChange never fires. Start the
+        // sequence here too so the tree grows on entry instead of appearing instantly.
+        .onAppear {
+            if newlyPlantedTileIndex != nil { startGrowthSequence() }
+        }
+    }
+
+    /// How long the Lottie dissolves into the static sprite once growth finishes.
+    private let crossfadeDuration: Double = 0.35
+
+    /// Starts the plant-growth choreography: suppress the static sprite, zoom in,
+    /// play the growth Lottie, then zoom back out (driven by the Lottie completion).
+    private func startGrowthSequence() {
+        isGrowing = true
+        lottieOpacity = 1
+        runPlantingZoom()
+        // Safety net: if the Lottie completion never fires, end the sequence anyway.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+            if isGrowing {
+                finishGrowth()
+            }
+        }
+    }
+
+    /// Crossfades the Lottie into the static sprite, then zooms back out and,
+    /// once the zoom settles, notifies the caller (which may cue an ambient).
+    private func finishGrowth() {
+        withAnimation(.easeInOut(duration: crossfadeDuration)) {
+            lottieOpacity = 0
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + crossfadeDuration) {
+            isGrowing = false
+            endPlantingZoom()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                onGrowthFinished?()
+            }
+        }
+    }
+
+    /// The tile being planted, as a UnitPoint anchor so `scaleEffect` zooms in on
+    /// it (0,0 = top-left, 1,1 = bottom-right). Falls back to center.
+    private var plantingAnchor: UnitPoint {
+        guard let idx = newlyPlantedTileIndex, sceneSize.width > 0, sceneSize.height > 0 else {
+            return .center
+        }
+        let l = layoutFor(width: sceneSize.width, columns: columns, rows: rows)
+        let c = center(l, col: idx % columns, row: idx / columns)
+        return UnitPoint(x: c.x / sceneSize.width, y: c.y / sceneSize.height)
+    }
+
+    /// Zooms the camera in on the tile. The zoom-out is driven by the growth Lottie's
+    /// completion (see growthOverlay) so it stays in sync with the animation.
+    private func runPlantingZoom() {
+        zoomProgress = 0
+        withAnimation(.easeInOut(duration: 0.8)) { zoomProgress = 1 }
+    }
+
+    /// Zooms the camera back out once the growth animation has finished.
+    private func endPlantingZoom() {
+        withAnimation(.easeInOut(duration: 0.8)) { zoomProgress = 0 }
     }
 
     /// The growth animation overlaid on the newly planted tile.
@@ -239,15 +326,22 @@ struct GardenSceneView: View {
                 let row = idx / columns
                 let c = center(l, col: col, row: row)
                 let size = l.tileW * scaleFor(Int(idx < tiles.count ? tiles[idx].entryCount : 1))
-                let asset: LottieAsset = plantType.isTree ? .treeGrow : .plantGrow
+                // Every planting action uses the tree growth animation.
+                let asset: LottieAsset = .treeGrow
+                // Size the growth Lottie close to the final static tree so it plays at
+                // the right scale; the tree only appears after the animation finishes.
+                let growthSize = size * 1.25
 
-                GrowthLottieView(asset: asset, speed: 2.5) {
-                    isGrowing = false
-                    onGrowthFinished?()
+                GrowthLottieView(asset: asset, speed: 4) {
+                    // Growth finished: crossfade into the static tree, then zoom
+                    // back out and only afterwards notify the caller (which may
+                    // cue an ambient surprise), so nothing overlaps the choreography.
+                    finishGrowth()
                 }
-                .frame(width: size * 1.6, height: size * 1.6)
-                // Anchor the animation's base to the tile (bottom of the sprite).
-                .position(x: c.x, y: (c.y + l.tileH / 2) - size * 0.8)
+                .opacity(lottieOpacity)
+                .frame(width: growthSize, height: growthSize)
+                // Anchor the animation's base to the tile ground line (bottom of sprite).
+                .position(x: c.x, y: (c.y + l.tileH / 2) - growthSize / 2)
             }
         }
     }

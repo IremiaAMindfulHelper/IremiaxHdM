@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 // =============================================================================
 // "Letzte Notizen" section — 1:1 translation of RecentNotesSection.kt.

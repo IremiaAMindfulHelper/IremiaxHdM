@@ -16,6 +16,8 @@ import kotlin.native.ObjCName
  * @property bodySignals Selected body signals.
  * @property moodBefore Mood index before (0-based), or null.
  * @property moodAfter Mood index after (0-based), or null.
+ * @property createdAt When the episode happened, epoch millis. Null falls back to
+ *           "now" at save time; the capture wizard sets it from the chosen date+time.
  */
 @ObjCName("EpisodeDraft", exact = true)
 data class EpisodeDraft(
@@ -26,4 +28,5 @@ data class EpisodeDraft(
     val bodySignals: List<String> = emptyList(),
     val moodBefore: Int? = null,
     val moodAfter: Int? = null,
+    val createdAt: Long? = null,
 )

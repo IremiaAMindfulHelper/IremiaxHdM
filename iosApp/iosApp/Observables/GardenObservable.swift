@@ -1,5 +1,5 @@
 import Foundation
-import Shared
+import shared
 
 /// The journal entry behind a tapped plant, in a SwiftUI-friendly shape.
 struct GardenEntry: Identifiable, Equatable {
@@ -92,11 +92,35 @@ final class GardenObservable: ObservableObject {
         controller.clear()
     }
 
-    /// Starts an ambient surprise if none is currently playing.
+    // Cycle through the animations in order (deterministic for demos) instead of
+    // picking randomly, so each surprise is a different, predictable next one.
+    private var ambientCycleIndex = 0
+
+    private func nextAmbient() -> AmbientConfig {
+        let config = ambientConfigs[ambientCycleIndex % ambientConfigs.count]
+        ambientCycleIndex += 1
+        return config
+    }
+
+    /// Shows the next ambient animation only if none is currently playing.
     func triggerAmbient() {
         if activeAmbient == nil {
-            activeAmbient = selectRandomAmbient()
+            activeAmbient = nextAmbient()
         }
+    }
+
+    /// Called every time the garden screen appears. Restarts a fresh animation — any
+    /// still-running one is dropped so re-entering never repeats the same one, and
+    /// the user always sees a new animation on entry.
+    ///
+    /// If a tile is mid-planting (e.g. entering right after saving an episode),
+    /// the ambient is skipped here entirely — the zoom-in and tree_grow animation
+    /// need the screen to themselves. Once growth finishes, `newlyPlantedTileIndex`
+    /// flips back to nil and the observer above schedules the ambient itself.
+    func onEnterGarden() {
+        guard newlyPlantedTileIndex == nil else { return }
+        activeAmbient = nil
+        activeAmbient = nextAmbient()
     }
 
     /// Clears the ambient surprise once its animation finished.
@@ -116,6 +140,17 @@ final class GardenObservable: ObservableObject {
 
     func navigateMonth(delta: Int) {
         controller.navigateMonthAsync(delta: Int32(delta)) { _ in }
+    }
+
+    /// Clears all planted items (Reset Garden).
+    func resetGarden() {
+        controller.resetGardenAsync { _ in }
+    }
+
+    /// Plants a garden item not tied to a journal entry — e.g. after finishing a
+    /// breathing exercise. The single entry point other features can call.
+    func plantFromAction() {
+        controller.plantAsync(sourceEntryId: nil) { _ in }
     }
 
     /// Clears the growth-animation marker once the planting animation has played.

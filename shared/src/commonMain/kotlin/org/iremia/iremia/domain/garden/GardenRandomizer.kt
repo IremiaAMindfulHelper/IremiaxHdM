@@ -28,7 +28,7 @@ object GardenRandomizer {
     }
 
     /** Share of planted entries that become a flower crate (rest are trees). */
-    private const val FLOWER_CRATE_SHARE = 0.35f
+    private const val FLOWER_CRATE_SHARE = 0.15f
 
     /**
      * Selects a random [PlantType] for the given entry.

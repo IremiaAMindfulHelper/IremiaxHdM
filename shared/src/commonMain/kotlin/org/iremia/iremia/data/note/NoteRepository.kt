@@ -22,12 +22,12 @@ class NoteRepository(
 
     fun observeAll(): Flow<List<Note>> = dao.observeAll()
 
-    /** Adds a text-only note (kept for callers that only have content). */
-    suspend fun add(content: String, createdAt: Long) = withContext(io) {
+    /** Adds a text-only note. @return the new note id. */
+    suspend fun add(content: String, createdAt: Long): Long = withContext(io) {
         dao.insert(content, createdAt)
     }
 
-    /** Adds a full episode with its captured metadata. */
+    /** Adds a full episode with its captured metadata. @return the new note id. */
     suspend fun addEpisode(
         content: String,
         createdAt: Long,
@@ -37,7 +37,7 @@ class NoteRepository(
         bodySignals: List<String>,
         moodBefore: Int?,
         moodAfter: Int?,
-    ) = withContext(io) {
+    ): Long = withContext(io) {
         dao.insert(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
     }
 

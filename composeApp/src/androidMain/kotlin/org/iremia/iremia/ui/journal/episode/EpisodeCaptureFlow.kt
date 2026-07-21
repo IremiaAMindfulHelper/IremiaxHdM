@@ -42,6 +42,8 @@ fun EpisodeCaptureFlow(
 
     // --- Draft state (no persistence) ---
     val now = remember { Calendar.getInstance() }
+    // Selected day (start-of-day millis, UTC) + time-of-day. Defaults to today/now.
+    var selectedDateMillis by rememberSaveable { mutableStateOf(startOfDayUtc(now)) }
     var hour by rememberSaveable { mutableStateOf(now.get(Calendar.HOUR_OF_DAY)) }
     var minute by rememberSaveable { mutableStateOf(now.get(Calendar.MINUTE)) }
     var strength by rememberSaveable { mutableStateOf(6f) }
@@ -59,6 +61,8 @@ fun EpisodeCaptureFlow(
     ) {
         when (step) {
             EpisodeStep.Intensity -> EpisodeIntensityStep(
+                dateMillis = selectedDateMillis,
+                onDateChange = { selectedDateMillis = it },
                 hour = hour,
                 minute = minute,
                 onTimeChange = { h, m -> hour = h; minute = m },
@@ -99,6 +103,7 @@ fun EpisodeCaptureFlow(
                             bodySignals = bodySignals.toList(),
                             moodBefore = moodBefore.takeIf { it >= 0 },
                             moodAfter = moodAfter.takeIf { it >= 0 },
+                            createdAt = combineDateTime(selectedDateMillis, hour, minute),
                         )
                     )
                     step = EpisodeStep.Saved
@@ -119,4 +124,30 @@ fun EpisodeCaptureFlow(
 /** Add [value] if absent, remove it if present (multi-select toggle). */
 private fun <T> MutableList<T>.toggle(value: T) {
     if (!remove(value)) add(value)
+}
+
+/**
+ * Start-of-day in UTC millis for the given calendar. Material's DatePicker works in
+ * UTC, so we keep the selected date in UTC and only add the local time-of-day when
+ * building the final timestamp.
+ */
+private fun startOfDayUtc(cal: Calendar): Long {
+    val utc = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+    utc.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+    utc.set(Calendar.MILLISECOND, 0)
+    return utc.timeInMillis
+}
+
+/**
+ * Combines a UTC start-of-day [dateMillis] (from the DatePicker) with a local
+ * [hour]/[minute] into an epoch-millis timestamp in the device's zone, so the entry
+ * lands on the chosen calendar day at the chosen time.
+ */
+private fun combineDateTime(dateMillis: Long, hour: Int, minute: Int): Long {
+    val utc = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply { timeInMillis = dateMillis }
+    val local = Calendar.getInstance().apply {
+        set(utc.get(Calendar.YEAR), utc.get(Calendar.MONTH), utc.get(Calendar.DAY_OF_MONTH), hour, minute, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    return local.timeInMillis
 }

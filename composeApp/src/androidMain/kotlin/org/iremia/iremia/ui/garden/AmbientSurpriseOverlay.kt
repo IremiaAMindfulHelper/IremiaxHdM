@@ -39,77 +39,101 @@ data class AmbientConfig(
 /**
  * Weighted pool of ambient surprise animations.
  */
+// All ambient animations share the same weight, so each is equally likely.
+private const val AMBIENT_WEIGHT = 10
+
 val AmbientConfigs = listOf(
-    // 30% weight: falling green leaves (top -> bottom diagonal)
+    // Falling green leaves (top -> bottom, centered)
     AmbientConfig(
         asset = LottieAsset.LEAVES,
-        weight = 30,
-        startX = 0.2f, startY = -0.2f,
-        endX = 0.8f, endY = 1.2f,
+        weight = AMBIENT_WEIGHT,
+        startX = 0.5f, startY = -0.2f,
+        endX = 0.5f, endY = 1.2f,
         durationMillis = 5500,
-        scale = 1.0f
+        scale = 1.6f
     ),
-    // 25% weight: flying birds (left -> right diagonal up)
+    // Single drifting leaf (gentle top -> bottom)
+    AmbientConfig(
+        asset = LottieAsset.LEAF,
+        weight = AMBIENT_WEIGHT,
+        startX = 0.35f, startY = -0.2f,
+        endX = 0.65f, endY = 1.2f,
+        durationMillis = 6000,
+        scale = 1.2f
+    ),
+    // Flying birds (left -> right diagonal up)
     AmbientConfig(
         asset = LottieAsset.BIRDS,
-        weight = 25,
+        weight = AMBIENT_WEIGHT,
         startX = -0.3f, startY = 0.3f,
         endX = 1.3f, endY = 0.1f,
         durationMillis = 4500,
-        scale = 0.9f
+        scale = 1.5f
     ),
-    // 20% weight: falling autumn red leaves (top -> bottom diagonal)
+    // A single bird crossing the sky (left -> right)
+    AmbientConfig(
+        asset = LottieAsset.BIRD,
+        weight = AMBIENT_WEIGHT,
+        startX = -0.3f, startY = 0.25f,
+        endX = 1.3f, endY = 0.15f,
+        durationMillis = 5000,
+        scale = 1.3f
+    ),
+    // Red birds flock (right -> left diagonal up)
+    AmbientConfig(
+        asset = LottieAsset.RED_BIRDS,
+        weight = AMBIENT_WEIGHT,
+        startX = 1.3f, startY = 0.35f,
+        endX = -0.3f, endY = 0.15f,
+        durationMillis = 5000,
+        scale = 1.5f
+    ),
+    // Transparent birds flock (left -> right, higher up)
+    AmbientConfig(
+        asset = LottieAsset.TRANSPARENT_BIRDS,
+        weight = AMBIENT_WEIGHT,
+        startX = -0.3f, startY = 0.2f,
+        endX = 1.3f, endY = 0.08f,
+        durationMillis = 5200,
+        scale = 1.5f
+    ),
+    // Falling autumn red leaves (top -> bottom, centered)
     AmbientConfig(
         asset = LottieAsset.AUTUMN_FALL,
-        weight = 20,
-        startX = 0.6f, startY = -0.2f,
-        endX = 0.2f, endY = 1.2f,
+        weight = AMBIENT_WEIGHT,
+        startX = 0.5f, startY = -0.2f,
+        endX = 0.5f, endY = 1.2f,
         durationMillis = 6000,
-        scale = 1.0f
+        scale = 1.6f
     ),
-    // 15% weight: floating butterflies (sinusoidal right -> left)
-    AmbientConfig(
-        asset = LottieAsset.BUTTERFLIES,
-        weight = 15,
-        startX = 1.3f, startY = 0.5f,
-        endX = -0.3f, endY = 0.3f,
-        durationMillis = 6500,
-        scale = 0.75f
-    ),
-    // 8% weight: paper plane (fast diagonal zip)
+    // Paper plane (fast diagonal zip, left -> right)
     AmbientConfig(
         asset = LottieAsset.PAPER_PLANE,
-        weight = 8,
-        startX = 1.2f, startY = 0.0f,
-        endX = -0.2f, endY = 0.6f,
+        weight = AMBIENT_WEIGHT,
+        startX = -0.2f, startY = 0.0f,
+        endX = 1.2f, endY = 0.6f,
         durationMillis = 2800,
-        scale = 0.6f
+        scale = 0.55f
     ),
-    // 5% weight: running deer (horizontal along ground)
+    // Running deer (horizontal along ground)
     AmbientConfig(
         asset = LottieAsset.DEER,
-        weight = 5,
+        weight = AMBIENT_WEIGHT,
         startX = -0.4f, startY = 0.72f,
         endX = 1.4f, endY = 0.72f,
         durationMillis = 7000,
-        scale = 1.0f
+        scale = 1.5f
     ),
 )
 
 /**
- * Picks an animation randomly from the weighted [AmbientConfigs] pool.
+ * Picks a random animation from the pool (all equally likely). Optionally avoids
+ * repeating [exclude], so consecutive surprises feel varied instead of sometimes
+ * showing the same animation twice in a row.
  */
-fun selectRandomAmbient(): AmbientConfig {
-    val totalWeight = AmbientConfigs.sumOf { it.weight }
-    val randomVal = kotlin.random.Random.nextInt(totalWeight)
-    var currentWeight = 0
-    for (config in AmbientConfigs) {
-        currentWeight += config.weight
-        if (randomVal < currentWeight) {
-            return config
-        }
-    }
-    return AmbientConfigs.first()
+fun selectRandomAmbient(exclude: LottieAsset? = null): AmbientConfig {
+    val pool = AmbientConfigs.filter { it.asset != exclude }.ifEmpty { AmbientConfigs }
+    return pool[kotlin.random.Random.nextInt(pool.size)]
 }
 
 /**

@@ -64,10 +64,40 @@ class GardenViewModel(
 
     fun clearNewlyPlanted() = gardenController.clearNewlyPlanted()
 
+    /** Clear all planted items (Reset Garden). */
+    fun resetGarden() = viewModelScope.launch { gardenController.resetGarden() }
+
+    /**
+     * Plants a garden item not tied to a journal entry — e.g. after finishing a
+     * breathing exercise. The single entry point other features can call.
+     */
+    fun plantFromAction() = viewModelScope.launch { gardenController.plant(sourceEntryId = null) }
+
+    // Cycle through the animations in order (deterministic for demos) instead of
+    // picking randomly, so each surprise is a different, predictable next one.
+    private var ambientCycleIndex = 0
+
+    private fun nextAmbient(): AmbientConfig {
+        val config = AmbientConfigs[ambientCycleIndex % AmbientConfigs.size]
+        ambientCycleIndex++
+        return config
+    }
+
+    /** Show the next ambient animation only if none is currently playing. */
     fun triggerAmbient() {
         if (_activeAmbient.value == null) {
-            _activeAmbient.value = selectRandomAmbient()
+            _activeAmbient.value = nextAmbient()
         }
+    }
+
+    /**
+     * Called every time the garden screen is opened. Restarts a fresh animation —
+     * any still-running one is dropped so re-entering never gets stuck repeating the
+     * same frame, and the user always sees a new animation on entry.
+     */
+    fun onEnterGarden() {
+        _activeAmbient.value = null
+        _activeAmbient.value = nextAmbient()
     }
 
     fun clearAmbient() {

@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 // =============================================================================
 // "Baumuebersicht" card — 1:1 translation of TreeOverviewCard.kt.

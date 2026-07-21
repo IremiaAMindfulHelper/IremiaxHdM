@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 // =============================================================================
 // Full-screen garden overview — refactored to use GardenObservable (shared controller).
@@ -11,6 +11,14 @@ struct GardenOverviewScreen: View {
     @ObservedObject var garden: GardenObservable
     let onClose: () -> Void
 
+    @State private var showResetConfirm = false
+    // Pinch-to-zoom / pan for the full garden view. Kept separate from the
+    // planting zoom animation inside GardenSceneView.
+    @State private var zoomScale: CGFloat = 1
+    @State private var baseZoom: CGFloat = 1
+    @State private var panOffset: CGSize = .zero
+    @State private var basePan: CGSize = .zero
+
     var body: some View {
         let trees = garden.tiles.filter { $0.entryCount > 0 }.count
 
@@ -21,6 +29,17 @@ struct GardenOverviewScreen: View {
                     .font(IremiaText.h2)
                     .foregroundColor(IremiaColors.ink)
                 Spacer()
+                Button {
+                    showResetConfirm = true
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(IremiaColors.ink900)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(PS.garden_reset)
+                .padding(.trailing, IremiaSpacing.s3)
+
                 Button(action: onClose) {
                     Image(systemName: "xmark")
                         .font(.system(size: 18, weight: .medium))
@@ -75,11 +94,37 @@ struct GardenOverviewScreen: View {
                 newlyPlantedTileIndex: garden.newlyPlantedTileIndex,
                 onGrowthFinished: { garden.clearNewlyPlanted() }
             )
+            .scaleEffect(zoomScale)
+            .offset(panOffset)
+            .gesture(
+                // Pinch to zoom, drag to pan when zoomed in. Scale is clamped so
+                // the plot can't be lost; pan resets to center at 1x.
+                SimultaneousGesture(
+                    MagnificationGesture()
+                        .onChanged { value in
+                            zoomScale = min(max(baseZoom * value, 1), 4)
+                            if zoomScale <= 1 { panOffset = .zero }
+                        }
+                        .onEnded { _ in baseZoom = zoomScale },
+                    DragGesture()
+                        .onChanged { value in
+                            guard zoomScale > 1 else { return }
+                            panOffset = CGSize(
+                                width: basePan.width + value.translation.width,
+                                height: basePan.height + value.translation.height
+                            )
+                        }
+                        .onEnded { _ in basePan = panOffset }
+                )
+            )
             .padding(IremiaSpacing.s1)
             .background(
                 RoundedRectangle(cornerRadius: IremiaShapes.card, style: .continuous)
                     .fill(IremiaColors.blueHeader)
             )
+            // Clip zoom/pan to the card bounds so the magnified scene stays inside
+            // its blue header and never spills over the info text below it.
+            .clipShape(RoundedRectangle(cornerRadius: IremiaShapes.card, style: .continuous))
 
             Spacer().frame(height: IremiaSpacing.s5)
 
@@ -102,8 +147,20 @@ struct GardenOverviewScreen: View {
                 AmbientSurpriseOverlayView(config: config) {
                     garden.clearAmbient()
                 }
+                // Rebuild the view when the animation changes so it starts fresh.
+                .id(config.asset.name)
                 .transition(.opacity)
             }
+        }
+        // Play a fresh ambient animation every time the garden is opened.
+        .onAppear { garden.onEnterGarden() }
+        .alert(PS.garden_reset_confirm_title, isPresented: $showResetConfirm) {
+            Button(PS.garden_reset_cancel, role: .cancel) {}
+            Button(PS.garden_reset_confirm_action, role: .destructive) {
+                garden.resetGarden()
+            }
+        } message: {
+            Text(PS.garden_reset_confirm_message)
         }
         // Tapping a planted tree reveals the journal entry it represents.
         .sheet(

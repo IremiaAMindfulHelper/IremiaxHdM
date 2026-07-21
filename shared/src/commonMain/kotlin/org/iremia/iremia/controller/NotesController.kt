@@ -5,6 +5,7 @@ package org.iremia.iremia.controller
 import kotlin.native.ObjCName
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import org.iremia.iremia.data.garden.GardenPlantRepository
 import org.iremia.iremia.data.note.NoteRepository
 import org.iremia.iremia.domain.note.Note
 
@@ -25,6 +26,9 @@ data class NotesState(
 @ObjCName("NotesController", exact = true)
 class NotesController(
     private val repo: NoteRepository,
+    // Adding a note also plants a garden item, linked back to the new entry.
+    // Deleting the note later does NOT remove the plant (they are decoupled).
+    private val gardenRepo: GardenPlantRepository,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 ) {
     private val _state = MutableStateFlow(NotesState(isLoading = true))
@@ -48,10 +52,13 @@ class NotesController(
         }
     }
 
-    /** Android: Add a new note. */
-    suspend fun add(content: String, createdAt: Long) = repo.add(content, createdAt)
+    /** Android: Add a new note and plant a linked garden item. */
+    suspend fun add(content: String, createdAt: Long) {
+        val id = repo.add(content, createdAt)
+        gardenRepo.plant(sourceEntryId = id)
+    }
 
-    /** Android: Add a full episode with captured metadata. */
+    /** Android: Add a full episode with captured metadata and plant a linked garden item. */
     suspend fun addEpisode(
         content: String,
         createdAt: Long,
@@ -61,7 +68,10 @@ class NotesController(
         bodySignals: List<String>,
         moodBefore: Int?,
         moodAfter: Int?,
-    ) = repo.addEpisode(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
+    ) {
+        val id = repo.addEpisode(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
+        gardenRepo.plant(sourceEntryId = id)
+    }
 
     /** Android: Update an existing note. */
     suspend fun update(id: Long, content: String) = repo.update(id, content)
@@ -81,16 +91,16 @@ class NotesController(
     /** Android: Delete a note. */
     suspend fun delete(id: Long) = repo.delete(id)
 
-    /** iOS: Add a new note. */
+    /** iOS: Add a new note and plant a linked garden item. */
     fun addAsync(content: String, createdAt: Long, onDone: (Throwable?) -> Unit) {
         scope.launch {
-            runCatching { repo.add(content, createdAt) }
+            runCatching { add(content, createdAt) }
                 .onFailure(onDone)
                 .onSuccess { onDone(null) }
         }
     }
 
-    /** iOS: Add a full episode with captured metadata. */
+    /** iOS: Add a full episode with captured metadata and plant a linked garden item. */
     fun addEpisodeAsync(
         content: String,
         createdAt: Long,
@@ -104,7 +114,7 @@ class NotesController(
     ) {
         scope.launch {
             runCatching {
-                repo.addEpisode(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
+                addEpisode(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
             }.onFailure(onDone).onSuccess { onDone(null) }
         }
     }

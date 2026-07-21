@@ -12,15 +12,17 @@ import dev.icerock.moko.resources.FileResource
  */
 @ObjCName("LottieAsset", exact = true)
 enum class LottieAsset(val fileResource: FileResource) {
-    // Growth animations
-    PLANT_GROW(SharedRes.files.animated_plant_loader_lottie),
+    // Growth animation — every planting action uses the tree growth animation.
     TREE_GROW(SharedRes.files.tree_growth_without_background_lottie),
 
     // Ambient surprises
     PAPER_PLANE(SharedRes.files.paper_plane_lottie),
     DEER(SharedRes.files.deer_lottie),
     BIRDS(SharedRes.files.birds_lottie),
-    BUTTERFLIES(SharedRes.files.magenta_butterflies_lottie),
+    BIRD(SharedRes.files.bird_lottie),
+    RED_BIRDS(SharedRes.files.red_birds_lottie),
+    TRANSPARENT_BIRDS(SharedRes.files.transparent_birds_lottie),
     LEAVES(SharedRes.files.leaves_lottie),
+    LEAF(SharedRes.files.leaf_lottie),
     AUTUMN_FALL(SharedRes.files.autumn_fall_lottie);
 }

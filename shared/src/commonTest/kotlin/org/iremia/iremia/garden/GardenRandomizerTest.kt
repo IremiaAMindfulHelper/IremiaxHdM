@@ -73,10 +73,10 @@ class GardenRandomizerTest {
     }
 
     @Test
-    fun flower_crates_appear_regularly() {
-        // Flower beds should be a meaningful minority (~35%), not almost never.
+    fun flower_crates_are_a_small_minority() {
+        // Trees dominate the garden; flower beds are a small minority (~15%).
         val sample = (1L..1000L).map { GardenRandomizer.assignPlantType(it) }
         val flowerShare = sample.count { !it.isTree }.toDouble() / sample.size
-        assertTrue(flowerShare in 0.25..0.45, "flower share was $flowerShare, expected ~0.35")
+        assertTrue(flowerShare in 0.08..0.22, "flower share was $flowerShare, expected ~0.15")
     }
 }

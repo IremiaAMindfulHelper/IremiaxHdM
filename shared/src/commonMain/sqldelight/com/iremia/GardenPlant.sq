@@ -1,0 +1,39 @@
+-- Persistent garden plants. Decoupled from the note table on purpose: a plant
+-- survives even if its source journal entry is later deleted. `sourceEntryId` is
+-- nullable so non-journal actions (e.g. finishing a breathing exercise) can plant
+-- too, and there is deliberately NO foreign key / cascade to `note`.
+CREATE TABLE gardenPlant (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  position INTEGER NOT NULL,       -- grid cell index (0 until columns*rows)
+  plantType TEXT NOT NULL,         -- PlantType enum name
+  sourceEntryId INTEGER,           -- originating note id, or NULL (no cascade)
+  createdAt INTEGER NOT NULL       -- timestamp in millis
+);
+
+selectAll:
+SELECT *
+FROM gardenPlant
+ORDER BY position ASC;
+
+-- Positions already taken, used to place a new plant on a free cell.
+selectOccupiedPositions:
+SELECT position
+FROM gardenPlant;
+
+insert:
+INSERT INTO gardenPlant(position, plantType, sourceEntryId, createdAt)
+VALUES (?, ?, ?, ?);
+
+-- Reserved for the future drag-and-drop edit mode (move a plant to a new cell).
+updatePositionById:
+UPDATE gardenPlant
+SET position = ?
+WHERE id = ?;
+
+deleteById:
+DELETE FROM gardenPlant
+WHERE id = ?;
+
+-- Clears the whole garden (Reset Garden button).
+deleteAll:
+DELETE FROM gardenPlant;

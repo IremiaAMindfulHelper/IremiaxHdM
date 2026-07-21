@@ -41,7 +41,8 @@ class JournalViewModel(
         viewModelScope.launch {
             notesController.addEpisode(
                 content = draft.content,
-                createdAt = System.currentTimeMillis(),
+                // Use the date+time the user picked; fall back to now if unset.
+                createdAt = draft.createdAt ?: System.currentTimeMillis(),
                 strength = draft.strength,
                 places = draft.places,
                 activities = draft.activities,
