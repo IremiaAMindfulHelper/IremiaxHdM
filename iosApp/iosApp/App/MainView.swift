@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 // =============================================================================
 // MainView — Custom frosted bottom navigation:
@@ -47,10 +47,7 @@ struct MainView: View {
                 switch selectedTab {
                 case .start:
                     NavigationStack {
-                        HomeView(
-                            showSoundPlayer: $showSoundPlayer,
-                            currentSoundTitle: $currentSoundTitle
-                        )
+                        InsightHomeView()
                     }
 
                 case .training:

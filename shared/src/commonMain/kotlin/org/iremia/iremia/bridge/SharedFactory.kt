@@ -6,8 +6,11 @@ import kotlin.native.ObjCName
 import com.iremia.UserData
 import org.iremia.iremia.controller.GardenController
 import org.iremia.iremia.controller.MantrasController
+import org.iremia.iremia.controller.MotivationController
 import org.iremia.iremia.controller.NotesController
 import org.iremia.iremia.db.DriverFactory
+import org.iremia.iremia.data.garden.GardenPlantDao
+import org.iremia.iremia.data.garden.GardenPlantRepository
 import org.iremia.iremia.data.mantra.MantraDao
 import org.iremia.iremia.data.mantra.MantraRepository
 import org.iremia.iremia.data.note.NoteDao
@@ -95,25 +98,44 @@ object SharedFactory {
      */
     fun createNotesController(driverFactory: DriverFactory): NotesController {
         val db = createDatabase(driverFactory)
-        val dao = NoteDao(db)
-        val repo = NoteRepository(dao)
-        return NotesController(repo)
+        val repo = NoteRepository(NoteDao(db))
+        // Adding a note also plants a persistent garden item via this repo.
+        val gardenRepo = GardenPlantRepository(GardenPlantDao(db))
+        return NotesController(repo, gardenRepo)
     }
 
     /**
      * Assembles the Garden feature (DAO → Repository → Controller) for Swift.
      *
-     * Shares the same NoteRepository as [createNotesController] — garden tiles
-     * are derived from journal entries (one entry = one planted tile).
+     * Tiles come from the persistent `gardenPlant` table (via [GardenPlantRepository]),
+     * so plants survive deletion of their source journal entry. The [NoteRepository]
+     * is still passed in to resolve a tapped plant back to its originating entry.
+     * The shared, cached `UserData` means plants added through the notes flow appear
+     * here automatically.
      *
      * @param driverFactory Platform driver provider.
      * @return A `GardenController` ready to manage the garden overview state.
      */
     fun createGardenController(driverFactory: DriverFactory): GardenController {
         val db = createDatabase(driverFactory)
-        val dao = NoteDao(db)
-        val repo = NoteRepository(dao)
-        return GardenController(repo)
+        val gardenRepo = GardenPlantRepository(GardenPlantDao(db))
+        val noteRepo = NoteRepository(NoteDao(db))
+        return GardenController(gardenRepo, noteRepo)
+    }
+
+    /**
+     * Assembles the Motivation feature for the home screen's blue insight card.
+     *
+     * Reads real journal entries via [NoteRepository]; the algorithm fills missing
+     * signals with deterministic dummy generators until exercise tracking lands.
+     *
+     * @param driverFactory Platform driver provider.
+     * @return A `MotivationController` exposing the computed insight state.
+     */
+    fun createMotivationController(driverFactory: DriverFactory): MotivationController {
+        val db = createDatabase(driverFactory)
+        val noteRepo = NoteRepository(NoteDao(db))
+        return MotivationController(noteRepo)
     }
 
     // Example sketch for future features (keep for reference):

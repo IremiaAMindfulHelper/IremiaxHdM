@@ -98,6 +98,11 @@
     <string name="garden_month_trees">%1$d trees planted this month</string>
     <string name="garden_entry_sheet_title">This entry</string>
     <string name="garden_entry_sheet_empty">No text for this entry.</string>
+    <string name="garden_reset">Reset garden</string>
+    <string name="garden_reset_confirm_title">Reset garden?</string>
+    <string name="garden_reset_confirm_message">This clears all planted trees and flowers. Your journal entries stay untouched.</string>
+    <string name="garden_reset_confirm_action">Reset</string>
+    <string name="garden_reset_cancel">Cancel</string>
     <string name="episode_detail_title">Episode</string>
     <string name="episode_detail_edit">Edit</string>
 
@@ -108,4 +113,41 @@
     <string name="sample_note_preview_2">After the breathing exercise things went straight…</string>
     <string name="sample_note_title_3">Before sleeping</string>
     <string name="sample_note_preview_3">Today two calm moments consciously…</string>
+
+    <!-- Home screen (redesign) -->
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_day">Hello</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="home_greeting_name">Hello, Lena</string>
+    <string name="home_greeting_subtitle">Good to have you here.</string>
+    <string name="home_hero_label">YOUR LAST 30 DAYS</string>
+    <string name="home_hero_no_rating">no rating</string>
+    <string name="home_patterns_title">What helps you</string>
+    <string name="home_patterns_auto">detected automatically</string>
+    <string name="home_pattern_move_title">On days with movement, you feel noticeably better.</string>
+    <string name="home_pattern_move_meta">12 of 14 active days ended calmer</string>
+    <string name="home_pattern_evening_title">Early evenings calm you down.</string>
+    <string name="home_pattern_evening_meta">Entries before 11 pm → calmer sleep</string>
+    <string name="home_pattern_breath_title">Breathing exercises ease your tension.</string>
+    <string name="home_pattern_breath_meta">On average noticeably more relaxed after 4 minutes</string>
+    <string name="home_flashcard_label">DAILY CARD</string>
+    <string name="home_flashcard_1">Fear is a normal, evolutionarily useful protective reaction — not a weakness.</string>
+    <string name="home_flashcard_2">A panic attack is unpleasant, but never dangerous. It always subsides again.</string>
+    <string name="home_flashcard_3">Your breath is always with you. Exhaling longer than you inhale calms your nervous system.</string>
+    <string name="home_flashcard_4">You don\'t have to feel good to make progress. Both may exist side by side.</string>
+    <string name="home_flashcard_5">Setbacks are part of it. They don\'t erase what you\'ve already learned.</string>
+    <string name="home_flashcard_prev">Previous card</string>
+    <string name="home_flashcard_next">Next card</string>
+
+    <!-- Motivation insight (blue hero card) copy variants, keyed by (isPositive, confidence) -->
+    <string name="insight_headline_positive_high">You\'re on the right track! The last 30 days felt noticeably calmer.</string>
+    <string name="insight_headline_positive_medium">Things seem to be settling — the last 30 days trended calmer.</string>
+    <string name="insight_headline_positive_low">A gentle sign: your last few weeks look a little calmer.</string>
+    <string name="insight_headline_neutral_high">Steady weeks. You keep showing up for yourself.</string>
+    <string name="insight_headline_neutral_medium">You\'re staying with it — that already counts.</string>
+    <string name="insight_headline_neutral_low">Good to have you here. Every entry helps understand your patterns.</string>
+    <string name="insight_fact_fewer_attacks">Fewer panic attacks</string>
+    <string name="insight_fact_steady_attacks">A steady stretch</string>
+    <string name="insight_fact_vs_prev_30">than 30 days ago</string>
+    <string name="insight_fact_keep_going">keep going at your pace</string>
 </resources>

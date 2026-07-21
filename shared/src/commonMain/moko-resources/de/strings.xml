@@ -98,6 +98,11 @@
     <string name="garden_month_trees">%1$d Bäume in diesem Monat gepflanzt</string>
     <string name="garden_entry_sheet_title">Diese Episode</string>
     <string name="garden_entry_sheet_empty">Kein Text für diese Episode.</string>
+    <string name="garden_reset">Garten zurücksetzen</string>
+    <string name="garden_reset_confirm_title">Garten zurücksetzen?</string>
+    <string name="garden_reset_confirm_message">Das entfernt alle gepflanzten Bäume und Blumen. Deine Einträge bleiben erhalten.</string>
+    <string name="garden_reset_confirm_action">Zurücksetzen</string>
+    <string name="garden_reset_cancel">Abbrechen</string>
     <string name="episode_detail_title">Episode</string>
     <string name="episode_detail_edit">Bearbeiten</string>
 
@@ -108,4 +113,41 @@
     <string name="sample_note_preview_2">Nach der Atemübung ging es direkt…</string>
     <string name="sample_note_title_3">Vor dem Schlafen</string>
     <string name="sample_note_preview_3">Heute zwei ruhige Momente bewusst…</string>
+
+    <!-- Home screen (redesign) -->
+    <string name="home_greeting_morning">Guten Morgen</string>
+    <string name="home_greeting_day">Hallo</string>
+    <string name="home_greeting_evening">Guten Abend</string>
+    <string name="home_greeting_name">Hallo, Lena</string>
+    <string name="home_greeting_subtitle">Schön, dass du da bist.</string>
+    <string name="home_hero_label">DEINE LETZTEN 30 TAGE</string>
+    <string name="home_hero_no_rating">ohne Wertung</string>
+    <string name="home_patterns_title">Was dir gut tut</string>
+    <string name="home_patterns_auto">automatisch erkannt</string>
+    <string name="home_pattern_move_title">An Tagen mit Bewegung geht es dir deutlich besser.</string>
+    <string name="home_pattern_move_meta">12 von 14 Bewegungstagen mit ruhigerem Abend</string>
+    <string name="home_pattern_evening_title">Frühe Abende beruhigen dich.</string>
+    <string name="home_pattern_evening_meta">Einträge vor 23 Uhr → ruhigerer Schlaf</string>
+    <string name="home_pattern_breath_title">Atemübungen senken deine Anspannung.</string>
+    <string name="home_pattern_breath_meta">Im Schnitt spürbar gelöster nach 4 Minuten</string>
+    <string name="home_flashcard_label">TÄGLICHE KARTEIKARTE</string>
+    <string name="home_flashcard_1">Angst ist eine normale, evolutionär sinnvolle Schutzreaktion – keine Schwäche.</string>
+    <string name="home_flashcard_2">Eine Panikattacke ist unangenehm, aber nie gefährlich. Sie ebbt immer wieder ab.</string>
+    <string name="home_flashcard_3">Dein Atem ist immer dabei. Länger ausatmen als einatmen beruhigt dein Nervensystem.</string>
+    <string name="home_flashcard_4">Du musst dich nicht gut fühlen, um Fortschritte zu machen. Beides darf nebeneinander sein.</string>
+    <string name="home_flashcard_5">Rückschritte gehören dazu. Sie löschen nicht, was du schon gelernt hast.</string>
+    <string name="home_flashcard_prev">Vorherige Karte</string>
+    <string name="home_flashcard_next">Nächste Karte</string>
+
+    <!-- Motivation insight (blue hero card) copy variants, keyed by (isPositive, confidence) -->
+    <string name="insight_headline_positive_high">Dein Weg stimmt! Die letzten 30 Tage waren spürbar ruhiger.</string>
+    <string name="insight_headline_positive_medium">Es scheint sich zu beruhigen – die letzten 30 Tage gingen in die ruhigere Richtung.</string>
+    <string name="insight_headline_positive_low">Ein leises Zeichen: deine letzten Wochen wirken etwas ruhiger.</string>
+    <string name="insight_headline_neutral_high">Beständige Wochen. Du bist immer wieder für dich da.</string>
+    <string name="insight_headline_neutral_medium">Du bleibst dran – das zählt schon.</string>
+    <string name="insight_headline_neutral_low">Schön, dass du da bist. Jeder Eintrag hilft, deine Muster zu verstehen.</string>
+    <string name="insight_fact_fewer_attacks">Weniger Panikattacken</string>
+    <string name="insight_fact_steady_attacks">Eine beständige Phase</string>
+    <string name="insight_fact_vs_prev_30">als vor 30 Tagen</string>
+    <string name="insight_fact_keep_going">bleib in deinem Tempo dran</string>
 </resources>
