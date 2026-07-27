@@ -69,9 +69,14 @@ class GardenController(
     // The displayed month, as a flow so the plant subscription switches with it.
     private val displayedMonth = MutableStateFlow(currentYearMonth())
 
-    // Remembers plant ids across emissions so a growth animation only plays for a
-    // genuinely new plant, per displayed month.
-    private var previousIds: Set<Long>? = null
+    // All plant ids ever seen (across every month), so a growth animation fires for
+    // a genuinely new plant even if it was planted while another month was shown.
+    // Null until the first emission establishes the baseline (no animation then).
+    private var knownPlantIds: Set<Long>? = null
+
+    // A freshly planted plant whose month was not on screen at plant time; replayed
+    // by [resetToCurrentMonth] when the garden opens on that month.
+    private var pendingAnimation: GardenPlant? = null
 
     init {
         val (year, month) = displayedMonth.value
@@ -91,11 +96,31 @@ class GardenController(
             }
         }
 
+        // Detect newly planted plants globally (independent of the shown month), so
+        // the growth animation is never lost to a month switch.
+        scope.launch {
+            plantRepo.observeAll().collect { plants ->
+                val ids = plants.map { it.id }.toSet()
+                val known = knownPlantIds
+                if (known != null) {
+                    val addedId = (ids - known).singleOrNull()
+                    val added = addedId?.let { id -> plants.firstOrNull { it.id == id } }
+                    if (added != null) {
+                        if ((added.year to added.month) == displayedMonth.value) {
+                            _state.value = _state.value.copy(newlyPlantedTileIndex = added.position)
+                        } else {
+                            pendingAnimation = added
+                        }
+                    }
+                }
+                knownPlantIds = ids
+            }
+        }
+
         // Re-subscribe to the persistent garden whenever the displayed month
         // changes, so only that month's plants are shown (plan 6.3).
         scope.launch {
             displayedMonth.flatMapLatest { (year, month) ->
-                previousIds = null // fresh month: don't animate its existing plants
                 // Pair each emission with its month so the tile grid is always sized
                 // for the month the plants belong to (no dependency on state timing).
                 plantRepo.observeForMonth(year, month).map { plants -> Triple(year, month, plants) }
@@ -104,17 +129,6 @@ class GardenController(
                 val tiles = buildTiles(plants, config)
                 sourceEntryByTile = buildSourceEntryMap(plants)
 
-                val currentIds = plants.map { it.id }.toSet()
-                var newPlantedIndex: Int? = null
-                val previous = previousIds
-                if (previous != null) {
-                    val addedId = (currentIds - previous).singleOrNull()
-                    if (addedId != null) {
-                        newPlantedIndex = plants.firstOrNull { it.id == addedId }?.position
-                    }
-                }
-                previousIds = currentIds
-
                 _state.value = _state.value.copy(
                     year = year,
                     month = month,
@@ -122,10 +136,35 @@ class GardenController(
                     totalPlants = plants.size,
                     isLoading = false,
                     gridConfig = config,
-                    newlyPlantedTileIndex = newPlantedIndex ?: _state.value.newlyPlantedTileIndex,
                     selectedEntry = entryForTile(_state.value.selectedTile),
                 )
             }
+        }
+    }
+
+    /**
+     * Snap the garden back to the current month. Called every time the garden is
+     * opened, so it never opens on a stale month from an earlier visit. Replays a
+     * pending growth animation if the freshly planted plant belongs to this month.
+     */
+    fun resetToCurrentMonth() {
+        val current = currentYearMonth()
+        if (displayedMonth.value != current) {
+            val (year, month) = current
+            _state.value = _state.value.copy(
+                year = year,
+                month = month,
+                selectedTile = null,
+                selectedEntry = null,
+                gridConfig = gridConfigFor(year, month),
+            )
+            displayedMonth.value = current
+        }
+        pendingAnimation?.let { pending ->
+            if ((pending.year to pending.month) == current) {
+                _state.value = _state.value.copy(newlyPlantedTileIndex = pending.position)
+            }
+            pendingAnimation = null
         }
     }
 

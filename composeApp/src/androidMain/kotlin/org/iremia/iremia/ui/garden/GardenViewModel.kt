@@ -90,6 +90,9 @@ class GardenViewModel(
      * same frame, and the user always sees a new animation on entry.
      */
     fun onEnterGarden() {
+        // Always open on the current month (a previous visit may have navigated
+        // away); also replays a pending growth animation for a fresh plant.
+        gardenController.resetToCurrentMonth()
         _activeAmbient.value = null
         _activeAmbient.value = nextAmbient()
     }

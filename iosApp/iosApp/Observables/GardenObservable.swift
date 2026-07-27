@@ -118,6 +118,9 @@ final class GardenObservable: ObservableObject {
     /// need the screen to themselves. Once growth finishes, `newlyPlantedTileIndex`
     /// flips back to nil and the observer above schedules the ambient itself.
     func onEnterGarden() {
+        // Always open on the current month (a previous visit may have navigated
+        // away); also replays a pending growth animation for a fresh plant.
+        controller.resetToCurrentMonth()
         guard newlyPlantedTileIndex == nil else { return }
         activeAmbient = nil
         activeAmbient = nextAmbient()
