@@ -31,11 +31,21 @@ struct InsightHomeView: View {
     /// Drives the blue insight card from the shared motivation algorithm.
     @StateObject private var motivation = MotivationObservable()
 
+    /// Navigates to the Journal tab, which hosts the capture flow and garden.
+    var onOpenJournal: () -> Void = {}
+
+    /// The trend point tapped on the graph, driving the detail sheet (Block 2).
+    @State private var selectedPoint: TrendPoint?
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 greetingHeader
-                HeroInsightCard(insight: motivation.insight)
+                // Entry point (Block 1.3): garden preview + two primary actions.
+                gardenEntryCard
+                    .padding(.top, 20)
+                    .padding(.horizontal, 16)
+                HeroInsightCard(insight: motivation.insight, onPointTap: { selectedPoint = $0 })
                     .padding(.top, 20)
                     .padding(.horizontal, 16)
                 patternsSection
@@ -51,6 +61,72 @@ struct InsightHomeView: View {
         .task {
             motivation.start()
         }
+        // Trend point detail (Block 2).
+        .sheet(item: Binding(
+            get: { selectedPoint.map { TrendPointItem(point: $0) } },
+            set: { if $0 == nil { selectedPoint = nil } }
+        )) { item in
+            TrendPointSheet(point: item.point)
+                .presentationDetents([.height(240)])
+                .presentationDragIndicator(.visible)
+        }
+    }
+
+    /// Home entry point: a small garden preview and the two primary actions. Both
+    /// lead to the Journal tab, which hosts the live garden and capture flow.
+    private var gardenEntryCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("✦ " + Strings.home_garden_preview_title)
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.1)
+                .foregroundColor(HomeColors.teal)
+            Spacer().frame(height: 12)
+            gardenPreviewStrip
+            Spacer().frame(height: 14)
+            HStack(spacing: 10) {
+                Button(action: onOpenJournal) {
+                    Text(Strings.home_make_entry)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(HomeColors.onTeal)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Capsule().fill(HomeColors.teal))
+                }
+                .buttonStyle(.plain)
+                Button(action: onOpenJournal) {
+                    Text(Strings.home_view_garden)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(HomeColors.teal)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(
+                            Capsule().stroke(HomeColors.teal, lineWidth: 1.5)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(HomeColors.card)
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(HomeColors.line, lineWidth: 1))
+        )
+    }
+
+    /// A simple decorative row of garden tiles as a lightweight preview.
+    private var gardenPreviewStrip: some View {
+        HStack(alignment: .bottom, spacing: 10) {
+            ForEach(Array([true, false, true, true, false, true, false, true].enumerated()), id: \.offset) { _, planted in
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(HomeColors.teal.opacity(planted ? 0.55 : 0.16))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: planted ? 30 : 16)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 16)
+        .background(RoundedRectangle(cornerRadius: 14).fill(HomeColors.tealSofter))
     }
 
     private var greetingHeader: some View {
@@ -108,6 +184,7 @@ struct InsightHomeView: View {
 
 private struct HeroInsightCard: View {
     let insight: MotivationInsight
+    var onPointTap: (TrendPoint) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -125,10 +202,20 @@ private struct HeroInsightCard: View {
             }
 
             Spacer().frame(height: 14)
+            // Block 4: quiet label tying the text to the user's last entry.
+            Text("✦ " + Strings.insight_for_you_label)
+                .font(.system(size: 11, weight: .semibold))
+                .tracking(0.4)
+                .foregroundColor(HomeColors.onTeal.opacity(0.7))
+            Spacer().frame(height: 8)
+            // Block 4: crossfade the headline when it changes after a new entry.
             Text(localizedInsightKey(insight.headlineKey))
                 .font(.system(size: 23, weight: .bold))
                 .foregroundColor(HomeColors.onTeal)
                 .fixedSize(horizontal: false, vertical: true)
+                .id(insight.headlineKey)
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.4), value: insight.headlineKey)
             Spacer().frame(height: 16)
 
             Rectangle().fill(HomeColors.onTeal.opacity(0.16)).frame(height: 1)
@@ -154,8 +241,12 @@ private struct HeroInsightCard: View {
                     }
                 }
                 Spacer()
-                TrendChart(points: insight.trend.map { CGFloat(truncating: $0) })
-                    .frame(width: 74, height: 34)
+                TrendChart(
+                    points: insight.trend.map { CGFloat(truncating: $0) },
+                    trendPoints: insight.trendPoints,
+                    onPointTap: onPointTap
+                )
+                .frame(width: 74, height: 34)
             }
         }
         .padding(18)
@@ -169,9 +260,12 @@ private struct HeroInsightCard: View {
     }
 }
 
-/// Small line+area sparkline. Higher value = higher on screen.
+/// Small line+area sparkline. Higher value = higher on screen. When trendPoints
+/// are present the chart is tappable and reports the nearest point (Block 2).
 private struct TrendChart: View {
     let points: [CGFloat]
+    var trendPoints: [TrendPoint] = []
+    var onPointTap: (TrendPoint) -> Void = { _ in }
 
     var body: some View {
         GeometryReader { geo in
@@ -207,7 +301,80 @@ private struct TrendChart: View {
                 Circle().fill(HomeColors.onTeal).frame(width: 5.2, height: 5.2)
                     .position(chartPoints[chartPoints.count - 1])
             }
+
+            // Tap layer: map the tap x to the nearest trend point (Block 2).
+            if !trendPoints.isEmpty {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { location in
+                        let frac = max(0, min(1, location.x / max(w, 1)))
+                        let index = Int((frac * CGFloat(trendPoints.count - 1)).rounded())
+                            .clamped(to: 0...(trendPoints.count - 1))
+                        onPointTap(trendPoints[index])
+                    }
+            }
         }
+    }
+}
+
+/// Wraps a shared TrendPoint so it can drive a SwiftUI `.sheet(item:)`.
+private struct TrendPointItem: Identifiable {
+    let id = UUID()
+    let point: TrendPoint
+}
+
+/// Detail sheet for a tapped trend point (Block 2): the day, the entry's intensity,
+/// and a gentle, never-judgmental note on how it moved the course.
+private struct TrendPointSheet: View {
+    let point: TrendPoint
+
+    private var dateText: String {
+        let date = Date(timeIntervalSince1970: Double(point.createdAt) / 1000.0)
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "de_DE")
+        fmt.dateFormat = "d. MMM yyyy"
+        return fmt.string(from: date)
+    }
+
+    private var directionText: String {
+        switch point.direction {
+        case .calmer: return Strings.trend_detail_calmer
+        case .moreIntense: return Strings.trend_detail_more_intense
+        default: return Strings.trend_detail_steady
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(Strings.trend_detail_title)
+                .font(IremiaText.h2)
+                .foregroundColor(IremiaColors.ink)
+            Text(dateText)
+                .font(IremiaText.caption)
+                .foregroundColor(IremiaColors.gray500)
+            if let intensity = point.intensity {
+                Text(Strings.trend_detail_intensity.replacingOccurrences(of: "%1$d", with: "\(Int(truncating: intensity))"))
+                    .font(IremiaText.body)
+                    .foregroundColor(IremiaColors.ink)
+            } else {
+                Text(Strings.trend_detail_journal)
+                    .font(IremiaText.body)
+                    .foregroundColor(IremiaColors.ink)
+            }
+            Text(directionText)
+                .font(IremiaText.body)
+                .foregroundColor(IremiaColors.gray600)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(IremiaSpacing.screenGutter)
+        .background(IremiaColors.gray100.ignoresSafeArea())
+    }
+}
+
+private extension Comparable {
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        min(max(self, range.lowerBound), range.upperBound)
     }
 }
 

@@ -14,6 +14,31 @@ import kotlin.native.ObjCName
 enum class InsightConfidence { LOW, MEDIUM, HIGH }
 
 /**
+ * Whether a trend point pulled the recent course up, down, or held it steady.
+ * Presented to the user as a gentle, never-judgmental plus/minus (plan Block 2).
+ */
+@ObjCName("TrendDirection", exact = true)
+enum class TrendDirection { CALMER, STEADY, MORE_INTENSE }
+
+/**
+ * One tappable point on the home trend graph, resolved back to the entry behind it.
+ *
+ * @property value The plotted intensity value (matches [MotivationInsight.trend]).
+ * @property entryId The source entry id, or null when the point has none.
+ * @property createdAt The entry's timestamp in millis (for the day/date shown).
+ * @property intensity The entry's panic intensity, or null (journal entries).
+ * @property direction How this point moved the recent course vs. the running average.
+ */
+@ObjCName("TrendPoint", exact = true)
+data class TrendPoint(
+    val value: Float,
+    val entryId: Long?,
+    val createdAt: Long,
+    val intensity: Int?,
+    val direction: TrendDirection,
+)
+
+/**
  * The gentle, non-judgmental "last 30 days" insight rendered in the home screen's
  * blue hero card.
  *
@@ -38,6 +63,9 @@ data class MotivationInsight(
     val score: Int,
     val isPositive: Boolean,
     val confidence: InsightConfidence,
+    // Per-point breakdown for the tappable graph (Block 2). Empty for the
+    // placeholder and when there are no entries to resolve.
+    val trendPoints: List<TrendPoint> = emptyList(),
 ) {
     companion object {
         /**

@@ -29,6 +29,7 @@ data class ExerciseSession(
  * @property moodBefore Mood index 0..4 before, or null.
  * @property moodAfter Mood index 0..4 after, or null.
  * @property sentiment Lightweight comment sentiment in -1f..1f (0 = neutral/unknown).
+ * @property entryId Source note id, so a tapped graph point can open its entry.
  */
 @ObjCName("EntrySignal", exact = true)
 data class EntrySignal(
@@ -37,6 +38,7 @@ data class EntrySignal(
     val moodBefore: Int?,
     val moodAfter: Int?,
     val sentiment: Float,
+    val entryId: Long? = null,
 )
 
 /** Source of exercise sessions. Real implementation swaps in later. */

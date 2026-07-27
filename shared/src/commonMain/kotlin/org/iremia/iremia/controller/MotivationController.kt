@@ -57,6 +57,7 @@ class MotivationController(
                 moodBefore = note.moodBefore,
                 moodAfter = note.moodAfter,
                 sentiment = SentimentAnalyzer.score(note.content),
+                entryId = note.id,
             )
         }
 

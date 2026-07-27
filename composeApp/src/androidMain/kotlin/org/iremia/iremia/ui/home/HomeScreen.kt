@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,11 +31,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -97,7 +102,11 @@ private data class PatternCardData(
 fun HomeScreen(
     modifier: Modifier = Modifier,
     insight: MotivationInsight = MotivationInsight.placeholder,
+    onOpenJournal: () -> Unit = {},
 ) {
+    // The trend point tapped on the graph, if any, drives the detail dialog (Block 2).
+    var selectedPoint by remember { mutableStateOf<org.iremia.iremia.domain.insights.TrendPoint?>(null) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -105,13 +114,178 @@ fun HomeScreen(
             .verticalScroll(rememberScrollState()),
     ) {
         GreetingHeader()
+        // Entry point (Block 1.3): garden preview + "make entry" / "view garden".
+        // Both lead to the Journal tab, which hosts the capture flow and garden.
+        GardenEntryCard(
+            onMakeEntry = onOpenJournal,
+            onViewGarden = onOpenJournal,
+            modifier = Modifier.padding(top = 20.dp, start = 16.dp, end = 16.dp),
+        )
         HeroInsightCard(
             insight = insight,
+            onPointTap = { selectedPoint = it },
             modifier = Modifier.padding(top = 20.dp, start = 16.dp, end = 16.dp),
         )
         PatternsSection(modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp))
         DailyFlashcard(modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp))
         Spacer(Modifier.height(24.dp))
+    }
+
+    selectedPoint?.let { point ->
+        TrendPointDialog(point = point, onDismiss = { selectedPoint = null })
+    }
+}
+
+/**
+ * Detail dialog for a tapped trend point (Block 2). Shows the day, the entry's
+ * intensity, and a gentle, never-judgmental note on how it moved the course.
+ */
+@Composable
+private fun TrendPointDialog(
+    point: org.iremia.iremia.domain.insights.TrendPoint,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val dateText = remember(point.createdAt) {
+        val dt = java.time.Instant.ofEpochMilli(point.createdAt)
+            .atZone(java.time.ZoneId.systemDefault())
+        val months = listOf("Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez")
+        "${dt.dayOfMonth}. ${months[dt.monthValue - 1]} ${dt.year}"
+    }
+    val directionText = when (point.direction) {
+        org.iremia.iremia.domain.insights.TrendDirection.CALMER -> localized(SharedRes.strings.trend_detail_calmer)
+        org.iremia.iremia.domain.insights.TrendDirection.MORE_INTENSE -> localized(SharedRes.strings.trend_detail_more_intense)
+        org.iremia.iremia.domain.insights.TrendDirection.STEADY -> localized(SharedRes.strings.trend_detail_steady)
+    }.toString(context)
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text(localized(SharedRes.strings.nav_close).toString(context), color = HomeColors.teal)
+            }
+        },
+        title = {
+            Text(localized(SharedRes.strings.trend_detail_title).toString(context), color = HomeColors.ink, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column {
+                Text(dateText, fontSize = 13.sp, color = HomeColors.inkMute)
+                Spacer(Modifier.height(8.dp))
+                if (point.intensity != null) {
+                    Text(
+                        localized(SharedRes.strings.trend_detail_intensity).toString(context).replace("%1\$d", point.intensity.toString()),
+                        fontSize = 15.sp,
+                        color = HomeColors.ink,
+                    )
+                } else {
+                    Text(localized(SharedRes.strings.trend_detail_journal).toString(context), fontSize = 15.sp, color = HomeColors.ink)
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(directionText, fontSize = 14.sp, color = HomeColors.inkSoft)
+            }
+        },
+        containerColor = HomeColors.card,
+    )
+}
+
+/**
+ * Home entry point: a small garden preview strip and the two primary actions.
+ * Kept intentionally light; the live garden and the capture flow live on the
+ * Journal tab, one tap away.
+ */
+@Composable
+private fun GardenEntryCard(
+    onMakeEntry: () -> Unit,
+    onViewGarden: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(HomeColors.card)
+            .border(1.dp, HomeColors.line, RoundedCornerShape(20.dp))
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "✦ " + localized(SharedRes.strings.home_garden_preview_title).toString(context),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.1.sp,
+            color = HomeColors.teal,
+        )
+        Spacer(Modifier.height(12.dp))
+        GardenPreviewStrip()
+        Spacer(Modifier.height(14.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            // Primary: make an entry.
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(HomeColors.teal)
+                    .clickable(onClick = onMakeEntry)
+                    .padding(vertical = 13.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = localized(SharedRes.strings.home_make_entry).toString(context),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = HomeColors.onTeal,
+                )
+            }
+            // Secondary: view garden.
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .border(1.5.dp, HomeColors.teal, RoundedCornerShape(percent = 50))
+                    .clickable(onClick = onViewGarden)
+                    .padding(vertical = 13.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = localized(SharedRes.strings.home_view_garden).toString(context),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = HomeColors.teal,
+                )
+            }
+        }
+    }
+}
+
+/** A simple decorative row of garden tiles as a lightweight preview. */
+@Composable
+private fun GardenPreviewStrip() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(HomeColors.tealSofter)
+            .padding(horizontal = 14.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        // Alternating "planted" / "empty" tiles, purely visual.
+        val planted = listOf(true, false, true, true, false, true, false, true)
+        planted.forEach { isPlanted ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(if (isPlanted) 30.dp else 16.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(if (isPlanted) HomeColors.teal.copy(alpha = 0.55f) else HomeColors.teal.copy(alpha = 0.16f)),
+            )
+        }
     }
 }
 
@@ -172,7 +346,11 @@ private fun GreetingHeader() {
 }
 
 @Composable
-private fun HeroInsightCard(insight: MotivationInsight, modifier: Modifier = Modifier) {
+private fun HeroInsightCard(
+    insight: MotivationInsight,
+    modifier: Modifier = Modifier,
+    onPointTap: (org.iremia.iremia.domain.insights.TrendPoint) -> Unit = {},
+) {
     val context = LocalContext.current
     Column(
         modifier = modifier
@@ -212,13 +390,32 @@ private fun HeroInsightCard(insight: MotivationInsight, modifier: Modifier = Mod
         }
 
         Spacer(Modifier.height(14.dp))
+        // Block 4: a quiet label tying the text to the user's last entry, so the
+        // dynamic nature is noticeable.
         Text(
-            text = localized(insight.headlineKeyRes()).toString(context),
-            fontSize = 23.sp,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 28.sp,
-            color = HomeColors.onTeal,
+            text = "✦ " + localized(SharedRes.strings.insight_for_you_label).toString(context),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.4.sp,
+            color = HomeColors.onTeal.copy(alpha = 0.7f),
         )
+        Spacer(Modifier.height(8.dp))
+        // Block 4: crossfade the headline when it changes after a new entry, so the
+        // user sees that something updated.
+        val headlineText = localized(insight.headlineKeyRes()).toString(context)
+        AnimatedContent(
+            targetState = headlineText,
+            transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(200)) },
+            label = "insight_headline",
+        ) { text ->
+            Text(
+                text = text,
+                fontSize = 23.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 28.sp,
+                color = HomeColors.onTeal,
+            )
+        }
         Spacer(Modifier.height(16.dp))
 
         Box(
@@ -261,6 +458,8 @@ private fun HeroInsightCard(insight: MotivationInsight, modifier: Modifier = Mod
             }
             TrendChart(
                 points = insight.trend,
+                trendPoints = insight.trendPoints,
+                onPointTap = onPointTap,
                 modifier = Modifier
                     .width(74.dp)
                     .height(34.dp),
@@ -269,11 +468,30 @@ private fun HeroInsightCard(insight: MotivationInsight, modifier: Modifier = Mod
     }
 }
 
-/** Small line+area sparkline for the hero card. Higher value = higher on screen. */
+/**
+ * Small line+area sparkline for the hero card. Higher value = higher on screen.
+ * When [trendPoints] are present the chart is tappable: a tap maps to the nearest
+ * point and reports it via [onPointTap] (Block 2).
+ */
 @Composable
-private fun TrendChart(points: List<Float>, modifier: Modifier = Modifier) {
+private fun TrendChart(
+    points: List<Float>,
+    modifier: Modifier = Modifier,
+    trendPoints: List<org.iremia.iremia.domain.insights.TrendPoint> = emptyList(),
+    onPointTap: (org.iremia.iremia.domain.insights.TrendPoint) -> Unit = {},
+) {
     if (points.size < 2) return
-    androidx.compose.foundation.Canvas(modifier = modifier) {
+    val tapModifier = if (trendPoints.isNotEmpty()) {
+        Modifier.pointerInput(trendPoints) {
+            detectTapGestures { offset ->
+                // Map the tap x-position to the nearest trend point index.
+                val frac = (offset.x / size.width).coerceIn(0f, 1f)
+                val index = (frac * (trendPoints.size - 1)).roundToInt().coerceIn(0, trendPoints.size - 1)
+                onPointTap(trendPoints[index])
+            }
+        }
+    } else Modifier
+    androidx.compose.foundation.Canvas(modifier = modifier.then(tapModifier)) {
         val maxV = points.max()
         val minV = points.min()
         val range = (maxV - minV).takeIf { it > 0f } ?: 1f

@@ -40,6 +40,7 @@ object MotivationAlgorithm {
         val basis = if (recentWindow.isNotEmpty()) recentWindow else ordered
 
         val trend = buildTrend(basis)
+        val trendPoints = buildTrendPoints(basis)
         val progress = analyzeProgress(basis)
         val score = weightingScore(basis, exercises, progress)
         val confidence = confidenceFor(basis.size + exercises.size)
@@ -53,7 +54,49 @@ object MotivationAlgorithm {
             score = score,
             isPositive = isPositive,
             confidence = confidence,
+            trendPoints = trendPoints,
         )
+    }
+
+    // Intensity difference (vs. running average) below which a point counts as steady.
+    private const val STEADY_BAND = 0.75f
+
+    /**
+     * Builds the tappable per-point breakdown (Block 2). Each entry with an
+     * intensity becomes a point; its [TrendDirection] compares that intensity to the
+     * running average of the entries before it, so the user can see which entry
+     * calmed or intensified the recent course. Never judgmental — just up/down/steady.
+     */
+    private fun buildTrendPoints(ordered: List<EntrySignal>): List<TrendPoint> {
+        val withIntensity = ordered.filter { it.intensity != null }
+        if (withIntensity.isEmpty()) return emptyList()
+
+        val points = mutableListOf<TrendPoint>()
+        var runningSum = 0f
+        var runningCount = 0
+        for (entry in withIntensity) {
+            val intensity = entry.intensity!!.toFloat()
+            val direction = if (runningCount == 0) {
+                TrendDirection.STEADY
+            } else {
+                val avg = runningSum / runningCount
+                when {
+                    intensity <= avg - STEADY_BAND -> TrendDirection.CALMER
+                    intensity >= avg + STEADY_BAND -> TrendDirection.MORE_INTENSE
+                    else -> TrendDirection.STEADY
+                }
+            }
+            points += TrendPoint(
+                value = intensity,
+                entryId = entry.entryId,
+                createdAt = entry.createdAt,
+                intensity = entry.intensity,
+                direction = direction,
+            )
+            runningSum += intensity
+            runningCount++
+        }
+        return points
     }
 
     // ---- Analysis 3: progress trends (average intensity, newer half vs older half) ----
