@@ -61,39 +61,41 @@ val AmbientConfigs = listOf(
         durationMillis = 6000,
         scale = 1.2f
     ),
-    // Flying birds (left -> right diagonal up)
+    // Flying birds — straight horizontal left -> right. The birds in the Lottie fly
+    // horizontally, so the motion path must be horizontal too (equal start/end Y),
+    // otherwise it looks like they "hop" diagonally (Block 5).
     AmbientConfig(
         asset = LottieAsset.BIRDS,
         weight = AMBIENT_WEIGHT,
-        startX = -0.3f, startY = 0.3f,
-        endX = 1.3f, endY = 0.1f,
+        startX = -0.3f, startY = 0.18f,
+        endX = 1.3f, endY = 0.18f,
         durationMillis = 4500,
         scale = 1.5f
     ),
-    // A single bird crossing the sky (left -> right)
+    // A single bird crossing the sky — straight horizontal left -> right.
     AmbientConfig(
         asset = LottieAsset.BIRD,
         weight = AMBIENT_WEIGHT,
-        startX = -0.3f, startY = 0.25f,
-        endX = 1.3f, endY = 0.15f,
+        startX = -0.3f, startY = 0.22f,
+        endX = 1.3f, endY = 0.22f,
         durationMillis = 5000,
         scale = 1.3f
     ),
-    // Red birds flock (right -> left diagonal up)
+    // Red birds flock — straight horizontal right -> left (artwork faces this way).
     AmbientConfig(
         asset = LottieAsset.RED_BIRDS,
         weight = AMBIENT_WEIGHT,
-        startX = 1.3f, startY = 0.35f,
-        endX = -0.3f, endY = 0.15f,
+        startX = 1.3f, startY = 0.26f,
+        endX = -0.3f, endY = 0.26f,
         durationMillis = 5000,
         scale = 1.5f
     ),
-    // Transparent birds flock (left -> right, higher up)
+    // Transparent birds flock — straight horizontal left -> right, higher up.
     AmbientConfig(
         asset = LottieAsset.TRANSPARENT_BIRDS,
         weight = AMBIENT_WEIGHT,
-        startX = -0.3f, startY = 0.2f,
-        endX = 1.3f, endY = 0.08f,
+        startX = -0.3f, startY = 0.12f,
+        endX = 1.3f, endY = 0.12f,
         durationMillis = 5200,
         scale = 1.5f
     ),

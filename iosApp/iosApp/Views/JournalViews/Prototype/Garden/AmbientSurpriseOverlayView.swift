@@ -33,10 +33,12 @@ private let ambientWeight = 10
 let ambientConfigs: [AmbientConfig] = [
     AmbientConfig(asset: .leaves,           weight: ambientWeight, startX: 0.5, startY: -0.2, endX: 0.5, endY: 1.2, duration: 5.5, scale: 1.1, loop: true),
     AmbientConfig(asset: .leaf,             weight: ambientWeight, startX: 0.5, startY: -0.2, endX: 0.5, endY: 1.2, duration: 6.0, scale: 0.9, loop: true),
-    AmbientConfig(asset: .birds,            weight: ambientWeight, startX: -0.3, startY: 0.3, endX: 1.3, endY: 0.1, duration: 4.5, scale: 1.1, loop: true),
-    AmbientConfig(asset: .bird,             weight: ambientWeight, startX: -0.3, startY: 0.25, endX: 1.3, endY: 0.15, duration: 5.0, scale: 1.0, loop: true),
-    AmbientConfig(asset: .redBirds,         weight: ambientWeight, startX: 1.3, startY: 0.35, endX: -0.3, endY: 0.15, duration: 5.0, scale: 1.1, loop: true),
-    AmbientConfig(asset: .transparentBirds, weight: ambientWeight, startX: -0.3, startY: 0.2, endX: 1.3, endY: 0.08, duration: 5.2, scale: 1.1, loop: true),
+    // Birds fly horizontally in the artwork, so the motion path is horizontal too
+    // (equal start/end Y) to avoid the diagonal "hopping" look (Block 5).
+    AmbientConfig(asset: .birds,            weight: ambientWeight, startX: -0.3, startY: 0.18, endX: 1.3, endY: 0.18, duration: 4.5, scale: 1.1, loop: true),
+    AmbientConfig(asset: .bird,             weight: ambientWeight, startX: -0.3, startY: 0.22, endX: 1.3, endY: 0.22, duration: 5.0, scale: 1.0, loop: true),
+    AmbientConfig(asset: .redBirds,         weight: ambientWeight, startX: 1.3, startY: 0.26, endX: -0.3, endY: 0.26, duration: 5.0, scale: 1.1, loop: true),
+    AmbientConfig(asset: .transparentBirds, weight: ambientWeight, startX: -0.3, startY: 0.12, endX: 1.3, endY: 0.12, duration: 5.2, scale: 1.1, loop: true),
     AmbientConfig(asset: .autumnFall,       weight: ambientWeight, startX: 0.5, startY: -0.2, endX: 0.5, endY: 1.2, duration: 6.0, scale: 1.1, loop: true),
     AmbientConfig(asset: .paperPlane,       weight: ambientWeight, startX: -0.2, startY: 0.0, endX: 1.2, endY: 0.6, duration: 2.8, scale: 0.55, loop: true),
     AmbientConfig(asset: .deer,             weight: ambientWeight, startX: -0.4, startY: 0.72, endX: 1.4, endY: 0.72, duration: 7.0, scale: 1.2, loop: true),
