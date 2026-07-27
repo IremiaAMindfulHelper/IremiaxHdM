@@ -83,7 +83,9 @@ struct GardenOverviewScreen: View {
 
             Spacer().frame(height: IremiaSpacing.s5)
 
-            // Garden scene on blue header wash
+            // Free-standing garden scene. The flexible frame lets the 1.2-aspect
+            // plot scale to fit width AND height, so it stays a clean size in
+            // landscape instead of blowing up to full width.
             GardenSceneView(
                 tiles: garden.tiles,
                 columns: garden.gridColumns,
@@ -94,6 +96,7 @@ struct GardenOverviewScreen: View {
                 newlyPlantedTileIndex: garden.newlyPlantedTileIndex,
                 onGrowthFinished: { garden.clearNewlyPlanted() }
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .scaleEffect(zoomScale)
             .offset(panOffset)
             .gesture(

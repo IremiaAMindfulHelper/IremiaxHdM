@@ -3,7 +3,9 @@ package org.iremia.iremia.ui.garden
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -157,11 +159,20 @@ fun GardenOverviewScreen(
 
             Spacer(Modifier.height(IremiaSpacing.S5))
 
-            Box(
+            // The garden sits free on the screen (no card/box) so it reads bigger
+            // and more immersive. It takes the remaining height between the month
+            // row and the info text; the scene's width is capped so the 1.2-aspect
+            // plot always fits that height — otherwise it blows up in landscape.
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // No card/box around the garden — it sits free on the screen so it
-                    // reads bigger and more immersive.
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+            val sceneWidth = maxWidth.coerceAtMost(maxHeight * 1.2f)
+            Box(
+                modifier = Modifier
+                    .width(sceneWidth)
                     // Pinch to zoom and drag to pan the garden. Scale is clamped so
                     // the user can't lose the plot; pan resets to center at 1x.
                     .pointerInput(Unit) {
@@ -213,6 +224,7 @@ fun GardenOverviewScreen(
                             translationY = panY,
                         ),
                 )
+            }
             }
 
             Spacer(Modifier.height(IremiaSpacing.S5))
