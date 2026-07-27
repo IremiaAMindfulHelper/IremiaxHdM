@@ -41,13 +41,24 @@ struct MainView: View {
     @State private var showSoundPlayer = false
     @State private var currentSoundTitle = ""
 
+    // Shared notes state + capture flow, hosted at the shell so the "+" FAB works
+    // on every tab and the Journal tab observes the same controller instance.
+    @StateObject private var notesObservable = NotesObservable()
+    @State private var showCaptureFlow = false
+    @State private var openGardenSignal = false
+
+    private func openCaptureFlow() {
+        notesObservable.clearPlantResult()
+        showCaptureFlow = true
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
                 switch selectedTab {
                 case .start:
                     NavigationStack {
-                        InsightHomeView()
+                        InsightHomeView(onOpenJournal: { selectedTab = .journal })
                     }
 
                 case .training:
@@ -61,7 +72,11 @@ struct MainView: View {
 
                 case .journal:
                     NavigationStack {
-                        JournalPrototypeScreen()
+                        JournalPrototypeScreen(
+                            notesObservable: notesObservable,
+                            openCaptureFlow: { openCaptureFlow() },
+                            openGardenSignal: $openGardenSignal
+                        )
                     }
 
                 case .wellbeing:
@@ -87,10 +102,43 @@ struct MainView: View {
                 .transition(.move(edge: .leading).combined(with: .opacity))
             }
 
+            // Persistent "+" FAB — visible on every tab, above the glassy tab bar.
+            Button(action: { openCaptureFlow() }) {
+                Image(systemName: "plus")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(IremiaColors.white)
+                    .frame(width: 56, height: 56)
+                    .background(Circle().fill(IremiaColors.teal700))
+                    .shadow(color: SwiftUI.Color.black.opacity(0.18), radius: 8, x: 0, y: 4)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Strings.journal_fab)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            .padding(.trailing, IremiaSpacing.screenGutter)
+            .padding(.bottom, IremiaSpacing.bottomNavClearance)
+
             GlassyTabBar(selectedTab: $selectedTab)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 8)
                 .ignoresSafeArea(.keyboard)
+        }
+        // Capture flow, hosted at the shell so the FAB works on any tab.
+        .fullScreenCover(isPresented: $showCaptureFlow, onDismiss: { notesObservable.clearPlantResult() }) {
+            EpisodeCaptureFlow(
+                entryCount: notesObservable.entryCount,
+                onClose: { showCaptureFlow = false },
+                onFinished: { showCaptureFlow = false },
+                onViewGarden: {
+                    showCaptureFlow = false
+                    // Switch to the Journal tab and ask it to open the garden.
+                    selectedTab = .journal
+                    openGardenSignal = true
+                },
+                onSaveEpisode: { draft in
+                    notesObservable.addEntry(draft)
+                },
+                plantResult: notesObservable.lastPlantResult
+            )
         }
     }
 }
