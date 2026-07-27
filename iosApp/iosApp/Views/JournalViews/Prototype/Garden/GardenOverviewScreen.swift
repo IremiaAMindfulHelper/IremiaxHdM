@@ -25,7 +25,7 @@ struct GardenOverviewScreen: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text(PS.garden_title)
+                Text(Strings.garden_title)
                     .font(IremiaText.h2)
                     .foregroundColor(IremiaColors.ink)
                 Spacer()
@@ -37,7 +37,7 @@ struct GardenOverviewScreen: View {
                         .foregroundColor(IremiaColors.ink900)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(PS.garden_reset)
+                .accessibilityLabel(Strings.garden_reset)
                 .padding(.trailing, IremiaSpacing.s3)
 
                 Button(action: onClose) {
@@ -46,7 +46,7 @@ struct GardenOverviewScreen: View {
                         .foregroundColor(IremiaColors.ink900)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(PS.nav_close)
+                .accessibilityLabel(Strings.nav_close)
             }
 
             Spacer().frame(height: IremiaSpacing.s3)
@@ -60,7 +60,7 @@ struct GardenOverviewScreen: View {
                         .foregroundColor(IremiaColors.teal700)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(PS.garden_prev_month)
+                .accessibilityLabel(Strings.garden_prev_month)
 
                 Spacer()
 
@@ -77,7 +77,7 @@ struct GardenOverviewScreen: View {
                         .foregroundColor(IremiaColors.teal700)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(PS.garden_next_month)
+                .accessibilityLabel(Strings.garden_next_month)
             }
             .padding(.horizontal, IremiaSpacing.s4)
 
@@ -114,17 +114,22 @@ struct GardenOverviewScreen: View {
                                 height: basePan.height + value.translation.height
                             )
                         }
-                        .onEnded { _ in basePan = panOffset }
+                        .onEnded { value in
+                            if zoomScale > 1 {
+                                basePan = panOffset
+                            } else {
+                                // Swipe left/right to change month at 1x (plan 6.3).
+                                let dx = value.translation.width
+                                if dx > 60 { garden.navigateMonth(delta: -1) }
+                                else if dx < -60 { garden.navigateMonth(delta: 1) }
+                            }
+                        }
                 )
             )
-            .padding(IremiaSpacing.s1)
-            .background(
-                RoundedRectangle(cornerRadius: IremiaShapes.card, style: .continuous)
-                    .fill(IremiaColors.blueHeader)
-            )
-            // Clip zoom/pan to the card bounds so the magnified scene stays inside
-            // its blue header and never spills over the info text below it.
-            .clipShape(RoundedRectangle(cornerRadius: IremiaShapes.card, style: .continuous))
+            // No card/box around the garden — it sits free on the screen so it reads
+            // bigger and more immersive. Clip only so the zoomed scene never spills
+            // over the info text below it.
+            .clipped()
 
             Spacer().frame(height: IremiaSpacing.s5)
 
@@ -154,13 +159,13 @@ struct GardenOverviewScreen: View {
         }
         // Play a fresh ambient animation every time the garden is opened.
         .onAppear { garden.onEnterGarden() }
-        .alert(PS.garden_reset_confirm_title, isPresented: $showResetConfirm) {
-            Button(PS.garden_reset_cancel, role: .cancel) {}
-            Button(PS.garden_reset_confirm_action, role: .destructive) {
+        .alert(Strings.garden_reset_confirm_title, isPresented: $showResetConfirm) {
+            Button(Strings.garden_reset_cancel, role: .cancel) {}
+            Button(Strings.garden_reset_confirm_action, role: .destructive) {
                 garden.resetGarden()
             }
         } message: {
-            Text(PS.garden_reset_confirm_message)
+            Text(Strings.garden_reset_confirm_message)
         }
         // Tapping a planted tree reveals the journal entry it represents.
         .sheet(
@@ -176,15 +181,21 @@ struct GardenOverviewScreen: View {
     }
 
     private func infoText(trees: Int) -> String {
-        if let tile = garden.selectedTile {
-            let count = tile < garden.tiles.count ? garden.tiles[tile].entryCount : 0
+        if let tileIndex = garden.selectedTile {
+            let idx = Int(tileIndex)
+            let tile = idx < garden.tiles.count ? garden.tiles[idx] : nil
+            let day = Int(tile?.dayOfMonth ?? Int32(idx + 1))
+            let dayLabel = Strings.garden_day_label.replacingOccurrences(of: "%1$d", with: "\(day)")
+            let count = Int(tile?.entryCount ?? 0)
             if count == 0 {
-                return PS.garden_no_entry
+                return "\(dayLabel) · \(Strings.garden_no_entry)"
             } else {
-                return PS.garden_entry_singular.replacingOccurrences(of: "%1$d", with: "1")
+                let entries = (count == 1 ? Strings.garden_entry_singular : Strings.garden_entry_plural)
+                    .replacingOccurrences(of: "%1$d", with: "\(count)")
+                return "\(dayLabel) · \(entries)"
             }
         }
-        return PS.garden_month_trees.replacingOccurrences(of: "%1$d", with: "\(trees)")
+        return Strings.garden_month_trees.replacingOccurrences(of: "%1$d", with: "\(trees)")
     }
 }
 
@@ -202,7 +213,7 @@ private struct GardenEntrySheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: IremiaSpacing.s3) {
-                Text(PS.garden_entry_sheet_title)
+                Text(Strings.garden_entry_sheet_title)
                     .font(IremiaText.h2)
                     .foregroundColor(IremiaColors.ink)
 
@@ -211,7 +222,7 @@ private struct GardenEntrySheet: View {
                     .foregroundColor(IremiaColors.gray500)
 
                 let content = entry.content.trimmingCharacters(in: .whitespacesAndNewlines)
-                Text(content.isEmpty ? PS.garden_entry_sheet_empty : content)
+                Text(content.isEmpty ? Strings.garden_entry_sheet_empty : content)
                     .font(IremiaText.body)
                     .foregroundColor(IremiaColors.ink700)
                     .frame(maxWidth: .infinity, alignment: .leading)

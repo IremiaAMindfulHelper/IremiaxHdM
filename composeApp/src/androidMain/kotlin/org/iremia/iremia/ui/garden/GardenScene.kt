@@ -243,74 +243,29 @@ fun GardenScene(
 
                 if (plantType == null) {
                     drawDecoration(base, l.tileW, index)
-                } else if (index == newlyPlantedTileIndex) {
+                    return@forEach
+                }
+
+                if (index == newlyPlantedTileIndex) {
+                    // Growth animation for the just-planted plant (the tree growth
+                    // Lottie is used for both trees and flower beds).
                     drawShadow(base, l.tileW)
+                    val spriteWidth = l.tileW * plantScale(plantType)
 
-                    val activeLottiePainter = treeLottiePainter
-                    val count = tile.entryCount
-                    val scale = scaleFor(count) * plantType.sizeMultiplier()
-                    val spriteWidth = l.tileW * scale
-
-                    // 1. Draw Lottie growth animation (fading out during crossfade)
                     if (crossfadeAlpha.value < 1.0f) {
-                        val lottieAspect = activeLottiePainter.intrinsicSize.height / activeLottiePainter.intrinsicSize.width
+                        val lottieAspect = treeLottiePainter.intrinsicSize.height / treeLottiePainter.intrinsicSize.width
                         val lottieHeight = spriteWidth * lottieAspect
-                        val lottieLeft = base.x - spriteWidth / 2f
-                        val lottieTop = (base.y + l.tileH / 2f) - lottieHeight
-
-                        translate(lottieLeft, lottieTop) {
-                            with(activeLottiePainter) {
-                                draw(
-                                    size = Size(spriteWidth, lottieHeight),
-                                    alpha = 1.0f - crossfadeAlpha.value
-                                )
+                        translate(base.x - spriteWidth / 2f, (base.y + l.tileH / 2f) - lottieHeight) {
+                            with(treeLottiePainter) {
+                                draw(size = Size(spriteWidth, lottieHeight), alpha = 1.0f - crossfadeAlpha.value)
                             }
                         }
                     }
-
-                    // 2. Draw static sprite (fading in during crossfade)
                     if (crossfadeAlpha.value > 0.0f) {
-                        val painter = plantPainters[plantType]
-                        if (painter != null) {
-                            val staticAspect = painter.intrinsicSize.height / painter.intrinsicSize.width
-                            val staticHeight = spriteWidth * staticAspect
-                            val staticLeft = base.x - spriteWidth / 2f
-                            val staticTop = (base.y + l.tileH / 2f) - staticHeight
-
-                            translate(staticLeft, staticTop) {
-                                with(painter) {
-                                    draw(
-                                        size = Size(spriteWidth, staticHeight),
-                                        alpha = crossfadeAlpha.value
-                                    )
-                                }
-                            }
-                        }
+                        drawStaticPlant(base, l, plantType, plantPainters, alpha = crossfadeAlpha.value)
                     }
                 } else {
-                    // Trees rest on the tile with a contact shadow; flower crates
-                    // sit flat and centered, so they get no shadow.
-                    if (plantType.isTree) drawShadow(base, l.tileW)
-                    val painter = plantPainters[plantType]
-                    if (painter != null) {
-                        val count = tile.entryCount
-                        val scale = scaleFor(count) * plantType.sizeMultiplier()
-                        val spriteWidth = l.tileW * scale
-                        val aspect = painter.intrinsicSize.height / painter.intrinsicSize.width
-                        val spriteHeight = spriteWidth * aspect
-
-                        val left = base.x - spriteWidth / 2f
-                        // Both trees and flower crates rest on the tile's ground line
-                        // (front edge of the diamond) so they align with the isometric
-                        // cell instead of floating above its center.
-                        val top = (base.y + l.tileH / 2f) - spriteHeight
-
-                        translate(left, top) {
-                            with(painter) {
-                                draw(size = Size(spriteWidth, spriteHeight))
-                            }
-                        }
-                    }
+                    drawStaticPlant(base, l, plantType, plantPainters)
                 }
             }
         }
@@ -345,11 +300,32 @@ fun GardenScene(
  */
 private fun PlantType.sizeMultiplier(): Float = if (isTree) 1.0f else 0.72f
 
-private fun scaleFor(count: Int): Float = when (count) {
-    1 -> 0.8f
-    2 -> 1.0f
-    3 -> 1.15f
-    else -> 1.3f
+/** Draw scale for a single plant: a comfortable base size times the type multiplier. */
+private fun plantScale(plantType: PlantType): Float = 0.9f * plantType.sizeMultiplier()
+
+/**
+ * Draws one static plant sprite anchored at its tile's ground line. Trees get a
+ * contact shadow; flower crates sit flat and centered (no shadow).
+ */
+private fun DrawScope.drawStaticPlant(
+    base: Offset,
+    l: GardenLayout,
+    plantType: PlantType,
+    painters: Map<PlantType, androidx.compose.ui.graphics.painter.Painter>,
+    alpha: Float = 1.0f,
+) {
+    if (plantType.isTree) drawShadow(base, l.tileW)
+    val painter = painters[plantType] ?: return
+    val spriteWidth = l.tileW * plantScale(plantType)
+    val aspect = painter.intrinsicSize.height / painter.intrinsicSize.width
+    val spriteHeight = spriteWidth * aspect
+    val left = base.x - spriteWidth / 2f
+    val top = (base.y + l.tileH / 2f) - spriteHeight
+    translate(left, top) {
+        with(painter) {
+            draw(size = Size(spriteWidth, spriteHeight), alpha = alpha)
+        }
+    }
 }
 
 private fun diamondPath(c: Offset, w: Float, h: Float): Path = Path().apply {

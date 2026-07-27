@@ -100,6 +100,25 @@ private func scaleFor(_ count: Int) -> CGFloat {
     }
 }
 
+/// Draw scale for a single plant: a comfortable base size times the type multiplier.
+private func plantScale(_ plantType: PlantType) -> CGFloat {
+    0.9 * (plantType.isTree ? 1.0 : 0.72)
+}
+
+/// Draws one static plant sprite anchored at its tile's ground line. Trees get a
+/// contact shadow; flower crates sit flat and centered (no shadow).
+private func drawStaticPlant(ctx: GraphicsContext, base: CGPoint, l: GardenLayout, plantType: PlantType) {
+    if plantType.isTree { drawShadow(ctx: ctx, base: base, tileW: l.tileW) }
+    guard let uiImage = plantType.image.toUIImage() else { return }
+    let spriteWidth = l.tileW * plantScale(plantType)
+    let aspect = uiImage.size.height / uiImage.size.width
+    let spriteHeight = spriteWidth * aspect
+    let left = base.x - spriteWidth / 2
+    let top = (base.y + l.tileH / 2) - spriteHeight
+    let rect = CGRect(x: left, y: top, width: spriteWidth, height: spriteHeight)
+    ctx.draw(ctx.resolve(Image(uiImage: uiImage)), in: rect)
+}
+
 // MARK: - View
 
 /// Isometric garden rendered on a SwiftUI Canvas.
@@ -171,50 +190,19 @@ struct GardenSceneView: View {
                 let index = row * columns + col
                 let base = center(l, col: col, row: row)
                 let tile = index < tiles.count ? tiles[index] : nil
-                let count = tile?.entryCount ?? 0
-                if count == 0 {
+
+                guard let tile = tile, let plantType = tile.plantType else {
                     drawDecoration(ctx: ctx, base: base, tileW: l.tileW, index: index)
-                } else {
-                    // Canvas content isn't animatable, so lottieOpacity flips this
-                    // check the instant the fade starts (not gradually) — but the
-                    // Lottie view's own `.opacity()` modifier animates smoothly on
-                    // top of it, so the static sprite appears right as the Lottie
-                    // begins dissolving away, producing a real crossfade.
-                    let suppressForGrowth = (index == newlyPlantedTileIndex) && isGrowing && lottieOpacity >= 1
-                    if suppressForGrowth {
-                        // drawn by the growth Lottie overlay below
-                    } else if let plantType = tile?.plantType,
-                       let uiImage = plantType.image.toUIImage() {
-                        // Trees get a contact shadow; flower crates sit flat.
-                        if plantType.isTree { drawShadow(ctx: ctx, base: base, tileW: l.tileW) }
-                        // The flower crate (Blumenbeet) sprite is now tightly cropped,
-                        // so it sits centered. A bit smaller than a tile leaves a
-                        // margin on all sides, anchored at the ground line.
-                        let sizeMult: CGFloat = plantType.isTree ? 1.0 : 0.72
-                        let scale = scaleFor(Int(count)) * sizeMult
-                        let spriteWidth = l.tileW * scale
-                        let aspect = uiImage.size.height / uiImage.size.width
-                        let spriteHeight = spriteWidth * aspect
+                    continue
+                }
 
-                        let left = base.x - spriteWidth / 2
-                        // Both trees and crates rest on the tile's ground line (front
-                        // edge of the diamond) so they align with the isometric cell.
-                        let top = (base.y + l.tileH / 2) - spriteHeight
-
-                        let rect = CGRect(x: left, y: top, width: spriteWidth, height: spriteHeight)
-                        let resolvedImage = ctx.resolve(Image(uiImage: uiImage))
-                        ctx.draw(resolvedImage, in: rect)
-                    } else if !suppressForGrowth {
-                        drawShadow(ctx: ctx, base: base, tileW: l.tileW)
-                        // Fallback to procedural (sprite image unavailable)
-                        let foliage = foliagePalettes[(index * 5 + 2) % foliagePalettes.count]
-                        let scale = scaleFor(Int(count))
-                        if index % 2 == 0 {
-                            drawPine(ctx: ctx, base: base, tileW: l.tileW, scale: scale, foliage: foliage)
-                        } else {
-                            drawBroadleaf(ctx: ctx, base: base, tileW: l.tileW, scale: scale, foliage: foliage, index: index)
-                        }
-                    }
+                // One entry = one plant per tile (tree for panic, flower bed for
+                // journal — the category is baked into the plantType sprite).
+                // Suppress the just-planted plant's static sprite while the growth
+                // Lottie plays (the overlay draws it), then it crossfades in.
+                let suppressForGrowth = (index == newlyPlantedTileIndex) && isGrowing && lottieOpacity >= 1
+                if !suppressForGrowth {
+                    drawStaticPlant(ctx: ctx, base: base, l: l, plantType: plantType)
                 }
             }
         }

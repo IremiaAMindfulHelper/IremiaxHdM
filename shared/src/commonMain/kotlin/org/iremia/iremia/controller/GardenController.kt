@@ -46,9 +46,10 @@ data class GardenState(
  * deletion of their source journal entry. [NoteRepository] is still observed to
  * resolve a tapped plant back to its originating entry (when it has one).
  *
- * Planting goes through [plant]/[plantAsync] — the single entry point every
- * feature uses (journal entries today, breathing exercises later).
+ * Planting is owned by the notes flow (NotesController), which knows the entry's
+ * type and date; this controller only reads and navigates the resulting garden.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @ObjCName("GardenController", exact = true)
 class GardenController(
     private val plantRepo: GardenPlantRepository,
@@ -65,32 +66,44 @@ class GardenController(
     // The source-entry id behind each tile index, for entry resolution on tap.
     private var sourceEntryByTile: Map<Int, Long> = emptyMap()
 
+    // The displayed month, as a flow so the plant subscription switches with it.
+    private val displayedMonth = MutableStateFlow(currentYearMonth())
+
+    // Remembers plant ids across emissions so a growth animation only plays for a
+    // genuinely new plant, per displayed month.
+    private var previousIds: Set<Long>? = null
+
     init {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        _state.value = _state.value.copy(year = now.year, month = now.monthNumber)
+        val (year, month) = displayedMonth.value
+        _state.value = _state.value.copy(
+            year = year,
+            month = month,
+            gridConfig = gridConfigFor(year, month),
+        )
 
         // Keep the note lookup fresh so tapping a plant can open its entry.
         scope.launch {
             noteRepo.observeAll().collect { notes ->
                 notesById = notes.associateBy { it.id }
-                // Refresh the resolved entry for the current selection.
                 _state.value = _state.value.copy(
                     selectedEntry = entryForTile(_state.value.selectedTile),
                 )
             }
         }
 
-        // Tiles come from the persistent garden, not from live journal entries.
+        // Re-subscribe to the persistent garden whenever the displayed month
+        // changes, so only that month's plants are shown (plan 6.3).
         scope.launch {
-            var previousIds: Set<Long>? = null
-            plantRepo.observeAll().collect { plants ->
-                val tiles = buildTiles(plants)
-                sourceEntryByTile = plants
-                    .filter { it.sourceEntryId != null }
-                    .associate { it.position to it.sourceEntryId!! }
+            displayedMonth.flatMapLatest { (year, month) ->
+                previousIds = null // fresh month: don't animate its existing plants
+                // Pair each emission with its month so the tile grid is always sized
+                // for the month the plants belong to (no dependency on state timing).
+                plantRepo.observeForMonth(year, month).map { plants -> Triple(year, month, plants) }
+            }.collect { (year, month, plants) ->
+                val config = gridConfigFor(year, month)
+                val tiles = buildTiles(plants, config)
+                sourceEntryByTile = buildSourceEntryMap(plants)
 
-                // A growth animation should only play for a genuinely new plant
-                // (not on first load, a recompose, or a removal).
                 val currentIds = plants.map { it.id }.toSet()
                 var newPlantedIndex: Int? = null
                 val previous = previousIds
@@ -103,9 +116,12 @@ class GardenController(
                 previousIds = currentIds
 
                 _state.value = _state.value.copy(
+                    year = year,
+                    month = month,
                     tiles = tiles,
                     totalPlants = plants.size,
                     isLoading = false,
+                    gridConfig = config,
                     newlyPlantedTileIndex = newPlantedIndex ?: _state.value.newlyPlantedTileIndex,
                     selectedEntry = entryForTile(_state.value.selectedTile),
                 )
@@ -113,21 +129,38 @@ class GardenController(
         }
     }
 
-    /** Map persisted plants onto a full grid of [GardenTile]s. */
-    private fun buildTiles(plants: List<GardenPlant>): List<GardenTile> {
-        val tiles = Array(gridConfig.totalTiles) { GardenTile(index = it) }
+    /** The grid config for a month: a fixed even 5x5 square. */
+    private fun gridConfigFor(year: Int, month: Int): GardenGridConfig = gridConfig
+
+    /**
+     * Map one month's plants onto the fixed grid. Each plant occupies one tile at
+     * its free-cell [GardenPlant.position]; one entry = one plant per tile.
+     */
+    private fun buildTiles(plants: List<GardenPlant>, config: GardenGridConfig): List<GardenTile> {
+        val total = config.totalTiles
+        val tiles = Array(total) { GardenTile(index = it) }
         for (plant in plants) {
             val pos = plant.position
-            if (pos in 0 until gridConfig.totalTiles) {
+            if (pos in 0 until total) {
                 tiles[pos] = GardenTile(
                     index = pos,
-                    entryCount = 1,
                     plantType = plant.plantType,
+                    category = plant.category,
                     entryId = plant.sourceEntryId,
+                    dayOfMonth = plant.dayOfMonth,
                 )
             }
         }
         return tiles.toList()
+    }
+
+    /** Source-entry id behind each occupied tile, for tap-to-open. */
+    private fun buildSourceEntryMap(plants: List<GardenPlant>): Map<Int, Long> {
+        val map = mutableMapOf<Int, Long>()
+        for (plant in plants) {
+            plant.sourceEntryId?.let { map[plant.position] = it }
+        }
+        return map
     }
 
     // ---- Actions (Android: call directly) ----
@@ -160,16 +193,22 @@ class GardenController(
         var newYear = current.year
         if (newMonth < 1) { newMonth = 12; newYear-- }
         if (newMonth > 12) { newMonth = 1; newYear++ }
-        _state.value = current.copy(year = newYear, month = newMonth, selectedTile = null, selectedEntry = null)
+        // Update the visible state immediately (month label + empty grid), then
+        // switch the plant subscription; the collector fills in this month's plants.
+        _state.value = current.copy(
+            year = newYear,
+            month = newMonth,
+            selectedTile = null,
+            selectedEntry = null,
+            newlyPlantedTileIndex = null,
+            gridConfig = gridConfigFor(newYear, newMonth),
+        )
+        displayedMonth.value = newYear to newMonth
     }
 
-    /**
-     * Plant a new item and persist it. This is the single planting entry point:
-     * journal entries pass their id as [sourceEntryId]; other actions pass null.
-     * The observed garden flow then triggers the growth animation for the new tile.
-     */
-    suspend fun plant(sourceEntryId: Long?) {
-        plantRepo.plant(sourceEntryId)
+    private fun currentYearMonth(): Pair<Int, Int> {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        return now.year to now.monthNumber
     }
 
     /** Clear the whole garden (Reset Garden button). */
@@ -210,15 +249,6 @@ class GardenController(
     fun navigateMonthAsync(delta: Int, onDone: (Throwable?) -> Unit) {
         navigateMonth(delta)
         onDone(null)
-    }
-
-    /** iOS: plant a new item (pass null for non-journal actions). */
-    fun plantAsync(sourceEntryId: Long?, onDone: (Throwable?) -> Unit) {
-        scope.launch {
-            runCatching { plant(sourceEntryId) }
-                .onFailure { onDone(it) }
-                .onSuccess { onDone(null) }
-        }
     }
 
     /** iOS: reset the garden. */

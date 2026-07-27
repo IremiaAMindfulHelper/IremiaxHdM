@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,6 +75,7 @@ import org.iremia.library.SharedRes
 fun GardenOverviewScreen(
     viewModel: GardenViewModel,
     onClose: () -> Unit,
+    onOpenEntry: (Long) -> Unit = {},
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsState()
@@ -80,6 +83,8 @@ fun GardenOverviewScreen(
     val days = state.tiles.map { it.entryCount }
 
     var showResetConfirm by remember { mutableStateOf(false) }
+    // Block 5: long-press the title to open the animation preview (dev tool).
+    var showAmbientPreview by remember { mutableStateOf(false) }
 
     // Pinch-to-zoom / pan state for the full garden view. Kept separate from the
     // planting zoom animation inside GardenScene.
@@ -106,7 +111,14 @@ fun GardenOverviewScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(localized(SharedRes.strings.garden_title).toString(context), style = IremiaText.H2, color = IremiaColors.Ink)
+                Text(
+                    localized(SharedRes.strings.garden_title).toString(context),
+                    style = IremiaText.H2,
+                    color = IremiaColors.Ink,
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures(onLongPress = { showAmbientPreview = true })
+                    },
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { showResetConfirm = true }) {
                         Icon(
@@ -148,9 +160,8 @@ fun GardenOverviewScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(IremiaShapes.Card)
-                    .background(IremiaColors.BlueHeader)
-                    .padding(IremiaSpacing.S1)
+                    // No card/box around the garden — it sits free on the screen so it
+                    // reads bigger and more immersive.
                     // Pinch to zoom and drag to pan the garden. Scale is clamped so
                     // the user can't lose the plot; pan resets to center at 1x.
                     .pointerInput(Unit) {
@@ -163,6 +174,24 @@ fun GardenOverviewScreen(
                                 panX = 0f
                                 panY = 0f
                             }
+                        }
+                    }
+                    // Swipe left/right to change month, but only at 1x so it does
+                    // not fight panning while zoomed in (plan 6.3).
+                    .pointerInput(Unit) {
+                        var dragTotal = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { dragTotal = 0f },
+                            onDragEnd = {
+                                if (zoomScale <= 1f) {
+                                    val threshold = size.width * 0.18f
+                                    if (dragTotal > threshold) viewModel.navigateMonth(-1)
+                                    else if (dragTotal < -threshold) viewModel.navigateMonth(1)
+                                }
+                            },
+                        ) { change, dragAmount ->
+                            change.consume()
+                            dragTotal += dragAmount
                         }
                     },
             ) {
@@ -188,12 +217,20 @@ fun GardenOverviewScreen(
 
             Spacer(Modifier.height(IremiaSpacing.S5))
 
-            val info = state.selectedTile?.let { tile ->
-                val count = days.getOrElse(tile) { 0 }
+            val info = state.selectedTile?.let { tileIndex ->
+                val tile = state.tiles.getOrNull(tileIndex)
+                val dayLabel = localized(SharedRes.strings.garden_day_label).toString(context)
+                    .replace("%1\$d", (tile?.dayOfMonth ?: tileIndex + 1).toString())
+                val count = tile?.entryCount ?: 0
                 if (count == 0) {
-                    localized(SharedRes.strings.garden_no_entry).toString(context)
+                    "$dayLabel · " + localized(SharedRes.strings.garden_no_entry).toString(context)
                 } else {
-                    localized(SharedRes.strings.garden_entry_singular).toString(context).replace("%1\$d", "1")
+                    val entries = if (count == 1) {
+                        localized(SharedRes.strings.garden_entry_singular).toString(context)
+                    } else {
+                        localized(SharedRes.strings.garden_entry_plural).toString(context)
+                    }.replace("%1\$d", count.toString())
+                    "$dayLabel · $entries"
                 }
             } ?: localized(SharedRes.strings.garden_month_trees).toString(context).replace("%1\$d", state.totalPlants.toString())
 
@@ -241,8 +278,17 @@ fun GardenOverviewScreen(
             GardenEntrySheet(
                 entry = entry,
                 onDismiss = { viewModel.selectTile(null) },
+                onOpenEntry = {
+                    viewModel.selectTile(null)
+                    onOpenEntry(entry.id)
+                },
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
+        }
+
+        // Block 5: animation preview mode (opened by long-pressing the title).
+        if (showAmbientPreview) {
+            AmbientPreviewScreen(onClose = { showAmbientPreview = false })
         }
     }
 }
@@ -256,6 +302,7 @@ fun GardenOverviewScreen(
 private fun GardenEntrySheet(
     entry: Note,
     onDismiss: () -> Unit,
+    onOpenEntry: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -315,6 +362,29 @@ private fun GardenEntrySheet(
                     .heightIn(max = 280.dp)
                     .verticalScroll(rememberScrollState()),
             )
+
+            // Dezenter "Eintrag öffnen →"-Button (Block 2.2): text + arrow, no border.
+            Spacer(Modifier.height(IremiaSpacing.S4))
+            Row(
+                modifier = Modifier
+                    .clip(IremiaShapes.Pill)
+                    .clickable(onClick = onOpenEntry)
+                    .padding(vertical = IremiaSpacing.S1),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = localized(SharedRes.strings.garden_open_entry).toString(context),
+                    style = IremiaText.CardTitle,
+                    color = IremiaColors.Teal700,
+                )
+                Spacer(Modifier.size(6.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = IremiaColors.Teal700,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }

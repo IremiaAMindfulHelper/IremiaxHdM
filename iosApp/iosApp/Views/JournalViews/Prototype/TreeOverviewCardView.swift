@@ -16,12 +16,12 @@ struct TreeOverviewCardView: View {
         IremiaCard {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text(PS.tree_overview_title)
+                    Text(Strings.tree_overview_title)
                         .font(IremiaText.eyebrow)
                         .foregroundColor(IremiaColors.teal700)
                         .tracking(0.06 * 12)
                     Spacer()
-                    Text(PS.tree_overview_period)
+                    Text(Strings.tree_overview_period)
                         .font(IremiaText.caption)
                         .foregroundColor(IremiaColors.gray500)
                 }
@@ -32,7 +32,7 @@ struct TreeOverviewCardView: View {
                     Text("\(treesPlanted)")
                         .font(IremiaText.numXl)
                         .foregroundColor(IremiaColors.ink)
-                    Text(PS.tree_overview_planted)
+                    Text(Strings.tree_overview_planted)
                         .font(IremiaText.body)
                         .foregroundColor(IremiaColors.gray600)
                         .padding(.bottom, 6)
@@ -52,7 +52,7 @@ struct TreeOverviewCardView: View {
                     Image(systemName: "leaf.fill")
                         .font(.system(size: 16))
                         .foregroundColor(IremiaColors.garden500)
-                    Text(PS.tree_overview_encouragement)
+                    Text(Strings.tree_overview_encouragement)
                         .font(IremiaText.caption)
                         .foregroundColor(IremiaColors.gray500)
                 }

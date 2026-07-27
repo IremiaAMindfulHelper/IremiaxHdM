@@ -3,80 +3,71 @@ package org.iremia.iremia.garden
 import org.iremia.iremia.domain.garden.GardenRandomizer
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.assertNull
 
 /**
- * Locks in the placement guarantees the garden relies on: deterministic,
- * append-only positions that never shift when a new entry is added.
+ * Locks in the day-indexed garden's sprite selection and month-length rules.
+ * Placement itself is now by calendar day (position = dayOfMonth - 1), so these
+ * tests cover the parts the randomizer still owns: deterministic sprites and the
+ * tree/flower split.
  */
 class GardenRandomizerTest {
 
     @Test
-    fun placement_is_order_independent() {
-        val ids = listOf(1L, 2L, 3L, 4L, 5L)
-        val ascending = GardenRandomizer.buildGrid(ids, gridSize = 25)
-        val descending = GardenRandomizer.buildGrid(ids.reversed(), gridSize = 25)
-
-        // The journal lists notes newest-first; passing either order must yield
-        // the exact same grid so positions are stable across recomposes.
-        assertEquals(ascending, descending)
+    fun tree_sprite_is_deterministic() {
+        assertEquals(
+            GardenRandomizer.treeSprite(42L),
+            GardenRandomizer.treeSprite(42L),
+            "same seed must yield the same tree sprite",
+        )
     }
 
     @Test
-    fun adding_an_entry_never_moves_existing_plants() {
-        val before = GardenRandomizer.buildGrid(listOf(3L, 2L, 1L), gridSize = 25)
-        val after = GardenRandomizer.buildGrid(listOf(4L, 3L, 2L, 1L), gridSize = 25)
+    fun flower_sprite_is_deterministic() {
+        assertEquals(
+            GardenRandomizer.flowerSprite(42L),
+            GardenRandomizer.flowerSprite(42L),
+            "same seed must yield the same flower sprite",
+        )
+    }
 
-        // Every tile that already held a plant keeps the same plant in the same spot.
-        for (tile in before.filter { it.entryId != null }) {
-            val matching = after[tile.index]
-            assertEquals(tile.entryId, matching.entryId, "entry moved at index ${tile.index}")
-            assertEquals(tile.plantType, matching.plantType)
+    @Test
+    fun tree_sprite_is_always_a_tree() {
+        for (seed in 1L..200L) {
+            assertTrue(GardenRandomizer.treeSprite(seed).isTree, "seed $seed produced a non-tree")
         }
-
-        // The new entry occupies exactly one previously-free tile.
-        val newlyOccupied = after.filter { it.entryId != null } - before.filter { it.entryId != null }.toSet()
-        assertEquals(1, newlyOccupied.size)
-        assertEquals(4L, newlyOccupied.single().entryId)
     }
 
     @Test
-    fun each_entry_is_placed_exactly_once() {
-        val ids = (1L..10L).toList()
-        val grid = GardenRandomizer.buildGrid(ids, gridSize = 25)
-
-        val placedIds = grid.mapNotNull { it.entryId }
-        assertEquals(ids.toSet(), placedIds.toSet())
-        assertEquals(ids.size, placedIds.size, "an entry was placed more than once")
+    fun flower_sprite_is_always_a_flower() {
+        for (seed in 1L..200L) {
+            assertTrue(!GardenRandomizer.flowerSprite(seed).isTree, "seed $seed produced a non-flower")
+        }
     }
 
     @Test
-    fun full_grid_does_not_overflow() {
-        val ids = (1L..40L).toList()
-        val grid = GardenRandomizer.buildGrid(ids, gridSize = 25)
-
-        assertEquals(25, grid.size)
-        assertEquals(25, grid.count { it.entryId != null })
+    fun assign_position_is_deterministic_and_free() {
+        val occupied = setOf(0, 1, 2)
+        val a = GardenRandomizer.assignPosition(seed = 42L, occupiedPositions = occupied, gridSize = 25)
+        val b = GardenRandomizer.assignPosition(seed = 42L, occupiedPositions = occupied, gridSize = 25)
+        assertEquals(a, b, "same seed must yield the same position")
+        assertTrue(a !in occupied, "must pick a free cell")
+        assertTrue(a in 0 until 25, "must be within the grid")
     }
 
     @Test
-    fun tile_links_back_to_its_entry() {
-        val grid = GardenRandomizer.buildGrid(listOf(42L), gridSize = 25)
-        val planted = grid.firstOrNull { it.entryId != null }
-        assertNotNull(planted)
-        assertEquals(42L, planted.entryId)
-        assertNotNull(planted.plantType)
-        assertTrue(grid.count { it.entryId == null } == 24)
-        assertNull(grid.first { it.entryId == null }.plantType)
+    fun assign_position_returns_minus_one_when_full() {
+        val full = (0 until 25).toSet()
+        assertEquals(-1, GardenRandomizer.assignPosition(seed = 1L, occupiedPositions = full, gridSize = 25))
     }
 
     @Test
-    fun flower_crates_are_a_small_minority() {
-        // Trees dominate the garden; flower beds are a small minority (~15%).
-        val sample = (1L..1000L).map { GardenRandomizer.assignPlantType(it) }
-        val flowerShare = sample.count { !it.isTree }.toDouble() / sample.size
-        assertTrue(flowerShare in 0.08..0.22, "flower share was $flowerShare, expected ~0.15")
+    fun days_in_month_covers_lengths_and_leap_years() {
+        assertEquals(31, GardenRandomizer.daysInMonth(2026, 1))
+        assertEquals(30, GardenRandomizer.daysInMonth(2026, 4))
+        assertEquals(28, GardenRandomizer.daysInMonth(2026, 2))
+        assertEquals(29, GardenRandomizer.daysInMonth(2024, 2)) // leap year
+        assertEquals(28, GardenRandomizer.daysInMonth(2100, 2)) // century, not leap
+        assertEquals(29, GardenRandomizer.daysInMonth(2000, 2)) // 400-divisible, leap
     }
 }

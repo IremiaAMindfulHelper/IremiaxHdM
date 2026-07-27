@@ -67,12 +67,6 @@ class GardenViewModel(
     /** Clear all planted items (Reset Garden). */
     fun resetGarden() = viewModelScope.launch { gardenController.resetGarden() }
 
-    /**
-     * Plants a garden item not tied to a journal entry — e.g. after finishing a
-     * breathing exercise. The single entry point other features can call.
-     */
-    fun plantFromAction() = viewModelScope.launch { gardenController.plant(sourceEntryId = null) }
-
     // Cycle through the animations in order (deterministic for demos) instead of
     // picking randomly, so each surprise is a different, predictable next one.
     private var ambientCycleIndex = 0

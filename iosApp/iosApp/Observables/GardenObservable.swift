@@ -147,12 +147,6 @@ final class GardenObservable: ObservableObject {
         controller.resetGardenAsync { _ in }
     }
 
-    /// Plants a garden item not tied to a journal entry — e.g. after finishing a
-    /// breathing exercise. The single entry point other features can call.
-    func plantFromAction() {
-        controller.plantAsync(sourceEntryId: nil) { _ in }
-    }
-
     /// Clears the growth-animation marker once the planting animation has played.
     func clearNewlyPlanted() {
         controller.clearNewlyPlanted()

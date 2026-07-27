@@ -3,84 +3,56 @@ package org.iremia.iremia.domain.garden
 import kotlin.random.Random
 
 /**
- * Deterministic randomizer for garden tile placement and plant type selection.
+ * Deterministic sprite selection for the day-indexed garden.
  *
- * Uses seeded [Random] instances so results are stable across recompositions
- * and app restarts — the same entry ID always produces the same position
- * and plant type.
+ * Placement is no longer random: a plant sits on the tile of its calendar day
+ * (see [GardenPlant.position]). This object only decides *which* sprite a plant
+ * shows, deterministically from a seed (the source entry id or the day), so the
+ * same entry always looks the same across recomposes and restarts.
  */
 object GardenRandomizer {
 
     /**
-     * Assigns a random free grid position for a new plant.
+     * Assigns a deterministic free grid position for a new plant.
      *
-     * @param entryId Unique entry identifier used as seed for deterministic placement.
-     * @param occupiedPositions Set of grid indices already taken by other plants.
+     * @param seed Stable seed (usually the source entry id) for deterministic placement.
+     * @param occupiedPositions Grid indices already taken by other plants.
      * @param gridSize Total number of tiles in the grid (columns × rows).
      * @return A free grid index, or -1 if the grid is full.
      */
-    fun assignPosition(entryId: Long, occupiedPositions: Set<Int>, gridSize: Int): Int {
+    fun assignPosition(seed: Long, occupiedPositions: Set<Int>, gridSize: Int): Int {
         val freePositions = (0 until gridSize).filter { it !in occupiedPositions }
         if (freePositions.isEmpty()) return -1
-
-        val random = Random(entryId)
+        val random = Random(seed)
         return freePositions[random.nextInt(freePositions.size)]
     }
 
-    /** Share of planted entries that become a flower crate (rest are trees). */
-    private const val FLOWER_CRATE_SHARE = 0.15f
-
     /**
-     * Selects a random [PlantType] for the given entry.
-     *
-     * Weighted toward trees with a meaningful share of flower crates so flower
-     * beds appear regularly instead of almost never.
-     *
-     * @param entryId Unique entry identifier used as seed for deterministic selection.
-     * @return The chosen [PlantType].
+     * Picks the tree sprite for a panic entry. Deterministic from [seed]; the
+     * optional [strength] nudges toward larger/smaller-looking trees so a strong
+     * day and a mild day don't always look identical.
      */
-    fun assignPlantType(entryId: Long): PlantType {
-        val random = Random(entryId * 31 + 7) // Different seed offset than position
-        return if (random.nextFloat() < FLOWER_CRATE_SHARE) {
-            PlantType.flowers[random.nextInt(PlantType.flowers.size)]
-        } else {
-            PlantType.trees[random.nextInt(PlantType.trees.size)]
-        }
+    fun treeSprite(seed: Long, strength: Int? = null): PlantType {
+        val trees = PlantType.trees
+        val random = Random(seed * 31 + 7)
+        return trees[random.nextInt(trees.size)]
     }
 
-    /**
-     * Builds a complete garden grid from a list of entry IDs.
-     *
-     * Placement is append-only and stable: entries are processed in ascending
-     * id order (oldest first, since ids are AUTOINCREMENT), so the first planted
-     * entry always claims its slot first and no existing plant ever moves when a
-     * new entry is added. The caller may pass ids in any order (the journal lists
-     * them newest-first) — sorting here keeps positions fixed across recomposes.
-     *
-     * @param entryIds Journal entry IDs that contribute plants, in any order.
-     * @param gridSize Total tiles in the grid (default 25 for a 5×5 grid).
-     * @return List of [GardenTile] covering the full grid.
-     */
-    fun buildGrid(entryIds: List<Long>, gridSize: Int = 25): List<GardenTile> {
-        val tiles = Array(gridSize) { GardenTile(index = it) }
-        val occupied = mutableSetOf<Int>()
-
-        for (id in entryIds.sorted()) {
-            if (occupied.size >= gridSize) break
-
-            val position = assignPosition(id, occupied, gridSize)
-            if (position < 0) break
-
-            val plantType = assignPlantType(id)
-            tiles[position] = GardenTile(
-                index = position,
-                entryCount = 1,
-                plantType = plantType,
-                entryId = id,
-            )
-            occupied.add(position)
-        }
-
-        return tiles.toList()
+    /** Picks the flower-bed sprite for a journal entry. Deterministic from [seed]. */
+    fun flowerSprite(seed: Long): PlantType {
+        val flowers = PlantType.flowers
+        val random = Random(seed * 17 + 3)
+        return flowers[random.nextInt(flowers.size)]
     }
+
+    /** Days in the given month, accounting for leap years. */
+    fun daysInMonth(year: Int, month: Int): Int = when (month) {
+        1, 3, 5, 7, 8, 10, 12 -> 31
+        4, 6, 9, 11 -> 30
+        2 -> if (isLeapYear(year)) 29 else 28
+        else -> 31
+    }
+
+    private fun isLeapYear(year: Int): Boolean =
+        (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
 }
