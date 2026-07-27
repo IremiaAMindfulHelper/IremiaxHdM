@@ -334,55 +334,63 @@ struct EpisodeSavedScreenView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Balances the block vertically instead of letting it cling to the top,
-            // and keeps the tree clear of the status bar / Dynamic Island.
-            Spacer(minLength: IremiaSpacing.s3)
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 0) {
+                // Balances the block vertically instead of letting it cling to the top,
+                // and keeps the tree clear of the status bar / Dynamic Island.
+                Spacer(minLength: IremiaSpacing.s3)
 
-            // Growth animation in the normal layout flow (its own row), so it sits
-            // cleanly above the title with real spacing instead of overlapping it.
-            GrowthLottieView(asset: .treeGrow, speed: 6)
-                .frame(width: treeSize, height: treeSize)
+                // Growth animation in the normal layout flow (its own row), so it sits
+                // cleanly above the title with real spacing instead of overlapping it.
+                GrowthLottieView(asset: .treeGrow, speed: 6)
+                    .frame(width: treeSize, height: treeSize)
 
-            Spacer().frame(height: IremiaSpacing.s4)
+                // --- Top section: all texts consistently centered, room to breathe.
+                Spacer().frame(height: IremiaSpacing.s5)
 
-            Text(Strings.episode_saved_title)
-                .font(IremiaText.h1)
-                .foregroundColor(IremiaColors.ink)
+                Text(Strings.episode_saved_title)
+                    .font(IremiaText.h1)
+                    .foregroundColor(IremiaColors.ink)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
 
-            Spacer().frame(height: IremiaSpacing.s2)
+                Spacer().frame(height: IremiaSpacing.s3)
 
-            Text(Strings.episode_saved_body)
-                .font(IremiaText.body)
-                .foregroundColor(IremiaColors.gray500)
-                .multilineTextAlignment(.center)
+                Text(Strings.episode_saved_body)
+                    .font(IremiaText.body)
+                    .foregroundColor(IremiaColors.gray500)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
 
-            // Impulse text: a gentle, non-directive suggestion matched to the entry.
-            Spacer().frame(height: IremiaSpacing.s3)
-            Text(impulseText)
-                .font(IremiaText.body)
-                .foregroundColor(IremiaColors.teal700)
-                .multilineTextAlignment(.center)
+                Spacer().frame(height: IremiaSpacing.s4)
 
-            Spacer().frame(height: IremiaSpacing.s5)
+                // Impulse text: a gentle, non-directive suggestion matched to the entry.
+                Text(impulseText)
+                    .font(IremiaText.body)
+                    .foregroundColor(IremiaColors.teal700)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
 
-            // Garden badge (tree / flower bed / already-planted)
-            HStack(spacing: 8) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 18))
-                    .foregroundColor(IremiaColors.garden700)
-                Text(badgeText)
-                    .font(IremiaText.caption)
-                    .foregroundColor(IremiaColors.garden900)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(Capsule().fill(IremiaColors.garden100))
+                Spacer().frame(height: IremiaSpacing.s5)
 
-            Spacer().frame(height: IremiaSpacing.s6)
+                // Garden badge (tree / flower bed / garden full)
+                HStack(spacing: 8) {
+                    Image(systemName: "leaf.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(IremiaColors.garden700)
+                    Text(badgeText)
+                        .font(IremiaText.caption)
+                        .foregroundColor(IremiaColors.garden900)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Capsule().fill(IremiaColors.garden100))
 
-            // Progress card
-            IremiaCard {
+                Spacer().frame(height: IremiaSpacing.s6)
+
+                // --- Middle section: the progress tracker as a quiet, clearly
+                // bounded card (subtle gray surface + fine border); content stays
+                // left-aligned.
                 VStack(alignment: .leading, spacing: 0) {
                     Text(Strings.episode_saved_dataset_title)
                         .font(IremiaText.eyebrow)
@@ -419,26 +427,46 @@ struct EpisodeSavedScreenView: View {
                         .font(IremiaText.caption)
                         .foregroundColor(IremiaColors.gray400)
                 }
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: IremiaShapes.card, style: .continuous)
+                        .fill(IremiaColors.gray50)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: IremiaShapes.card, style: .continuous)
+                        .stroke(IremiaColors.gray200, lineWidth: 1)
+                )
+
+                // --- Bottom section: one primary action, one quiet text link.
+                Spacer(minLength: IremiaSpacing.s5)
+
+                PrimaryButton(
+                    text: Strings.episode_saved_view_garden,
+                    action: onViewGarden,
+                    trailingIcon: "leaf.fill"
+                )
+
+                Spacer().frame(height: IremiaSpacing.s3)
+
+                SecondaryTextButton(text: Strings.episode_saved_insights, action: onInsights)
             }
+            .padding(.horizontal, IremiaSpacing.screenGutter)
+            .padding(.vertical, IremiaSpacing.s5)
 
-            Spacer(minLength: IremiaSpacing.s5)
-
-            PrimaryButton(
-                text: Strings.episode_saved_view_garden,
-                action: onViewGarden,
-                trailingIcon: "leaf.fill"
-            )
-
-            Spacer().frame(height: IremiaSpacing.s1)
-
-            SecondaryTextButton(text: Strings.episode_saved_insights, action: onInsights)
-
-            Spacer().frame(height: IremiaSpacing.s1)
-
-            SecondaryTextButton(text: Strings.episode_saved_home, action: onHome)
+            // Close ("back to home") as an X in the top-right corner instead of a
+            // third stacked button, decluttering the action area.
+            Button(action: onHome) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(IremiaColors.ink900)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Strings.nav_close)
+            .padding(.trailing, IremiaSpacing.s2)
         }
-        .padding(.horizontal, IremiaSpacing.screenGutter)
-        .padding(.vertical, IremiaSpacing.s5)
     }
 }
 

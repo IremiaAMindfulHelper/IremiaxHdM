@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
@@ -64,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.iremia.iremia.ui.components.ChoiceChip
@@ -568,52 +570,72 @@ fun EpisodeSavedScreen(
         else -> localized(SharedRes.strings.saved_impulse_panic_low).toString(context)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .padding(horizontal = IremiaSpacing.ScreenGutter)
-            .padding(vertical = IremiaSpacing.S5),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(Modifier.height(IremiaSpacing.S6))
-        // A large growth animation so the user sees growth after saving. It plays
-        // even when no new plant was set (plan 6.2), acknowledging the entry.
-        EpisodeGrowthAnimation(modifier = Modifier.size(240.dp))
-        Spacer(Modifier.height(IremiaSpacing.S4))
-        Text(localized(SharedRes.strings.episode_saved_title).toString(context), style = IremiaText.H1, color = IremiaColors.Ink)
-        Spacer(Modifier.height(IremiaSpacing.S2))
-        Text(
-            localized(SharedRes.strings.episode_saved_body).toString(context),
-            style = IremiaText.Body,
-            color = IremiaColors.Gray500,
-        )
-
-        // Impulse text: a gentle, non-directive suggestion matched to the entry.
-        Spacer(Modifier.height(IremiaSpacing.S3))
-        Text(
-            impulseText,
-            style = IremiaText.Body,
-            color = IremiaColors.Teal700,
-        )
-
-        Spacer(Modifier.height(IremiaSpacing.S5))
-        Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .clip(IremiaShapes.Pill)
-                .background(IremiaColors.Garden100)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = IremiaSpacing.ScreenGutter)
+                .padding(vertical = IremiaSpacing.S5),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Icon(Icons.Filled.Eco, contentDescription = null, tint = IremiaColors.Garden700, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.size(8.dp))
-            Text(badgeText, style = IremiaText.Caption, color = IremiaColors.Garden900)
-        }
+            Spacer(Modifier.height(IremiaSpacing.S6))
+            // A large growth animation so the user sees growth after saving. It plays
+            // even when no new plant was set (plan 6.2), acknowledging the entry.
+            EpisodeGrowthAnimation(modifier = Modifier.size(240.dp))
 
-        Spacer(Modifier.height(IremiaSpacing.S6))
-        IremiaCard(modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.fillMaxWidth()) {
+            // --- Top section: all texts consistently centered, with room to breathe.
+            Spacer(Modifier.height(IremiaSpacing.S5))
+            Text(
+                localized(SharedRes.strings.episode_saved_title).toString(context),
+                style = IremiaText.H1,
+                color = IremiaColors.Ink,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(IremiaSpacing.S3))
+            Text(
+                localized(SharedRes.strings.episode_saved_body).toString(context),
+                style = IremiaText.Body,
+                color = IremiaColors.Gray500,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(IremiaSpacing.S4))
+            // Impulse text: a gentle, non-directive suggestion matched to the entry.
+            Text(
+                impulseText,
+                style = IremiaText.Body,
+                color = IremiaColors.Teal700,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(Modifier.height(IremiaSpacing.S5))
+            Row(
+                modifier = Modifier
+                    .clip(IremiaShapes.Pill)
+                    .background(IremiaColors.Garden100)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.Eco, contentDescription = null, tint = IremiaColors.Garden700, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(8.dp))
+                Text(badgeText, style = IremiaText.Caption, color = IremiaColors.Garden900)
+            }
+
+            // --- Middle section: the progress tracker as a quiet, clearly bounded
+            // card (subtle gray surface + fine border); its content stays left-aligned.
+            Spacer(Modifier.height(IremiaSpacing.S6))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(IremiaShapes.Card)
+                    .background(IremiaColors.Gray50)
+                    .border(1.dp, IremiaColors.Gray200, IremiaShapes.Card)
+                    .padding(20.dp),
+            ) {
                 Text(localized(SharedRes.strings.episode_saved_dataset_title).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
                 Spacer(Modifier.height(IremiaSpacing.S2))
                 Row(verticalAlignment = Alignment.Bottom) {
@@ -640,14 +662,29 @@ fun EpisodeSavedScreen(
                 Spacer(Modifier.height(IremiaSpacing.S1))
                 Text("$entryCount / $goal", style = IremiaText.Caption, color = IremiaColors.Gray400)
             }
+
+            // --- Bottom section: one primary action, one quiet text link.
+            Spacer(Modifier.weight(1f))
+            PrimaryButton(localized(SharedRes.strings.episode_saved_view_garden).toString(context), onViewGarden, trailingIcon = Icons.Filled.Eco)
+            Spacer(Modifier.height(IremiaSpacing.S3))
+            SecondaryTextButton(localized(SharedRes.strings.episode_saved_insights).toString(context), onInsights)
         }
 
-        Spacer(Modifier.weight(1f))
-        PrimaryButton(localized(SharedRes.strings.episode_saved_view_garden).toString(context), onViewGarden, trailingIcon = Icons.Filled.Eco)
-        Spacer(Modifier.height(IremiaSpacing.S1))
-        SecondaryTextButton(localized(SharedRes.strings.episode_saved_insights).toString(context), onInsights)
-        Spacer(Modifier.height(IremiaSpacing.S1))
-        SecondaryTextButton(localized(SharedRes.strings.episode_saved_home).toString(context), onHome)
+        // Close ("back to home") as an X in the top-right corner instead of a third
+        // stacked button, decluttering the action area.
+        IconButton(
+            onClick = onHome,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(IremiaSpacing.S2),
+        ) {
+            Icon(
+                Icons.Filled.Close,
+                contentDescription = localized(SharedRes.strings.nav_close).toString(context),
+                tint = IremiaColors.Ink900,
+            )
+        }
     }
 }
 
