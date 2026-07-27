@@ -11,13 +11,14 @@ import shared
 struct JournalPrototypeScreen: View {
     /// Shared notes state, owned by MainView so FAB + journal use one instance.
     @ObservedObject var notesObservable: NotesObservable
+    /// Shared garden state, owned by MainView so home + journal use one instance.
+    @ObservedObject var gardenObservable: GardenObservable
     /// Opens the capture flow hosted at the shell level.
     var openCaptureFlow: () -> Void = {}
     /// Set true by MainView (e.g. "view garden" from the capture flow) to open the
     /// garden; this screen resets it after opening.
     @Binding var openGardenSignal: Bool
 
-    @StateObject private var gardenObservable = GardenObservable()
     @State private var selectedDate = Date()
     @State private var showGarden = false
     @State private var detailNote: NoteUI?

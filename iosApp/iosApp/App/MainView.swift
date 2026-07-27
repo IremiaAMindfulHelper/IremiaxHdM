@@ -44,6 +44,8 @@ struct MainView: View {
     // Shared notes state + capture flow, hosted at the shell so the "+" FAB works
     // on every tab and the Journal tab observes the same controller instance.
     @StateObject private var notesObservable = NotesObservable()
+    // Shared garden state, so the home screen shows the same live garden preview.
+    @StateObject private var gardenObservable = GardenObservable()
     @State private var showCaptureFlow = false
     @State private var openGardenSignal = false
 
@@ -58,7 +60,10 @@ struct MainView: View {
                 switch selectedTab {
                 case .start:
                     NavigationStack {
-                        InsightHomeView(onOpenJournal: { selectedTab = .journal })
+                        InsightHomeView(
+                            garden: gardenObservable,
+                            onOpenJournal: { selectedTab = .journal }
+                        )
                     }
 
                 case .training:
@@ -74,6 +79,7 @@ struct MainView: View {
                     NavigationStack {
                         JournalPrototypeScreen(
                             notesObservable: notesObservable,
+                            gardenObservable: gardenObservable,
                             openCaptureFlow: { openCaptureFlow() },
                             openGardenSignal: $openGardenSignal
                         )

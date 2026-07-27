@@ -208,9 +208,6 @@
     <string name="insight_headline_neutral_high">Auch schwere Tage gehören dazu. Dass du sie festhältst, ist schon ein Schritt.</string>
     <string name="insight_headline_neutral_medium">Gerade ist einiges los bei dir. Sei geduldig mit dir.</string>
     <string name="insight_headline_neutral_low">Du musst heute nichts leisten. Dass du hier bist, reicht.</string>
-
-    <!-- Block 4: label connecting the motivation text to the user's last entry -->
-    <string name="insight_for_you_label">Für dich, nach deinem letzten Eintrag</string>
     <string name="insight_fact_fewer_attacks">Weniger Panikattacken</string>
     <string name="insight_fact_steady_attacks">Eine beständige Phase</string>
     <string name="insight_fact_vs_prev_30">als vor 30 Tagen</string>

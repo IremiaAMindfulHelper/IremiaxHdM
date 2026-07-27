@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.iremia.iremia.bridge.SharedFactory
 import org.iremia.iremia.db.DriverFactory
+import org.iremia.iremia.ui.garden.GardenViewModel
 import org.iremia.iremia.ui.home.HomeScreen
 import org.iremia.iremia.ui.home.HomeViewModel
 import org.iremia.iremia.ui.journal.JournalScreen
@@ -62,8 +63,15 @@ fun MainScreen() {
             initializer { JournalViewModel(SharedFactory.createNotesController(driverFactory)) }
         }
     )
+    // Single garden VM shared by the Journal tab and the home screen's live preview.
+    val gardenViewModel: GardenViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { GardenViewModel(SharedFactory.createGardenController(driverFactory)) }
+        }
+    )
 
     val homeState by homeViewModel.state.collectAsState()
+    val gardenState by gardenViewModel.state.collectAsState()
 
     // Capture-flow + garden coordination state, hoisted to the shell.
     var showCaptureFlow by rememberSaveable { mutableStateOf(false) }
@@ -100,11 +108,15 @@ fun MainScreen() {
                 MainTab.Start -> HomeScreen(
                     modifier = contentModifier,
                     insight = homeState.insight,
+                    gardenTiles = gardenState.tiles,
+                    gardenColumns = gardenState.gridConfig.columns,
+                    gardenRows = gardenState.gridConfig.rows,
                     onOpenJournal = { selectedTab = MainTab.Journal },
                 )
                 MainTab.Training -> PlaceholderScreen(MainTab.Training.labelRes, contentModifier)
                 MainTab.Journal -> JournalScreen(
                     viewModel = notesViewModel,
+                    gardenViewModel = gardenViewModel,
                     modifier = contentModifier,
                     openCaptureFlow = { openCaptureFlow() },
                     openGardenSignal = openGardenSignal,

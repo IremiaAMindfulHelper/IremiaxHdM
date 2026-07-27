@@ -209,9 +209,6 @@
     <string name="insight_headline_neutral_high">Hard days are part of it too. Holding onto them is already a step.</string>
     <string name="insight_headline_neutral_medium">A lot is going on for you right now. Be patient with yourself.</string>
     <string name="insight_headline_neutral_low">You do not have to achieve anything today. Being here is enough.</string>
-
-    <!-- Block 4: label connecting the motivation text to the user's last entry -->
-    <string name="insight_for_you_label">For you, after your last entry</string>
     <string name="insight_fact_fewer_attacks">Fewer panic attacks</string>
     <string name="insight_fact_steady_attacks">A steady stretch</string>
     <string name="insight_fact_vs_prev_30">than 30 days ago</string>

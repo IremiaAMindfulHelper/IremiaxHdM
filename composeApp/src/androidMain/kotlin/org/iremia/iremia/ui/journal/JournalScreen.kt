@@ -77,6 +77,8 @@ private val LocalDateSaver: Saver<LocalDate, Any> = listSaver(
 @Composable
 fun JournalScreen(
     viewModel: JournalViewModel,
+    // Hoisted to MainScreen so the home screen shows the same live garden preview.
+    gardenViewModel: GardenViewModel,
     modifier: Modifier = Modifier,
     openCaptureFlow: () -> Unit = {},
     // Set true by MainScreen (e.g. after "view garden" from the capture flow) to
@@ -85,18 +87,6 @@ fun JournalScreen(
     onGardenShown: () -> Unit = {},
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-
-    // Wire up the garden ViewModel with the SharedFactory (notes VM is hoisted).
-    val driverFactory = remember { DriverFactory(context) }
-
-    val gardenViewModel: GardenViewModel = viewModel(
-        factory = viewModelFactory {
-            initializer {
-                val gardenController = SharedFactory.createGardenController(driverFactory)
-                GardenViewModel(gardenController)
-            }
-        }
-    )
 
     val state by viewModel.state.collectAsState()
     val gardenState by gardenViewModel.state.collectAsState()

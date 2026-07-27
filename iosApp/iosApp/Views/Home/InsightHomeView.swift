@@ -31,6 +31,9 @@ struct InsightHomeView: View {
     /// Drives the blue insight card from the shared motivation algorithm.
     @StateObject private var motivation = MotivationObservable()
 
+    /// Live garden state (owned by MainView) for the real garden preview.
+    @ObservedObject var garden: GardenObservable
+
     /// Navigates to the Journal tab, which hosts the capture flow and garden.
     var onOpenJournal: () -> Void = {}
 
@@ -72,16 +75,22 @@ struct InsightHomeView: View {
         }
     }
 
-    /// Home entry point: a small garden preview and the two primary actions. Both
-    /// lead to the Journal tab, which hosts the live garden and capture flow.
+    /// Home entry point: the real garden preview (this month's live tiles) and the
+    /// two primary actions. The full garden lives on the Journal tab.
     private var gardenEntryCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("✦ " + Strings.home_garden_preview_title)
+            Text(Strings.home_garden_preview_title)
                 .font(.system(size: 11, weight: .bold))
                 .tracking(1.1)
                 .foregroundColor(HomeColors.teal)
             Spacer().frame(height: 12)
-            gardenPreviewStrip
+            // The actual garden scene (read-only) instead of a decorative placeholder.
+            GardenSceneView(
+                tiles: garden.tiles,
+                columns: garden.gridColumns,
+                rows: garden.gridRows
+            )
+            .onTapGesture { onOpenJournal() }
             Spacer().frame(height: 14)
             HStack(spacing: 10) {
                 Button(action: onOpenJournal) {
@@ -112,21 +121,6 @@ struct InsightHomeView: View {
                 .fill(HomeColors.card)
                 .overlay(RoundedRectangle(cornerRadius: 20).stroke(HomeColors.line, lineWidth: 1))
         )
-    }
-
-    /// A simple decorative row of garden tiles as a lightweight preview.
-    private var gardenPreviewStrip: some View {
-        HStack(alignment: .bottom, spacing: 10) {
-            ForEach(Array([true, false, true, true, false, true, false, true].enumerated()), id: \.offset) { _, planted in
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(HomeColors.teal.opacity(planted ? 0.55 : 0.16))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: planted ? 30 : 16)
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 16)
-        .background(RoundedRectangle(cornerRadius: 14).fill(HomeColors.tealSofter))
     }
 
     private var greetingHeader: some View {
@@ -169,7 +163,7 @@ struct InsightHomeView: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(HomeColors.ink)
                 Spacer()
-                Text("✦ " + Strings.home_patterns_auto)
+                Text(Strings.home_patterns_auto)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(HomeColors.teal)
             }
@@ -202,13 +196,7 @@ private struct HeroInsightCard: View {
             }
 
             Spacer().frame(height: 14)
-            // Block 4: quiet label tying the text to the user's last entry.
-            Text("✦ " + Strings.insight_for_you_label)
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(0.4)
-                .foregroundColor(HomeColors.onTeal.opacity(0.7))
-            Spacer().frame(height: 8)
-            // Block 4: crossfade the headline when it changes after a new entry.
+            // Crossfade the headline when it changes after a new entry.
             Text(localizedInsightKey(insight.headlineKey))
                 .font(.system(size: 23, weight: .bold))
                 .foregroundColor(HomeColors.onTeal)
@@ -386,10 +374,6 @@ private struct PatternCard: View {
 
     var body: some View {
         HStack(spacing: 13) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 13).fill(HomeColors.tealSofter).frame(width: 42, height: 42)
-                Text("✦").font(.system(size: 18)).foregroundColor(HomeColors.teal)
-            }
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.system(size: 14.5, weight: .semibold)).foregroundColor(HomeColors.ink)
                 Text(meta).font(.system(size: 12)).foregroundColor(HomeColors.inkMute)
@@ -430,7 +414,7 @@ private struct DailyFlashcard: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Text("✦ " + Strings.home_flashcard_label)
+                Text(Strings.home_flashcard_label)
                     .font(.system(size: 11, weight: .bold)).tracking(1.1)
                     .foregroundColor(HomeColors.teal)
                 Spacer()

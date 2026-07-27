@@ -102,6 +102,9 @@ private data class PatternCardData(
 fun HomeScreen(
     modifier: Modifier = Modifier,
     insight: MotivationInsight = MotivationInsight.placeholder,
+    gardenTiles: List<org.iremia.iremia.domain.garden.GardenTile> = emptyList(),
+    gardenColumns: Int = 5,
+    gardenRows: Int = 5,
     onOpenJournal: () -> Unit = {},
 ) {
     // The trend point tapped on the graph, if any, drives the detail dialog (Block 2).
@@ -117,6 +120,9 @@ fun HomeScreen(
         // Entry point (Block 1.3): garden preview + "make entry" / "view garden".
         // Both lead to the Journal tab, which hosts the capture flow and garden.
         GardenEntryCard(
+            tiles = gardenTiles,
+            columns = gardenColumns,
+            rows = gardenRows,
             onMakeEntry = onOpenJournal,
             onViewGarden = onOpenJournal,
             modifier = Modifier.padding(top = 20.dp, start = 16.dp, end = 16.dp),
@@ -190,12 +196,14 @@ private fun TrendPointDialog(
 }
 
 /**
- * Home entry point: a small garden preview strip and the two primary actions.
- * Kept intentionally light; the live garden and the capture flow live on the
- * Journal tab, one tap away.
+ * Home entry point: the real garden preview (this month's live tiles) and the two
+ * primary actions. The full garden and the capture flow live on the Journal tab.
  */
 @Composable
 private fun GardenEntryCard(
+    tiles: List<org.iremia.iremia.domain.garden.GardenTile>,
+    columns: Int,
+    rows: Int,
     onMakeEntry: () -> Unit,
     onViewGarden: () -> Unit,
     modifier: Modifier = Modifier,
@@ -210,14 +218,22 @@ private fun GardenEntryCard(
             .padding(16.dp),
     ) {
         Text(
-            text = "✦ " + localized(SharedRes.strings.home_garden_preview_title).toString(context),
+            text = localized(SharedRes.strings.home_garden_preview_title).toString(context),
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.1.sp,
             color = HomeColors.teal,
         )
         Spacer(Modifier.height(12.dp))
-        GardenPreviewStrip()
+        // The actual garden scene (read-only) instead of a decorative placeholder.
+        org.iremia.iremia.ui.garden.GardenScene(
+            tiles = tiles,
+            columns = columns,
+            rows = rows,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onViewGarden),
+        )
         Spacer(Modifier.height(14.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -263,31 +279,6 @@ private fun GardenEntryCard(
     }
 }
 
-/** A simple decorative row of garden tiles as a lightweight preview. */
-@Composable
-private fun GardenPreviewStrip() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(HomeColors.tealSofter)
-            .padding(horizontal = 14.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        // Alternating "planted" / "empty" tiles, purely visual.
-        val planted = listOf(true, false, true, true, false, true, false, true)
-        planted.forEach { isPlanted ->
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(if (isPlanted) 30.dp else 16.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(if (isPlanted) HomeColors.teal.copy(alpha = 0.55f) else HomeColors.teal.copy(alpha = 0.16f)),
-            )
-        }
-    }
-}
 
 @Composable
 private fun GreetingHeader() {
@@ -390,18 +381,8 @@ private fun HeroInsightCard(
         }
 
         Spacer(Modifier.height(14.dp))
-        // Block 4: a quiet label tying the text to the user's last entry, so the
-        // dynamic nature is noticeable.
-        Text(
-            text = "✦ " + localized(SharedRes.strings.insight_for_you_label).toString(context),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.4.sp,
-            color = HomeColors.onTeal.copy(alpha = 0.7f),
-        )
-        Spacer(Modifier.height(8.dp))
-        // Block 4: crossfade the headline when it changes after a new entry, so the
-        // user sees that something updated.
+        // Crossfade the headline when it changes after a new entry, so the user
+        // sees that something updated.
         val headlineText = localized(insight.headlineKeyRes()).toString(context)
         AnimatedContent(
             targetState = headlineText,
@@ -547,7 +528,7 @@ private fun PatternsSection(modifier: Modifier = Modifier) {
                 color = HomeColors.ink,
             )
             Text(
-                text = "✦ " + localized(SharedRes.strings.home_patterns_auto).toString(context),
+                text = localized(SharedRes.strings.home_patterns_auto).toString(context),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = HomeColors.teal,
@@ -573,16 +554,6 @@ private fun PatternCard(data: PatternCardData) {
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(13.dp))
-                .background(HomeColors.tealSofter),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("✦", color = HomeColors.teal, fontSize = 18.sp)
-        }
-        Spacer(Modifier.width(13.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 text = localized(data.titleRes).toString(context),
@@ -653,7 +624,7 @@ private fun DailyFlashcard(modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "✦ " + localized(SharedRes.strings.home_flashcard_label).toString(context),
+                text = localized(SharedRes.strings.home_flashcard_label).toString(context),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.1.sp,
