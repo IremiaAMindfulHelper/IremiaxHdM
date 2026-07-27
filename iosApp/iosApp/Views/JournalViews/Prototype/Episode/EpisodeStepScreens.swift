@@ -33,7 +33,7 @@ struct EpisodeStepScaffold<Content: View>: View {
                         .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(PS.nav_back)
+                .accessibilityLabel(Strings.nav_back)
 
                 GeometryReader { geo in
                     Capsule()
@@ -121,16 +121,16 @@ struct EpisodeIntensityStepView: View {
         EpisodeStepScaffold(
             stepIndex: 1,
             stepCount: 3,
-            title: PS.episode_title,
+            title: Strings.episode_title,
             onBack: onBack,
-            primaryLabel: PS.episode_next,
+            primaryLabel: Strings.episode_next,
             onPrimary: onNext,
-            subtitle: PS.episode_subtitle,
+            subtitle: Strings.episode_subtitle,
             primaryTrailingIcon: "arrow.right",
-            secondaryLabel: PS.episode_skip_step,
+            secondaryLabel: Strings.episode_skip_step,
             onSecondary: onSkip
         ) {
-            Text(PS.episode_when)
+            Text(Strings.episode_when)
                 .font(IremiaText.cardTitle)
                 .foregroundColor(IremiaColors.ink)
 
@@ -162,7 +162,7 @@ struct EpisodeIntensityStepView: View {
             Spacer().frame(height: IremiaSpacing.s6)
 
             HStack {
-                Text(PS.episode_strength_label)
+                Text(Strings.episode_strength_label)
                     .font(IremiaText.cardTitle)
                     .foregroundColor(IremiaColors.ink)
                 Spacer()
@@ -175,11 +175,11 @@ struct EpisodeIntensityStepView: View {
                 .tint(IremiaColors.teal700)
 
             HStack {
-                Text(PS.episode_strength_low)
+                Text(Strings.episode_strength_low)
                     .font(IremiaText.caption)
                     .foregroundColor(IremiaColors.gray400)
                 Spacer()
-                Text(PS.episode_strength_high)
+                Text(Strings.episode_strength_high)
                     .font(IremiaText.caption)
                     .foregroundColor(IremiaColors.gray400)
             }
@@ -220,19 +220,19 @@ struct EpisodeContextStepView: View {
         EpisodeStepScaffold(
             stepIndex: 2,
             stepCount: 3,
-            title: PS.episode_context_title,
+            title: Strings.episode_context_title,
             onBack: onBack,
-            primaryLabel: PS.episode_next,
+            primaryLabel: Strings.episode_next,
             onPrimary: onNext,
             primaryTrailingIcon: "arrow.right",
-            secondaryLabel: PS.episode_skip_step,
+            secondaryLabel: Strings.episode_skip_step,
             onSecondary: onSkip
         ) {
-            ChipGroupView(title: PS.episode_context_where, options: placeOptions, selected: $places)
+            ChipGroupView(title: Strings.episode_context_where, options: placeOptions, selected: $places)
             Spacer().frame(height: IremiaSpacing.s5)
-            ChipGroupView(title: PS.episode_context_activity, options: activityOptions, selected: $activities)
+            ChipGroupView(title: Strings.episode_context_activity, options: activityOptions, selected: $activities)
             Spacer().frame(height: IremiaSpacing.s5)
-            ChipGroupView(title: PS.episode_context_body, options: bodySignalOptions, selected: $bodySignals)
+            ChipGroupView(title: Strings.episode_context_body, options: bodySignalOptions, selected: $bodySignals)
         }
     }
 }
@@ -250,14 +250,14 @@ struct EpisodeReflectionStepView: View {
         EpisodeStepScaffold(
             stepIndex: 3,
             stepCount: 3,
-            title: PS.episode_reflection_title,
+            title: Strings.episode_reflection_title,
             onBack: onBack,
-            primaryLabel: PS.episode_reflection_save,
+            primaryLabel: Strings.episode_reflection_save,
             onPrimary: onSave,
-            secondaryLabel: PS.episode_reflection_save_no_note,
+            secondaryLabel: Strings.episode_reflection_save_no_note,
             onSecondary: onSave
         ) {
-            Text(PS.episode_reflection_prompt)
+            Text(Strings.episode_reflection_prompt)
                 .font(IremiaText.cardTitle)
                 .foregroundColor(IremiaColors.ink)
 
@@ -281,7 +281,7 @@ struct EpisodeReflectionStepView: View {
                 )
                 .overlay(alignment: .topLeading) {
                     if note.isEmpty {
-                        Text(PS.episode_reflection_placeholder)
+                        Text(Strings.episode_reflection_placeholder)
                             .font(IremiaText.body)
                             .foregroundColor(IremiaColors.gray400)
                             .padding(.top, 20)
@@ -292,14 +292,14 @@ struct EpisodeReflectionStepView: View {
 
             Spacer().frame(height: IremiaSpacing.s6)
 
-            Text(PS.episode_mood_title)
+            Text(Strings.episode_mood_title)
                 .font(IremiaText.cardTitle)
                 .foregroundColor(IremiaColors.ink)
 
             Spacer().frame(height: IremiaSpacing.s3)
-            MoodRowView(label: PS.episode_mood_before, selectedIndex: $moodBefore)
+            MoodRowView(label: Strings.episode_mood_before, selectedIndex: $moodBefore)
             Spacer().frame(height: IremiaSpacing.s3)
-            MoodRowView(label: PS.episode_mood_after, selectedIndex: $moodAfter)
+            MoodRowView(label: Strings.episode_mood_after, selectedIndex: $moodAfter)
         }
     }
 }
@@ -309,6 +309,9 @@ struct EpisodeReflectionStepView: View {
 struct EpisodeSavedScreenView: View {
     let entryCount: Int
     let goal: Int
+    var isJournal: Bool = false
+    var strength: Int? = nil
+    var plantResult: PlantResult? = nil
     let onInsights: () -> Void
     let onHome: () -> Void
     var onViewGarden: () -> Void = {}
@@ -316,6 +319,19 @@ struct EpisodeSavedScreenView: View {
     /// Growth animation size on this screen. Large enough to be a clear focal
     /// point above the title, while still leaving room for the content below.
     private let treeSize: CGFloat = 150
+
+    /// Badge text: what happened in the garden (conditional on plan 6.2).
+    private var badgeText: String {
+        let newlyPlanted = plantResult?.planted ?? true
+        if !newlyPlanted { return isJournal ? Strings.episode_saved_already_flower : Strings.episode_saved_already_tree }
+        return isJournal ? Strings.episode_saved_flower_badge : Strings.episode_saved_tree_badge
+    }
+
+    /// Gentle impulse text (placeholder, no real exercise).
+    private var impulseText: String {
+        if isJournal { return Strings.saved_impulse_journal }
+        return (strength ?? 0) >= 7 ? Strings.saved_impulse_panic_high : Strings.saved_impulse_panic_low
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -330,25 +346,32 @@ struct EpisodeSavedScreenView: View {
 
             Spacer().frame(height: IremiaSpacing.s4)
 
-            Text(PS.episode_saved_title)
+            Text(Strings.episode_saved_title)
                 .font(IremiaText.h1)
                 .foregroundColor(IremiaColors.ink)
 
             Spacer().frame(height: IremiaSpacing.s2)
 
-            Text(PS.episode_saved_body)
+            Text(Strings.episode_saved_body)
                 .font(IremiaText.body)
                 .foregroundColor(IremiaColors.gray500)
                 .multilineTextAlignment(.center)
 
+            // Impulse text: a gentle, non-directive suggestion matched to the entry.
+            Spacer().frame(height: IremiaSpacing.s3)
+            Text(impulseText)
+                .font(IremiaText.body)
+                .foregroundColor(IremiaColors.teal700)
+                .multilineTextAlignment(.center)
+
             Spacer().frame(height: IremiaSpacing.s5)
 
-            // Tree badge
+            // Garden badge (tree / flower bed / already-planted)
             HStack(spacing: 8) {
                 Image(systemName: "leaf.fill")
                     .font(.system(size: 18))
                     .foregroundColor(IremiaColors.garden700)
-                Text(PS.episode_saved_tree_badge)
+                Text(badgeText)
                     .font(IremiaText.caption)
                     .foregroundColor(IremiaColors.garden900)
             }
@@ -361,7 +384,7 @@ struct EpisodeSavedScreenView: View {
             // Progress card
             IremiaCard {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(PS.episode_saved_dataset_title)
+                    Text(Strings.episode_saved_dataset_title)
                         .font(IremiaText.eyebrow)
                         .foregroundColor(IremiaColors.teal700)
                         .tracking(0.06 * 12)
@@ -372,7 +395,7 @@ struct EpisodeSavedScreenView: View {
                         Text("\(entryCount)")
                             .font(IremiaText.numXl)
                             .foregroundColor(IremiaColors.ink)
-                        Text(PS.episode_saved_entries)
+                        Text(Strings.episode_saved_entries)
                             .font(IremiaText.body)
                             .foregroundColor(IremiaColors.gray600)
                             .padding(.bottom, 6)
@@ -380,7 +403,7 @@ struct EpisodeSavedScreenView: View {
 
                     Spacer().frame(height: IremiaSpacing.s2)
 
-                    Text(PS.episode_saved_goal_hint.replacingOccurrences(of: "%1$d", with: "\(goal)"))
+                    Text(Strings.episode_saved_goal_hint.replacingOccurrences(of: "%1$d", with: "\(goal)"))
                         .font(IremiaText.caption)
                         .foregroundColor(IremiaColors.gray500)
 
@@ -401,18 +424,18 @@ struct EpisodeSavedScreenView: View {
             Spacer(minLength: IremiaSpacing.s5)
 
             PrimaryButton(
-                text: PS.episode_saved_view_garden,
+                text: Strings.episode_saved_view_garden,
                 action: onViewGarden,
                 trailingIcon: "leaf.fill"
             )
 
             Spacer().frame(height: IremiaSpacing.s1)
 
-            SecondaryTextButton(text: PS.episode_saved_insights, action: onInsights)
+            SecondaryTextButton(text: Strings.episode_saved_insights, action: onInsights)
 
             Spacer().frame(height: IremiaSpacing.s1)
 
-            SecondaryTextButton(text: PS.episode_saved_home, action: onHome)
+            SecondaryTextButton(text: Strings.episode_saved_home, action: onHome)
         }
         .padding(.horizontal, IremiaSpacing.screenGutter)
         .padding(.vertical, IremiaSpacing.s5)
@@ -516,11 +539,11 @@ private struct TimePickerSheet: View {
                 .labelsHidden()
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button(PS.dialog_cancel) { isPresented = false }
+                        Button(Strings.dialog_cancel) { isPresented = false }
                             .foregroundColor(IremiaColors.gray500)
                     }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button(PS.dialog_ok) {
+                        Button(Strings.dialog_ok) {
                             let cal = Calendar.current
                             hour = cal.component(.hour, from: selectedDate)
                             minute = cal.component(.minute, from: selectedDate)
@@ -566,11 +589,11 @@ private struct DatePickerSheet: View {
             .padding()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(PS.dialog_cancel) { isPresented = false }
+                    Button(Strings.dialog_cancel) { isPresented = false }
                         .foregroundColor(IremiaColors.gray500)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(PS.dialog_ok) {
+                    Button(Strings.dialog_ok) {
                         selectedDate = Calendar.current.startOfDay(for: draftDate)
                         isPresented = false
                         onConfirm()

@@ -70,3 +70,41 @@ fun bodySignalOptions(context: Context): List<String> = listOf(
 
 /** Mood faces (worst → best) used by the "Stimmung davor / danach" selectors. */
 val moodFaces = listOf("😣", "🙁", "😐", "🙂", "😄")
+
+/**
+ * One optional reflection prompt in the guided journal flow, identified by a
+ * stable [key] so answers survive recomposition regardless of the localized text.
+ */
+data class JournalPrompt(val key: String, val question: String)
+
+/**
+ * The optional reflection question pairs for the guided journal entry, in the
+ * order defined in the plan. Each pair is offered as a "difficult / good" duo;
+ * all are optional. Localized via moko-resources.
+ */
+fun journalPrompts(context: Context): List<JournalPrompt> = listOf(
+    JournalPrompt("annoyed", localized(SharedRes.strings.journal_q_annoyed).toString(context)),
+    JournalPrompt("pleased", localized(SharedRes.strings.journal_q_pleased).toString(context)),
+    JournalPrompt("stressed", localized(SharedRes.strings.journal_q_stressed).toString(context)),
+    JournalPrompt("relaxed", localized(SharedRes.strings.journal_q_relaxed).toString(context)),
+    JournalPrompt("hard", localized(SharedRes.strings.journal_q_hard).toString(context)),
+    JournalPrompt("welldone", localized(SharedRes.strings.journal_q_welldone).toString(context)),
+    JournalPrompt("worried", localized(SharedRes.strings.journal_q_worried).toString(context)),
+    JournalPrompt("lookforward", localized(SharedRes.strings.journal_q_lookforward).toString(context)),
+    JournalPrompt("burdened", localized(SharedRes.strings.journal_q_burdened).toString(context)),
+    JournalPrompt("grateful", localized(SharedRes.strings.journal_q_grateful).toString(context)),
+)
+
+/**
+ * Builds the entry text from answered guided prompts: each answered question is
+ * rendered as "Question\nAnswer", pairs separated by blank lines. Unanswered
+ * prompts are skipped. This becomes the entry [content] so the guided answers are
+ * preserved as readable text (no separate schema needed).
+ */
+fun composeGuidedJournalContent(prompts: List<JournalPrompt>, answers: Map<String, String>): String =
+    prompts
+        .mapNotNull { prompt ->
+            val answer = answers[prompt.key]?.trim().orEmpty()
+            if (answer.isEmpty()) null else "${prompt.question}\n$answer"
+        }
+        .joinToString("\n\n")

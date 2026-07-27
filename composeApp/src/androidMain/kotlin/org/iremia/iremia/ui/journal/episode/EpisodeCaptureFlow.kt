@@ -11,23 +11,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import org.iremia.iremia.data.garden.PlantResult
+import org.iremia.iremia.domain.note.EntryType
 import org.iremia.iremia.domain.note.EpisodeDraft
 import org.iremia.iremia.ui.theme.IremiaColors
 import java.util.Calendar
 
-/** The four stages of the "Episode festhalten" wizard. */
-private enum class EpisodeStep { Intensity, Context, Reflection, Saved }
+/** The stages of the capture flow. The type chooser comes first, then a branch. */
+private enum class CaptureStage { TypeChooser, PanicIntensity, PanicContext, PanicReflection, Journal, Saved }
 
-/** Sample totals for the confirmation screen (replaced by real data later). */
-private const val SAMPLE_ENTRY_COUNT = 26
+/** Insights goal shown on the confirmation screen. */
 private const val INSIGHTS_GOAL = 30
 
 /**
- * Self-contained "Episode festhalten" wizard.
+ * Self-contained capture flow. Opens on the entry-type chooser (panic vs journal),
+ * then routes into either the existing panic wizard (intensity → context →
+ * reflection) or the journal entry (guided prompts / free text). Both end on the
+ * shared "saved" confirmation.
  *
- * Holds the in-progress draft purely in UI state — nothing is persisted yet; the
- * flow just needs to "work" end to end. [onClose] backs out of the first step,
- * [onFinished] dismisses after the confirmation screen.
+ * The in-progress draft lives purely in UI state; [onSaveEpisode] persists the
+ * finished [EpisodeDraft]. [onClose] backs out of the chooser, [onFinished]
+ * dismisses after the confirmation screen.
  */
 @Composable
 fun EpisodeCaptureFlow(
@@ -36,13 +40,19 @@ fun EpisodeCaptureFlow(
     onFinished: () -> Unit,
     onViewGarden: () -> Unit = onFinished,
     onSaveEpisode: (EpisodeDraft) -> Unit,
+    // The result of the just-saved entry's plant attempt, for the saved screen's
+    // conditional text (Block 3). Null until planting completes.
+    plantResult: PlantResult? = null,
 ) {
     val finalEntryCount = remember { entryCount + 1 }
-    var step by rememberSaveable { mutableStateOf(EpisodeStep.Intensity) }
+    var stage by rememberSaveable { mutableStateOf(CaptureStage.TypeChooser) }
+    // The type + strength of the entry being saved, captured at save time so the
+    // saved screen can show a matching impulse text (Block 3).
+    var savedType by rememberSaveable { mutableStateOf(EntryType.PANIC) }
+    var savedStrength by rememberSaveable { mutableStateOf<Int?>(null) }
 
-    // --- Draft state (no persistence) ---
+    // --- Panic draft state (only used on the panic branch) ---
     val now = remember { Calendar.getInstance() }
-    // Selected day (start-of-day millis, UTC) + time-of-day. Defaults to today/now.
     var selectedDateMillis by rememberSaveable { mutableStateOf(startOfDayUtc(now)) }
     var hour by rememberSaveable { mutableStateOf(now.get(Calendar.HOUR_OF_DAY)) }
     var minute by rememberSaveable { mutableStateOf(now.get(Calendar.MINUTE)) }
@@ -59,8 +69,14 @@ fun EpisodeCaptureFlow(
             .fillMaxSize()
             .background(IremiaColors.White),
     ) {
-        when (step) {
-            EpisodeStep.Intensity -> EpisodeIntensityStep(
+        when (stage) {
+            CaptureStage.TypeChooser -> EntryTypeChooserScreen(
+                onBack = onClose,
+                onPickPanic = { stage = CaptureStage.PanicIntensity },
+                onPickJournal = { stage = CaptureStage.Journal },
+            )
+
+            CaptureStage.PanicIntensity -> EpisodeIntensityStep(
                 dateMillis = selectedDateMillis,
                 onDateChange = { selectedDateMillis = it },
                 hour = hour,
@@ -68,35 +84,38 @@ fun EpisodeCaptureFlow(
                 onTimeChange = { h, m -> hour = h; minute = m },
                 strength = strength,
                 onStrengthChange = { strength = it },
-                onBack = onClose,
-                onNext = { step = EpisodeStep.Context },
-                onSkip = { step = EpisodeStep.Context },
+                onBack = { stage = CaptureStage.TypeChooser },
+                onNext = { stage = CaptureStage.PanicContext },
+                onSkip = { stage = CaptureStage.PanicContext },
             )
 
-            EpisodeStep.Context -> EpisodeContextStep(
+            CaptureStage.PanicContext -> EpisodeContextStep(
                 places = places,
                 onTogglePlace = { places.toggle(it) },
                 activities = activities,
                 onToggleActivity = { activities.toggle(it) },
                 bodySignals = bodySignals,
                 onToggleSignal = { bodySignals.toggle(it) },
-                onBack = { step = EpisodeStep.Intensity },
-                onNext = { step = EpisodeStep.Reflection },
-                onSkip = { step = EpisodeStep.Reflection },
+                onBack = { stage = CaptureStage.PanicIntensity },
+                onNext = { stage = CaptureStage.PanicReflection },
+                onSkip = { stage = CaptureStage.PanicReflection },
             )
 
-            EpisodeStep.Reflection -> EpisodeReflectionStep(
+            CaptureStage.PanicReflection -> EpisodeReflectionStep(
                 note = note,
                 onNoteChange = { note = it },
                 moodBefore = moodBefore,
                 onMoodBefore = { moodBefore = it },
                 moodAfter = moodAfter,
                 onMoodAfter = { moodAfter = it },
-                onBack = { step = EpisodeStep.Context },
+                onBack = { stage = CaptureStage.PanicContext },
                 onSave = {
+                    savedType = EntryType.PANIC
+                    savedStrength = strength.toInt()
                     onSaveEpisode(
                         EpisodeDraft(
                             content = note,
+                            type = EntryType.PANIC,
                             strength = strength.toInt(),
                             places = places.toList(),
                             activities = activities.toList(),
@@ -106,13 +125,34 @@ fun EpisodeCaptureFlow(
                             createdAt = combineDateTime(selectedDateMillis, hour, minute),
                         )
                     )
-                    step = EpisodeStep.Saved
+                    stage = CaptureStage.Saved
                 },
             )
 
-            EpisodeStep.Saved -> EpisodeSavedScreen(
+            CaptureStage.Journal -> JournalEntryScreen(
+                onBack = { stage = CaptureStage.TypeChooser },
+                onSave = { title, content ->
+                    savedType = EntryType.JOURNAL
+                    savedStrength = null
+                    onSaveEpisode(
+                        EpisodeDraft(
+                            content = content,
+                            type = EntryType.JOURNAL,
+                            title = title.ifBlank { null },
+                            // A journal entry lands "now"; no date/time picker.
+                            createdAt = System.currentTimeMillis(),
+                        )
+                    )
+                    stage = CaptureStage.Saved
+                },
+            )
+
+            CaptureStage.Saved -> EpisodeSavedScreen(
                 entryCount = finalEntryCount,
                 goal = INSIGHTS_GOAL,
+                entryType = savedType,
+                strength = savedStrength,
+                plantResult = plantResult,
                 onInsights = onFinished,
                 onHome = onFinished,
                 onViewGarden = onViewGarden,

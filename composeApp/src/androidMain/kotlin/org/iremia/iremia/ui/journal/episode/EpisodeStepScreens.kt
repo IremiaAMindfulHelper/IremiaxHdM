@@ -535,7 +535,7 @@ private fun formatEpisodeDate(dateMillis: Long): String {
     return "$day. $month $year"
 }
 
-/** Final confirmation screen after saving an episode. */
+/** Final confirmation screen after saving an entry. */
 @Composable
 fun EpisodeSavedScreen(
     entryCount: Int,
@@ -543,8 +543,31 @@ fun EpisodeSavedScreen(
     onInsights: () -> Unit,
     onHome: () -> Unit,
     onViewGarden: () -> Unit = {},
+    entryType: org.iremia.iremia.domain.note.EntryType = org.iremia.iremia.domain.note.EntryType.PANIC,
+    strength: Int? = null,
+    plantResult: org.iremia.iremia.data.garden.PlantResult? = null,
 ) {
     val context = LocalContext.current
+    val isJournal = entryType == org.iremia.iremia.domain.note.EntryType.JOURNAL
+    val newlyPlanted = plantResult?.planted ?: true
+
+    // Badge text: what happened in the garden. When the day already had this type,
+    // say so instead of claiming a new plant (plan 6.2 / Block 3).
+    val badgeText = when {
+        !newlyPlanted && isJournal -> localized(SharedRes.strings.episode_saved_already_flower).toString(context)
+        !newlyPlanted -> localized(SharedRes.strings.episode_saved_already_tree).toString(context)
+        isJournal -> localized(SharedRes.strings.episode_saved_flower_badge).toString(context)
+        else -> localized(SharedRes.strings.episode_saved_tree_badge).toString(context)
+    }
+
+    // Gentle impulse text (placeholder, no real exercise). Panic strength >= 7 gets
+    // the breathing hint; lower panic a calm-moment hint; journal a warm note.
+    val impulseText = when {
+        isJournal -> localized(SharedRes.strings.saved_impulse_journal).toString(context)
+        (strength ?: 0) >= 7 -> localized(SharedRes.strings.saved_impulse_panic_high).toString(context)
+        else -> localized(SharedRes.strings.saved_impulse_panic_low).toString(context)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -555,8 +578,8 @@ fun EpisodeSavedScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.height(IremiaSpacing.S6))
-        // A large growth animation so the user actually sees their tree grow after
-        // saving, without losing the app context (we stay on the saved screen).
+        // A large growth animation so the user sees growth after saving. It plays
+        // even when no new plant was set (plan 6.2), acknowledging the entry.
         EpisodeGrowthAnimation(modifier = Modifier.size(240.dp))
         Spacer(Modifier.height(IremiaSpacing.S4))
         Text(localized(SharedRes.strings.episode_saved_title).toString(context), style = IremiaText.H1, color = IremiaColors.Ink)
@@ -565,6 +588,14 @@ fun EpisodeSavedScreen(
             localized(SharedRes.strings.episode_saved_body).toString(context),
             style = IremiaText.Body,
             color = IremiaColors.Gray500,
+        )
+
+        // Impulse text: a gentle, non-directive suggestion matched to the entry.
+        Spacer(Modifier.height(IremiaSpacing.S3))
+        Text(
+            impulseText,
+            style = IremiaText.Body,
+            color = IremiaColors.Teal700,
         )
 
         Spacer(Modifier.height(IremiaSpacing.S5))
@@ -577,7 +608,7 @@ fun EpisodeSavedScreen(
         ) {
             Icon(Icons.Filled.Eco, contentDescription = null, tint = IremiaColors.Garden700, modifier = Modifier.size(18.dp))
             Spacer(Modifier.size(8.dp))
-            Text(localized(SharedRes.strings.episode_saved_tree_badge).toString(context), style = IremiaText.Caption, color = IremiaColors.Garden900)
+            Text(badgeText, style = IremiaText.Caption, color = IremiaColors.Garden900)
         }
 
         Spacer(Modifier.height(IremiaSpacing.S6))

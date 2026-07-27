@@ -15,7 +15,7 @@ struct RecentNotesSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text(PS.recent_notes_title)
+                Text(Strings.recent_notes_title)
                     .font(IremiaText.h2)
                     .foregroundColor(IremiaColors.ink)
                 Spacer()
@@ -27,7 +27,7 @@ struct RecentNotesSectionView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(PS.recent_notes_add)
+                .accessibilityLabel(Strings.recent_notes_add)
             }
 
             Spacer().frame(height: 12)
@@ -38,7 +38,7 @@ struct RecentNotesSectionView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "plus")
                         .font(.system(size: 16, weight: .semibold))
-                    Text(PS.recent_notes_add)
+                    Text(Strings.recent_notes_add)
                         .font(IremiaText.cardTitle)
                 }
                 .foregroundColor(IremiaColors.teal700)
@@ -77,10 +77,15 @@ private struct NoteCardView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     HStack(spacing: 6) {
-                        Image(systemName: "note.text")
-                            .font(.system(size: 16))
-                            .foregroundColor(IremiaColors.gray400)
-                        Text("\(formattedDate(note.createdAt)) · \(formattedTime(note.createdAt))")
+                        // Entry-type marker: panic → heart (teal), journal → leaf
+                        // (green), matching the entry-type chooser for easy scanning.
+                        Image(systemName: note.isJournal ? "leaf.fill" : "heart.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(note.isJournal ? IremiaColors.garden700 : IremiaColors.teal700)
+                        Text(note.isJournal ? Strings.entry_type_journal_title : Strings.entry_type_panic_title)
+                            .font(IremiaText.caption)
+                            .foregroundColor(note.isJournal ? IremiaColors.garden700 : IremiaColors.teal700)
+                        Text("· \(formattedDate(note.createdAt)) · \(formattedTime(note.createdAt))")
                             .font(IremiaText.caption)
                             .foregroundColor(IremiaColors.gray500)
                     }
@@ -93,7 +98,7 @@ private struct NoteCardView: View {
                             .padding(.horizontal, 4)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Löschen")
+                    .accessibilityLabel(Strings.entry_delete_confirm)
 
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14))
@@ -102,7 +107,8 @@ private struct NoteCardView: View {
 
                 Spacer().frame(height: 6)
 
-                let title = titleOf(note.content)
+                // The entry's title: user-set when present, otherwise derived.
+                let title = note.displayTitle.isEmpty ? "—" : note.displayTitle
                 let preview = previewOf(note.content)
 
                 HStack(alignment: .center) {
@@ -152,11 +158,6 @@ private struct NoteCardView: View {
         let fmt = DateFormatter()
         fmt.dateFormat = "HH:mm"
         return fmt.string(from: date)
-    }
-
-    private func titleOf(_ content: String) -> String {
-        let first = content.components(separatedBy: .newlines).first ?? ""
-        return first.isEmpty ? "—" : first
     }
 
     private func previewOf(_ content: String) -> String {

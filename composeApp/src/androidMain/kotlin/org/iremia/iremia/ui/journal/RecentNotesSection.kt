@@ -14,7 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.Favorite
+import org.iremia.iremia.domain.note.EntryType
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -98,6 +100,7 @@ fun RecentNotesSection(
 
 @Composable
 private fun NoteCard(note: Note, onClick: () -> Unit, onDelete: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val dateTime = remember(note.createdAt) {
         Instant.fromEpochMilliseconds(note.createdAt)
             .toLocalDateTime(TimeZone.currentSystemDefault())
@@ -120,20 +123,32 @@ private fun NoteCard(note: Note, onClick: () -> Unit, onDelete: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Entry-type marker: panic → heart (teal), journal → leaf (green),
+                    // matching the entry-type chooser so the list is easy to scan.
+                    val isJournal = note.type == EntryType.JOURNAL
                     Icon(
-                        Icons.Filled.EditNote,
+                        if (isJournal) Icons.Filled.Eco else Icons.Filled.Favorite,
                         contentDescription = null,
-                        tint = IremiaColors.Gray400,
+                        tint = if (isJournal) IremiaColors.Garden700 else IremiaColors.Teal700,
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.size(6.dp))
-                    Text("$dateStr · $timeStr", style = IremiaText.Caption, color = IremiaColors.Gray500)
+                    Text(
+                        text = localized(
+                            if (isJournal) SharedRes.strings.entry_type_journal_title
+                            else SharedRes.strings.entry_type_panic_title
+                        ).toString(context),
+                        style = IremiaText.Caption,
+                        color = if (isJournal) IremiaColors.Garden700 else IremiaColors.Teal700,
+                    )
+                    Spacer(Modifier.size(6.dp))
+                    Text("· $dateStr · $timeStr", style = IremiaText.Caption, color = IremiaColors.Gray500)
                 }
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Filled.Delete,
-                        contentDescription = "Löschen",
+                        contentDescription = localized(SharedRes.strings.entry_delete_confirm).toString(context),
                         tint = IremiaColors.Gray400,
                         modifier = Modifier
                             .size(20.dp)
@@ -150,7 +165,8 @@ private fun NoteCard(note: Note, onClick: () -> Unit, onDelete: () -> Unit) {
             }
 
             Spacer(Modifier.height(6.dp))
-            val title = note.content.lineSequence().firstOrNull()?.takeIf { it.isNotBlank() } ?: "—"
+            // The entry's title: user-set when present, otherwise derived from text.
+            val title = note.displayTitle.ifBlank { "—" }
             // ~50-char preview of the body text.
             val preview = note.content.replace("\n", " ").trim().take(50)
                 .let { if (note.content.length > 50) "$it…" else it }

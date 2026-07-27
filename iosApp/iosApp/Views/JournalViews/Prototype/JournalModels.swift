@@ -46,20 +46,20 @@ let sampleTreesPlanted: Int = sampleGardenDays.filter { $0 > 0 }.count
 
 /// Context options for step 2 of the episode flow.
 var placeOptions: [String] {
-    [PS.episode_place_home, PS.episode_place_work,
-     PS.episode_place_public, PS.episode_place_outside,
-     PS.episode_place_commute]
+    [Strings.episode_place_home, Strings.episode_place_work,
+     Strings.episode_place_public, Strings.episode_place_outside,
+     Strings.episode_place_commute]
 }
 
 var activityOptions: [String] {
-    [PS.episode_activity_sleeping, PS.episode_activity_working,
-     PS.episode_activity_sports, PS.episode_activity_social,
-     PS.episode_activity_eating, PS.episode_activity_traveling]
+    [Strings.episode_activity_sleeping, Strings.episode_activity_working,
+     Strings.episode_activity_sports, Strings.episode_activity_social,
+     Strings.episode_activity_eating, Strings.episode_activity_traveling]
 }
 
 var bodySignalOptions: [String] {
-    [PS.episode_body_heart, PS.episode_body_dizzy,
-     PS.episode_body_breathless, PS.episode_body_shaking]
+    [Strings.episode_body_heart, Strings.episode_body_dizzy,
+     Strings.episode_body_breathless, Strings.episode_body_shaking]
 }
 
 /// Mood faces (worst -> best).

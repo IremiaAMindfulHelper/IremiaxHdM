@@ -7,12 +7,34 @@ struct NoteUI: Identifiable, Equatable {
     let id: Int64
     let content: String
     let createdAt: Int64
+    /// Entry type as its storage token ("panic" / "journal").
+    var type: String = "panic"
+    /// User-set title, or nil to derive one from `content`.
+    var title: String? = nil
     var strength: Int? = nil
     var places: [String] = []
     var activities: [String] = []
     var bodySignals: [String] = []
     var moodBefore: Int? = nil
     var moodAfter: Int? = nil
+
+    /// True for journal entries (hide panic-only intensity/mood in the UI).
+    var isJournal: Bool { type == "journal" }
+
+    /// Title shown in lists/detail: user title when set, else derived from text.
+    var displayTitle: String {
+        if let t = title, !t.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return t }
+        let firstLine = content
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .first(where: { !$0.isEmpty }) ?? ""
+        if firstLine.count <= 40 { return firstLine }
+        let cut = String(firstLine.prefix(40))
+        if let lastSpace = cut.lastIndex(of: " ") {
+            return String(cut[..<lastSpace]) + "…"
+        }
+        return cut + "…"
+    }
 }
 
 /// ObservableObject that bridges the shared KMP NotesController state
@@ -23,6 +45,8 @@ final class NotesObservable: ObservableObject {
     @Published var isLoading = false
     @Published var entryCount = 0
     @Published var gardenEntries: [Int] = []
+    /// Result of the most recent plant attempt, for the saved screen (Block 3 / 6.2).
+    @Published var lastPlantResult: PlantResult?
 
     private let controller: NotesController
     private var cancelable: KmpCancelable?
@@ -60,36 +84,26 @@ final class NotesObservable: ObservableObject {
     func add(content: String) {
         let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
         let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
-        controller.addAsync(content: trimmed, createdAt: nowMs) { _ in }
+        controller.addAsync(content: trimmed, createdAt: nowMs) { _, _ in }
     }
 
-    /// Adds a full episode with captured metadata via the shared controller.
-    func addEpisode(_ draft: EpisodeDraftData) {
-        controller.addEpisodeAsync(
-            content: draft.content.trimmingCharacters(in: .whitespacesAndNewlines),
-            // Use the date+time the user picked in the wizard.
-            createdAt: draft.createdAt,
-            strength: draft.strength.map { KotlinInt(int: Int32($0)) },
-            places: draft.places,
-            activities: draft.activities,
-            bodySignals: draft.bodySignals,
-            moodBefore: draft.moodBefore.map { KotlinInt(int: Int32($0)) },
-            moodAfter: draft.moodAfter.map { KotlinInt(int: Int32($0)) }
-        ) { _ in }
+    /// Adds an entry (panic or journal) from a captured draft via the shared
+    /// controller. Plants a linked garden item and publishes the plant result so
+    /// the saved screen can adapt its text.
+    func addEntry(_ draft: EpisodeDraftData) {
+        controller.addDraftAsync(draft: draft.toShared()) { [weak self] result, _ in
+            DispatchQueue.main.async { self?.lastPlantResult = result }
+        }
     }
 
-    /// Updates an episode and its metadata via the shared controller.
-    func updateEpisode(id: Int64, _ draft: EpisodeDraftData) {
-        controller.updateEpisodeAsync(
-            id: id,
-            content: draft.content.trimmingCharacters(in: .whitespacesAndNewlines),
-            strength: draft.strength.map { KotlinInt(int: Int32($0)) },
-            places: draft.places,
-            activities: draft.activities,
-            bodySignals: draft.bodySignals,
-            moodBefore: draft.moodBefore.map { KotlinInt(int: Int32($0)) },
-            moodAfter: draft.moodAfter.map { KotlinInt(int: Int32($0)) }
-        ) { _ in }
+    /// Reset the plant result when a new capture flow starts.
+    func clearPlantResult() {
+        lastPlantResult = nil
+    }
+
+    /// Updates an entry from a captured draft via the shared controller.
+    func updateEntry(id: Int64, _ draft: EpisodeDraftData) {
+        controller.updateDraftAsync(id: id, draft: draft.toShared()) { _ in }
     }
 
     /// Deletes a note by ID via the shared controller (async wrapper).
@@ -124,6 +138,8 @@ final class NotesObservable: ObservableObject {
                 id: note.id,
                 content: note.content,
                 createdAt: note.createdAt,
+                type: note.type.storageValue,
+                title: note.title,
                 strength: note.strength?.intValue,
                 places: stringArray(from: any, key: "places"),
                 activities: stringArray(from: any, key: "activities"),

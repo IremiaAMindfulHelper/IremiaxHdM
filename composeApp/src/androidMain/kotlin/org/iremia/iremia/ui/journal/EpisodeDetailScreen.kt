@@ -38,9 +38,11 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.iremia.iremia.domain.note.EntryType
 import org.iremia.iremia.domain.note.EpisodeDraft
 import org.iremia.iremia.domain.note.Note
 import org.iremia.iremia.ui.components.IremiaCard
+import org.iremia.iremia.ui.journal.episode.EntryTitleField
 import org.iremia.iremia.ui.components.PrimaryButton
 import org.iremia.iremia.ui.components.SecondaryTextButton
 import org.iremia.iremia.ui.theme.IremiaColors
@@ -65,8 +67,10 @@ fun EpisodeDetailScreen(
     onSave: (EpisodeDraft) -> Unit,
 ) {
     val context = LocalContext.current
+    val isPanic = note.type == EntryType.PANIC
     var editing by remember { mutableStateOf(false) }
     var content by remember(note.id) { mutableStateOf(note.content) }
+    var title by remember(note.id) { mutableStateOf(note.title.orEmpty()) }
     var strength by remember(note.id) { mutableStateOf((note.strength ?: 5).toFloat()) }
     var moodAfter by remember(note.id) { mutableStateOf(note.moodAfter ?: -1) }
 
@@ -97,6 +101,9 @@ fun EpisodeDetailScreen(
             }
         }
         Text(dateText, style = IremiaText.Caption, color = IremiaColors.Gray500)
+        Spacer(Modifier.height(IremiaSpacing.S1))
+        // The entry's title (user-set or derived from the text).
+        Text(note.displayTitle, style = IremiaText.H2, color = IremiaColors.Ink)
 
         Spacer(Modifier.height(IremiaSpacing.S4))
 
@@ -105,6 +112,12 @@ fun EpisodeDetailScreen(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
+            // --- Editable title (edit mode only) ---
+            if (editing) {
+                EntryTitleField(title = title, onTitleChange = { title = it })
+                Spacer(Modifier.height(IremiaSpacing.S3))
+            }
+
             // --- Reflection text ---
             IremiaCard(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth()) {
@@ -134,49 +147,52 @@ fun EpisodeDetailScreen(
                 }
             }
 
-            Spacer(Modifier.height(IremiaSpacing.S3))
+            // Intensity + mood are panic-only; journal entries hide them.
+            if (isPanic) {
+                Spacer(Modifier.height(IremiaSpacing.S3))
 
-            // --- Intensity ---
-            IremiaCard(modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.fillMaxWidth()) {
-                    Text(localized(SharedRes.strings.episode_strength_label).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
-                    Spacer(Modifier.height(IremiaSpacing.S2))
-                    if (editing) {
-                        Slider(
-                            value = strength,
-                            onValueChange = { strength = it },
-                            valueRange = 1f..10f,
-                            steps = 8,
-                            colors = SliderDefaults.colors(
-                                thumbColor = IremiaColors.Teal700,
-                                activeTrackColor = IremiaColors.Teal700,
-                                inactiveTrackColor = IremiaColors.Gray200,
-                            ),
-                        )
+                // --- Intensity ---
+                IremiaCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.fillMaxWidth()) {
+                        Text(localized(SharedRes.strings.episode_strength_label).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
+                        Spacer(Modifier.height(IremiaSpacing.S2))
+                        if (editing) {
+                            Slider(
+                                value = strength,
+                                onValueChange = { strength = it },
+                                valueRange = 1f..10f,
+                                steps = 8,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = IremiaColors.Teal700,
+                                    activeTrackColor = IremiaColors.Teal700,
+                                    inactiveTrackColor = IremiaColors.Gray200,
+                                ),
+                            )
+                        }
+                        Text("${strength.toInt()}/10", style = IremiaText.CardTitle, color = IremiaColors.Ink)
                     }
-                    Text("${strength.toInt()}/10", style = IremiaText.CardTitle, color = IremiaColors.Ink)
                 }
-            }
 
-            Spacer(Modifier.height(IremiaSpacing.S3))
+                Spacer(Modifier.height(IremiaSpacing.S3))
 
-            // --- Mood ---
-            IremiaCard(modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.fillMaxWidth()) {
-                    Text(localized(SharedRes.strings.episode_mood_after).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
-                    Spacer(Modifier.height(IremiaSpacing.S2))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        moodFaces.forEachIndexed { idx, face ->
-                            val selected = idx == moodAfter
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(IremiaShapes.Pill)
-                                    .background(if (selected) IremiaColors.Teal100 else IremiaColors.Gray100)
-                                    .then(if (editing) Modifier.clickable { moodAfter = idx } else Modifier),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(face, style = IremiaText.CardTitle)
+                // --- Mood ---
+                IremiaCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.fillMaxWidth()) {
+                        Text(localized(SharedRes.strings.episode_mood_after).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
+                        Spacer(Modifier.height(IremiaSpacing.S2))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            moodFaces.forEachIndexed { idx, face ->
+                                val selected = idx == moodAfter
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(IremiaShapes.Pill)
+                                        .background(if (selected) IremiaColors.Teal100 else IremiaColors.Gray100)
+                                        .then(if (editing) Modifier.clickable { moodAfter = idx } else Modifier),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(face, style = IremiaText.CardTitle)
+                                }
                             }
                         }
                     }
@@ -204,12 +220,14 @@ fun EpisodeDetailScreen(
                 onSave(
                     EpisodeDraft(
                         content = content,
-                        strength = strength.toInt(),
+                        type = note.type,
+                        title = title.ifBlank { null },
+                        strength = if (isPanic) strength.toInt() else null,
                         places = note.places,
                         activities = note.activities,
                         bodySignals = note.bodySignals,
-                        moodBefore = note.moodBefore,
-                        moodAfter = moodAfter.takeIf { it >= 0 },
+                        moodBefore = if (isPanic) note.moodBefore else null,
+                        moodAfter = if (isPanic) moodAfter.takeIf { it >= 0 } else null,
                     )
                 )
                 editing = false

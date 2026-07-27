@@ -4,15 +4,25 @@ import shared
 // =============================================================================
 // Main Journal screen — 1:1 translation of JournalScreen.kt.
 // Assembles the calendar, tree overview, recent notes, CTA, and modal sheets.
+// The notes observable and the capture flow are hosted by MainView (shell level),
+// so the "+" FAB works on every tab and both share one controller instance.
 // =============================================================================
 
 struct JournalPrototypeScreen: View {
-    @StateObject private var notesObservable = NotesObservable()
+    /// Shared notes state, owned by MainView so FAB + journal use one instance.
+    @ObservedObject var notesObservable: NotesObservable
+    /// Opens the capture flow hosted at the shell level.
+    var openCaptureFlow: () -> Void = {}
+    /// Set true by MainView (e.g. "view garden" from the capture flow) to open the
+    /// garden; this screen resets it after opening.
+    @Binding var openGardenSignal: Bool
+
     @StateObject private var gardenObservable = GardenObservable()
     @State private var selectedDate = Date()
-    @State private var showCaptureFlow = false
     @State private var showGarden = false
     @State private var detailNote: NoteUI?
+    // Entry pending deletion; drives the confirmation dialog (Block 1.4).
+    @State private var pendingDelete: NoteUI?
 
     private let today = Date()
 
@@ -26,15 +36,6 @@ struct JournalPrototypeScreen: View {
             dates.insert(comps)
         }
         return dates
-    }
-
-    /// Map real entries to 25 tiles for the garden scene (one tree per entry).
-    private var gardenEntries: [Int] {
-        notesObservable.gardenEntries
-    }
-
-    private var treesPlanted: Int {
-        notesObservable.entryCount
     }
 
     var body: some View {
@@ -63,10 +64,11 @@ struct JournalPrototypeScreen: View {
                         // Recent Notes
                         RecentNotesSectionView(
                             notes: notesObservable.items,
-                            onAdd: { showCaptureFlow = true },
+                            onAdd: openCaptureFlow,
                             onNoteClick: { note in detailNote = note },
                             onDelete: { id in
-                                notesObservable.delete(id: id)
+                                // Ask before deleting (Block 1.4).
+                                pendingDelete = notesObservable.items.first(where: { $0.id == id })
                             }
                         )
                     }
@@ -76,21 +78,16 @@ struct JournalPrototypeScreen: View {
                     Spacer().frame(height: IremiaSpacing.bottomNavClearance)
                 }
             }
+            // The "+" FAB now lives at the shell level (MainView), so it shows on
+            // every tab; it opens the same capture flow via [openCaptureFlow].
         }
         .background(IremiaColors.gray100.ignoresSafeArea())
-        .fullScreenCover(isPresented: $showCaptureFlow) {
-            EpisodeCaptureFlow(
-                entryCount: notesObservable.entryCount,
-                onClose: { showCaptureFlow = false },
-                onFinished: { showCaptureFlow = false },
-                onViewGarden: {
-                    showCaptureFlow = false
-                    showGarden = true
-                },
-                onSaveEpisode: { draft in
-                    notesObservable.addEpisode(draft)
-                }
-            )
+        // Open the garden when MainView signals it (from "view garden" in the flow).
+        .onChange(of: openGardenSignal) { signal in
+            if signal {
+                showGarden = true
+                openGardenSignal = false
+            }
         }
         .fullScreenCover(isPresented: $showGarden) {
             GardenOverviewScreen(
@@ -103,10 +100,30 @@ struct JournalPrototypeScreen: View {
                 note: note,
                 onClose: { detailNote = nil },
                 onSave: { draft in
-                    notesObservable.updateEpisode(id: note.id, draft)
+                    notesObservable.updateEntry(id: note.id, draft)
                     detailNote = nil
                 }
             )
+        }
+        // Delete confirmation (Block 1.4): nothing is removed until confirmed.
+        .confirmationDialog(
+            Strings.entry_delete_title,
+            isPresented: Binding(
+                get: { pendingDelete != nil },
+                set: { if !$0 { pendingDelete = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: pendingDelete
+        ) { note in
+            Button(Strings.entry_delete_confirm, role: .destructive) {
+                notesObservable.delete(id: note.id)
+                pendingDelete = nil
+            }
+            Button(Strings.entry_delete_cancel, role: .cancel) {
+                pendingDelete = nil
+            }
+        } message: { _ in
+            Text(Strings.entry_delete_message)
         }
     }
 }

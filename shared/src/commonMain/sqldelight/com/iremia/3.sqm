@@ -1,0 +1,6 @@
+-- Migration v3 -> v4: distinguish entry types (panic/journal) and store an
+-- optional, user-editable title.
+-- Existing rows default to type='panic' (the only kind before this version) and
+-- keep NULL for the title, so their title is derived from the content on display.
+ALTER TABLE note ADD COLUMN type TEXT NOT NULL DEFAULT 'panic';
+ALTER TABLE note ADD COLUMN title TEXT;

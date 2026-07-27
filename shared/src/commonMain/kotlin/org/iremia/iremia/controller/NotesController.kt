@@ -6,8 +6,13 @@ import kotlin.native.ObjCName
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.iremia.iremia.data.garden.GardenPlantRepository
+import org.iremia.iremia.data.garden.PlantResult
 import org.iremia.iremia.data.note.NoteRepository
+import org.iremia.iremia.domain.note.EntryType
+import org.iremia.iremia.domain.note.EpisodeDraft
 import org.iremia.iremia.domain.note.Note
+import org.iremia.iremia.domain.garden.PlantCategory
+import kotlinx.datetime.Clock
 
 /**
  * Immutable UI state for the Journal Notes feature.
@@ -52,70 +57,67 @@ class NotesController(
         }
     }
 
-    /** Android: Add a new note and plant a linked garden item. */
-    suspend fun add(content: String, createdAt: Long) {
+    /** Android: Add a text-only note (journal) and plant a flower bed for its day. */
+    suspend fun add(content: String, createdAt: Long): PlantResult {
         val id = repo.add(content, createdAt)
-        gardenRepo.plant(sourceEntryId = id)
+        return gardenRepo.plantForEntry(
+            sourceEntryId = id,
+            category = PlantCategory.FLOWERBED,
+            entryDateMillis = createdAt,
+        )
     }
 
-    /** Android: Add a full episode with captured metadata and plant a linked garden item. */
-    suspend fun addEpisode(
-        content: String,
-        createdAt: Long,
-        strength: Int?,
-        places: List<String>,
-        activities: List<String>,
-        bodySignals: List<String>,
-        moodBefore: Int?,
-        moodAfter: Int?,
-    ) {
-        val id = repo.addEpisode(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
-        gardenRepo.plant(sourceEntryId = id)
+    /**
+     * Android: Add an entry (panic or journal) from a captured [EpisodeDraft] and
+     * plant the matching garden item on the entry's day. This is the primary,
+     * type-aware write path.
+     *
+     * @return the [PlantResult] so the saved screen can tell whether a new plant
+     *         was set or the day already had this type (plan 6.2 / Block 3).
+     */
+    suspend fun addDraft(draft: EpisodeDraft): PlantResult {
+        val createdAt = draft.createdAt ?: Clock.System.now().toEpochMilliseconds()
+        val id = repo.addDraft(draft, fallbackCreatedAt = createdAt)
+        val category = when (draft.type) {
+            EntryType.PANIC -> PlantCategory.TREE
+            EntryType.JOURNAL -> PlantCategory.FLOWERBED
+        }
+        return gardenRepo.plantForEntry(
+            sourceEntryId = id,
+            category = category,
+            entryDateMillis = createdAt,
+            strength = draft.strength,
+        )
     }
+
+    /** Android: Update an entry from a captured [EpisodeDraft]. */
+    suspend fun updateDraft(id: Long, draft: EpisodeDraft) = repo.updateDraft(id, draft)
 
     /** Android: Update an existing note. */
     suspend fun update(id: Long, content: String) = repo.update(id, content)
 
-    /** Android: Update an episode with metadata. */
-    suspend fun updateEpisode(
-        id: Long,
-        content: String,
-        strength: Int?,
-        places: List<String>,
-        activities: List<String>,
-        bodySignals: List<String>,
-        moodBefore: Int?,
-        moodAfter: Int?,
-    ) = repo.updateEpisode(id, content, strength, places, activities, bodySignals, moodBefore, moodAfter)
-
     /** Android: Delete a note. */
     suspend fun delete(id: Long) = repo.delete(id)
 
-    /** iOS: Add a new note and plant a linked garden item. */
-    fun addAsync(content: String, createdAt: Long, onDone: (Throwable?) -> Unit) {
+    /** iOS: Add a text-only note and plant a flower bed. */
+    fun addAsync(content: String, createdAt: Long, onDone: (PlantResult?, Throwable?) -> Unit) {
         scope.launch {
             runCatching { add(content, createdAt) }
-                .onFailure(onDone)
-                .onSuccess { onDone(null) }
+                .onFailure { onDone(null, it) }
+                .onSuccess { onDone(it, null) }
         }
     }
 
-    /** iOS: Add a full episode with captured metadata and plant a linked garden item. */
-    fun addEpisodeAsync(
-        content: String,
-        createdAt: Long,
-        strength: Int?,
-        places: List<String>,
-        activities: List<String>,
-        bodySignals: List<String>,
-        moodBefore: Int?,
-        moodAfter: Int?,
-        onDone: (Throwable?) -> Unit,
-    ) {
+    /**
+     * iOS: Add an entry (panic or journal) from a captured [EpisodeDraft] and plant
+     * the matching garden item. Primary, type-aware write path for Swift. The
+     * callback carries the [PlantResult] so the saved screen can adapt its text.
+     */
+    fun addDraftAsync(draft: EpisodeDraft, onDone: (PlantResult?, Throwable?) -> Unit) {
         scope.launch {
-            runCatching {
-                addEpisode(content, createdAt, strength, places, activities, bodySignals, moodBefore, moodAfter)
-            }.onFailure(onDone).onSuccess { onDone(null) }
+            runCatching { addDraft(draft) }
+                .onFailure { onDone(null, it) }
+                .onSuccess { onDone(it, null) }
         }
     }
 
@@ -128,22 +130,12 @@ class NotesController(
         }
     }
 
-    /** iOS: Update an episode with metadata. */
-    fun updateEpisodeAsync(
-        id: Long,
-        content: String,
-        strength: Int?,
-        places: List<String>,
-        activities: List<String>,
-        bodySignals: List<String>,
-        moodBefore: Int?,
-        moodAfter: Int?,
-        onDone: (Throwable?) -> Unit,
-    ) {
+    /** iOS: Update an entry from a captured [EpisodeDraft]. */
+    fun updateDraftAsync(id: Long, draft: EpisodeDraft, onDone: (Throwable?) -> Unit) {
         scope.launch {
-            runCatching {
-                repo.updateEpisode(id, content, strength, places, activities, bodySignals, moodBefore, moodAfter)
-            }.onFailure(onDone).onSuccess { onDone(null) }
+            runCatching { repo.updateDraft(id, draft) }
+                .onFailure(onDone)
+                .onSuccess { onDone(null) }
         }
     }
 

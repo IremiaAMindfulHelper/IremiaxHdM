@@ -14,26 +14,73 @@
     <string name="wellbeing">Wohlbefinden</string>
     <!-- Journal screen -->
     <string name="today">Heute</string>
-    <string name="journal_capture_cta">+   Episode erfassen</string>
+    <string name="journal_capture_cta">+   Eintrag erfassen</string>
+    <string name="journal_fab">Neuer Eintrag</string>
 
     <!-- Tree overview card -->
     <string name="tree_overview_title">BAUMÜBERSICHT</string>
     <string name="tree_overview_period">Letzte 30 Tage</string>
     <string name="tree_overview_planted">Bäume gepflanzt</string>
-    <string name="tree_overview_encouragement">Leere Tage sind völlig okay — dein Garten wächst in deinem Tempo.</string>
+    <string name="tree_overview_encouragement">Leere Tage sind völlig okay, dein Garten wächst in deinem Tempo.</string>
 
     <!-- Recent notes section -->
-    <string name="recent_notes_title">Letzte Episoden</string>
-    <string name="recent_notes_add">Episode hinzufügen</string>
+    <string name="recent_notes_title">Letzte Einträge</string>
+    <string name="recent_notes_add">Eintrag hinzufügen</string>
+
+    <!-- Entry type chooser -->
+    <string name="entry_type_title">Was möchtest du festhalten?</string>
+    <string name="entry_type_subtitle">Du entscheidest, was gerade passt.</string>
+    <string name="entry_type_panic_title">Panikattacke</string>
+    <string name="entry_type_panic_desc">Halte fest, wie stark es war und was drumherum passiert ist.</string>
+    <string name="entry_type_journal_title">Journal-Eintrag</string>
+    <string name="entry_type_journal_desc">Schreib auf, wie es dir heute geht. Geführt oder ganz frei.</string>
+
+    <!-- Journal entry (guided + free) -->
+    <string name="journal_title">Wie geht es dir heute?</string>
+    <string name="journal_subtitle">Nimm dir einen Moment. Alles ist optional.</string>
+    <string name="journal_prompts_title">Ein paar Anstöße</string>
+    <string name="journal_prompts_hint">Beantworte, was dich anspricht. Nichts musst du ausfüllen.</string>
+    <string name="journal_free_button">Einfach nur Journal-Eintrag machen</string>
+    <string name="journal_free_title">Dein Journal-Eintrag</string>
+    <string name="journal_free_prompt">Schreib so viel du magst.</string>
+    <string name="journal_free_placeholder">Heute war …</string>
+    <string name="journal_save">Eintrag speichern</string>
+    <string name="journal_required_hint">Schreib ein paar Worte, dann kannst du speichern.</string>
+
+    <!-- Journal reflection question pairs (all optional) -->
+    <string name="journal_q_annoyed">Was hat dich heute genervt?</string>
+    <string name="journal_q_pleased">Was hat dich heute gefreut?</string>
+    <string name="journal_q_stressed">Was hat dich heute gestresst?</string>
+    <string name="journal_q_relaxed">Was hat dich heute entspannt?</string>
+    <string name="journal_q_hard">Was ist dir heute schwergefallen?</string>
+    <string name="journal_q_welldone">Was ist dir heute gut gelungen?</string>
+    <string name="journal_q_worried">Worüber hast du dir heute Sorgen gemacht?</string>
+    <string name="journal_q_lookforward">Worauf freust du dich gerade?</string>
+    <string name="journal_q_burdened">Was hat dich heute belastet?</string>
+    <string name="journal_q_grateful">Wofür bist du heute dankbar?</string>
+
+    <!-- Optional / required field markers -->
+    <string name="field_optional">(optional)</string>
+
+    <!-- Entry title (auto-generated, editable) -->
+    <string name="entry_title_label">Titel</string>
+    <string name="entry_title_optional_hint">Titel (optional, wird sonst aus dem Text erzeugt)</string>
+    <string name="entry_title_placeholder">Kurzer Titel</string>
+
+    <!-- Delete confirmation -->
+    <string name="entry_delete_title">Eintrag löschen?</string>
+    <string name="entry_delete_message">Das kann nicht rückgängig gemacht werden.</string>
+    <string name="entry_delete_confirm">Löschen</string>
+    <string name="entry_delete_cancel">Abbrechen</string>
 
     <!-- Episode capture: Step 1 — Intensity -->
-    <string name="episode_title">Episode festhalten</string>
-    <string name="episode_subtitle">Kein Druck — du hältst nur fest, was war.</string>
+    <string name="episode_title">Eintrag festhalten</string>
+    <string name="episode_subtitle">Kein Druck, du hältst nur fest, was war.</string>
     <string name="episode_next">Weiter</string>
     <string name="episode_skip_step">Schritt überspringen</string>
     <string name="episode_when">Wann war das?</string>
     <string name="episode_today_time">Heute, %1$s</string>
-    <string name="episode_strength_label">Stärke (1–10)</string>
+    <string name="episode_strength_label">Stärke (1 bis 10)</string>
     <string name="episode_strength_low">wenig spürbar</string>
     <string name="episode_strength_high">sehr stark</string>
 
@@ -72,6 +119,16 @@
     <string name="episode_saved_title">Gespeichert</string>
     <string name="episode_saved_body">Dein Eintrag ist erfasst. Du entscheidest, wie viel du teilst.</string>
     <string name="episode_saved_tree_badge">Ein Baum wurde in deinem Garten gepflanzt</string>
+
+    <!-- Block 3: impulse text on the saved screen (placeholder, no real exercise) -->
+    <string name="saved_impulse_panic_high">Vielleicht würde dir jetzt eine Atemübung guttun.</string>
+    <string name="saved_impulse_panic_low">Vielleicht magst du dir einen ruhigen Moment gönnen.</string>
+    <string name="saved_impulse_journal">Schön, dass du dir Zeit genommen hast.</string>
+
+    <!-- Block 3: badges for tree vs flower bed, and the "garden full" case -->
+    <string name="episode_saved_flower_badge">Ein Blumenbeet wurde in deinem Garten angelegt</string>
+    <string name="episode_saved_already_tree">Dein Garten ist diesen Monat schon voll bepflanzt.</string>
+    <string name="episode_saved_already_flower">Dein Garten ist diesen Monat schon voll bepflanzt.</string>
     <string name="episode_saved_dataset_title">DEIN DATENSATZ WÄCHST</string>
     <string name="episode_saved_entries">Einträge</string>
     <string name="episode_saved_goal_hint">Mit %1$d Einträgen werden häufige Ausreißer sichtbar</string>
@@ -96,14 +153,14 @@
     <string name="garden_entry_plural">%1$d Einträge</string>
     <string name="garden_day_label">Tag %1$d</string>
     <string name="garden_month_trees">%1$d Bäume in diesem Monat gepflanzt</string>
-    <string name="garden_entry_sheet_title">Diese Episode</string>
-    <string name="garden_entry_sheet_empty">Kein Text für diese Episode.</string>
+    <string name="garden_entry_sheet_title">Dieser Eintrag</string>
+    <string name="garden_entry_sheet_empty">Kein Text für diesen Eintrag.</string>
     <string name="garden_reset">Garten zurücksetzen</string>
     <string name="garden_reset_confirm_title">Garten zurücksetzen?</string>
     <string name="garden_reset_confirm_message">Das entfernt alle gepflanzten Bäume und Blumen. Deine Einträge bleiben erhalten.</string>
     <string name="garden_reset_confirm_action">Zurücksetzen</string>
     <string name="garden_reset_cancel">Abbrechen</string>
-    <string name="episode_detail_title">Episode</string>
+    <string name="episode_detail_title">Eintrag</string>
     <string name="episode_detail_edit">Bearbeiten</string>
 
     <!-- Sample journal notes (prototype) -->
@@ -113,6 +170,11 @@
     <string name="sample_note_preview_2">Nach der Atemübung ging es direkt…</string>
     <string name="sample_note_title_3">Vor dem Schlafen</string>
     <string name="sample_note_preview_3">Heute zwei ruhige Momente bewusst…</string>
+
+    <!-- Home screen entry point (Block 1.3) -->
+    <string name="home_garden_preview_title">DEIN GARTEN</string>
+    <string name="home_make_entry">Eintrag machen</string>
+    <string name="home_view_garden">Garten ansehen</string>
 
     <!-- Home screen (redesign) -->
     <string name="home_greeting_morning">Guten Morgen</string>
@@ -140,14 +202,35 @@
     <string name="home_flashcard_next">Nächste Karte</string>
 
     <!-- Motivation insight (blue hero card) copy variants, keyed by (isPositive, confidence) -->
-    <string name="insight_headline_positive_high">Dein Weg stimmt! Die letzten 30 Tage waren spürbar ruhiger.</string>
-    <string name="insight_headline_positive_medium">Es scheint sich zu beruhigen – die letzten 30 Tage gingen in die ruhigere Richtung.</string>
-    <string name="insight_headline_positive_low">Ein leises Zeichen: deine letzten Wochen wirken etwas ruhiger.</string>
-    <string name="insight_headline_neutral_high">Beständige Wochen. Du bist immer wieder für dich da.</string>
-    <string name="insight_headline_neutral_medium">Du bleibst dran – das zählt schon.</string>
-    <string name="insight_headline_neutral_low">Schön, dass du da bist. Jeder Eintrag hilft, deine Muster zu verstehen.</string>
+    <string name="insight_headline_positive_high">Du bist gerade auf einem guten Weg. Bleib dran, so wie du es machst.</string>
+    <string name="insight_headline_positive_medium">Die letzten Tage liefen ruhiger für dich. Gönn dir dieses Gefühl.</string>
+    <string name="insight_headline_positive_low">Man merkt, dass dir deine Einträge helfen. Schön, dass du dranbleibst.</string>
+    <string name="insight_headline_neutral_high">Auch schwere Tage gehören dazu. Dass du sie festhältst, ist schon ein Schritt.</string>
+    <string name="insight_headline_neutral_medium">Gerade ist einiges los bei dir. Sei geduldig mit dir.</string>
+    <string name="insight_headline_neutral_low">Du musst heute nichts leisten. Dass du hier bist, reicht.</string>
+
+    <!-- Block 4: label connecting the motivation text to the user's last entry -->
+    <string name="insight_for_you_label">Für dich, nach deinem letzten Eintrag</string>
     <string name="insight_fact_fewer_attacks">Weniger Panikattacken</string>
     <string name="insight_fact_steady_attacks">Eine beständige Phase</string>
     <string name="insight_fact_vs_prev_30">als vor 30 Tagen</string>
     <string name="insight_fact_keep_going">bleib in deinem Tempo dran</string>
+
+    <!-- Block 2: tappable trend graph detail -->
+    <string name="trend_detail_title">Dein Verlauf an diesem Punkt</string>
+    <string name="trend_detail_intensity">Stärke: %1$d von 10</string>
+    <string name="trend_detail_calmer">Dieser Eintrag hat deinen Verlauf beruhigt.</string>
+    <string name="trend_detail_steady">Dieser Eintrag hat deinen Verlauf gehalten.</string>
+    <string name="trend_detail_more_intense">Dieser Tag war intensiver. Auch das darf sein.</string>
+    <string name="trend_detail_journal">Ein Journal-Eintrag an diesem Tag.</string>
+    <string name="trend_detail_open_entry">Eintrag öffnen</string>
+    <string name="trend_detail_hint">Tippe auf einen Punkt, um den Tag zu sehen.</string>
+
+    <!-- Block 2: open entry from the tree/garden view -->
+    <string name="garden_open_entry">Eintrag öffnen</string>
+
+    <!-- Block 5: animation preview mode (dev tool) -->
+    <string name="ambient_preview_title">Animations-Vorschau</string>
+    <string name="ambient_preview_prev">Vorherige</string>
+    <string name="ambient_preview_next">Nächste</string>
 </resources>

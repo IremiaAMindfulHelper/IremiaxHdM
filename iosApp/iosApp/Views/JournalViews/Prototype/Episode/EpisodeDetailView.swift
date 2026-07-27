@@ -13,14 +13,18 @@ struct EpisodeDetailView: View {
 
     @State private var editing = false
     @State private var content: String
+    @State private var title: String
     @State private var strength: Double
     @State private var moodAfter: Int
+
+    private var isPanic: Bool { !note.isJournal }
 
     init(note: NoteUI, onClose: @escaping () -> Void, onSave: @escaping (EpisodeDraftData) -> Void) {
         self.note = note
         self.onClose = onClose
         self.onSave = onSave
         _content = State(initialValue: note.content)
+        _title = State(initialValue: note.title ?? "")
         _strength = State(initialValue: Double(note.strength ?? 5))
         _moodAfter = State(initialValue: note.moodAfter ?? -1)
     }
@@ -36,7 +40,7 @@ struct EpisodeDetailView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text(PS.episode_detail_title)
+                Text(Strings.episode_detail_title)
                     .font(IremiaText.h2)
                     .foregroundColor(IremiaColors.ink)
                 Spacer()
@@ -52,15 +56,25 @@ struct EpisodeDetailView: View {
             Text(dateText)
                 .font(IremiaText.caption)
                 .foregroundColor(IremiaColors.gray500)
+            Spacer().frame(height: IremiaSpacing.s1)
+            // The entry's title (user-set or derived from the text).
+            Text(note.displayTitle)
+                .font(IremiaText.h2)
+                .foregroundColor(IremiaColors.ink)
 
             Spacer().frame(height: IremiaSpacing.s4)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: IremiaSpacing.s3) {
+                    // Editable title (edit mode only)
+                    if editing {
+                        EntryTitleField(title: $title)
+                    }
+
                     // Reflection text
                     IremiaCard {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text(PS.episode_reflection_title)
+                            Text(Strings.episode_reflection_title)
                                 .font(IremiaText.eyebrow)
                                 .foregroundColor(IremiaColors.teal700)
                             Spacer().frame(height: IremiaSpacing.s2)
@@ -77,7 +91,7 @@ struct EpisodeDetailView: View {
                                             .stroke(IremiaColors.gray300, lineWidth: 1)
                                     )
                             } else {
-                                Text(content.isEmpty ? PS.garden_entry_sheet_empty : content)
+                                Text(content.isEmpty ? Strings.garden_entry_sheet_empty : content)
                                     .font(IremiaText.body)
                                     .foregroundColor(IremiaColors.ink700)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -85,39 +99,42 @@ struct EpisodeDetailView: View {
                         }
                     }
 
-                    // Intensity
-                    IremiaCard {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(PS.episode_strength_label)
-                                .font(IremiaText.eyebrow)
-                                .foregroundColor(IremiaColors.teal700)
-                            Spacer().frame(height: IremiaSpacing.s2)
-                            if editing {
-                                Slider(value: $strength, in: 1...10, step: 1)
-                                    .tint(IremiaColors.teal700)
+                    // Intensity + mood are panic-only; journal entries hide them.
+                    if isPanic {
+                        // Intensity
+                        IremiaCard {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(Strings.episode_strength_label)
+                                    .font(IremiaText.eyebrow)
+                                    .foregroundColor(IremiaColors.teal700)
+                                Spacer().frame(height: IremiaSpacing.s2)
+                                if editing {
+                                    Slider(value: $strength, in: 1...10, step: 1)
+                                        .tint(IremiaColors.teal700)
+                                }
+                                Text("\(Int(strength))/10")
+                                    .font(IremiaText.cardTitle)
+                                    .foregroundColor(IremiaColors.ink)
                             }
-                            Text("\(Int(strength))/10")
-                                .font(IremiaText.cardTitle)
-                                .foregroundColor(IremiaColors.ink)
                         }
-                    }
 
-                    // Mood
-                    IremiaCard {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(PS.episode_mood_after)
-                                .font(IremiaText.eyebrow)
-                                .foregroundColor(IremiaColors.teal700)
-                            Spacer().frame(height: IremiaSpacing.s2)
-                            HStack(spacing: 8) {
-                                ForEach(Array(moodFaces.enumerated()), id: \.offset) { idx, face in
-                                    Text(face)
-                                        .font(IremiaText.cardTitle)
-                                        .frame(width: 40, height: 40)
-                                        .background(
-                                            Capsule().fill(idx == moodAfter ? IremiaColors.teal100 : IremiaColors.gray100)
-                                        )
-                                        .onTapGesture { if editing { moodAfter = idx } }
+                        // Mood
+                        IremiaCard {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(Strings.episode_mood_after)
+                                    .font(IremiaText.eyebrow)
+                                    .foregroundColor(IremiaColors.teal700)
+                                Spacer().frame(height: IremiaSpacing.s2)
+                                HStack(spacing: 8) {
+                                    ForEach(Array(moodFaces.enumerated()), id: \.offset) { idx, face in
+                                        Text(face)
+                                            .font(IremiaText.cardTitle)
+                                            .frame(width: 40, height: 40)
+                                            .background(
+                                                Capsule().fill(idx == moodAfter ? IremiaColors.teal100 : IremiaColors.gray100)
+                                            )
+                                            .onTapGesture { if editing { moodAfter = idx } }
+                                    }
                                 }
                             }
                         }
@@ -128,7 +145,7 @@ struct EpisodeDetailView: View {
                     if !contextItems.isEmpty {
                         IremiaCard {
                             VStack(alignment: .leading, spacing: 0) {
-                                Text(PS.episode_context_title)
+                                Text(Strings.episode_context_title)
                                     .font(IremiaText.eyebrow)
                                     .foregroundColor(IremiaColors.teal700)
                                 Spacer().frame(height: IremiaSpacing.s2)
@@ -145,16 +162,18 @@ struct EpisodeDetailView: View {
             Spacer().frame(height: IremiaSpacing.s3)
 
             if editing {
-                PrimaryButton(text: PS.episode_reflection_save) {
+                PrimaryButton(text: Strings.episode_reflection_save) {
                     onSave(
                         EpisodeDraftData(
                             content: content,
-                            strength: Int(strength),
+                            type: note.type,
+                            title: title.isEmpty ? nil : title,
+                            strength: isPanic ? Int(strength) : nil,
                             places: note.places,
                             activities: note.activities,
                             bodySignals: note.bodySignals,
-                            moodBefore: note.moodBefore,
-                            moodAfter: moodAfter >= 0 ? moodAfter : nil,
+                            moodBefore: isPanic ? note.moodBefore : nil,
+                            moodAfter: isPanic ? (moodAfter >= 0 ? moodAfter : nil) : nil,
                             // Editing keeps the original timestamp; the update path ignores this.
                             createdAt: note.createdAt
                         )
@@ -162,12 +181,12 @@ struct EpisodeDetailView: View {
                     editing = false
                 }
             } else {
-                PrimaryButton(text: PS.episode_detail_edit) { editing = true }
+                PrimaryButton(text: Strings.episode_detail_edit) { editing = true }
             }
 
             Spacer().frame(height: IremiaSpacing.s1)
 
-            SecondaryTextButton(text: PS.nav_close, action: onClose)
+            SecondaryTextButton(text: Strings.nav_close, action: onClose)
         }
         .padding(.horizontal, IremiaSpacing.screenGutter)
         .padding(.vertical, IremiaSpacing.s3)

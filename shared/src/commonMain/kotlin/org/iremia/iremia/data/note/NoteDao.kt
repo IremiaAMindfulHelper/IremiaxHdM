@@ -4,6 +4,7 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import org.iremia.iremia.domain.note.EntryType
 import org.iremia.iremia.domain.note.Note
 import com.iremia.UserData
 
@@ -20,11 +21,13 @@ class NoteDao(private val db: UserData) {
      */
     fun observeAll(): Flow<List<Note>> =
         db.noteQueries
-            .selectAll { id, content, createdAt, strength, place, activity, bodySignals, moodBefore, moodAfter ->
+            .selectAll { id, content, createdAt, type, title, strength, place, activity, bodySignals, moodBefore, moodAfter ->
                 Note(
                     id = id,
                     content = content,
                     createdAt = createdAt,
+                    type = EntryType.fromStorage(type),
+                    title = title,
                     strength = strength?.toInt(),
                     places = decodeList(place),
                     activities = decodeList(activity),
@@ -45,6 +48,8 @@ class NoteDao(private val db: UserData) {
     fun insert(
         content: String,
         createdAt: Long,
+        type: EntryType = EntryType.PANIC,
+        title: String? = null,
         strength: Int? = null,
         places: List<String> = emptyList(),
         activities: List<String> = emptyList(),
@@ -55,6 +60,8 @@ class NoteDao(private val db: UserData) {
         db.noteQueries.insert(
             content = content,
             createdAt = createdAt,
+            type = type.storageValue,
+            title = title?.takeIf { it.isNotBlank() },
             strength = strength?.toLong(),
             place = encodeList(places),
             activity = encodeList(activities),
@@ -71,6 +78,8 @@ class NoteDao(private val db: UserData) {
     fun update(
         id: Long,
         content: String,
+        type: EntryType = EntryType.PANIC,
+        title: String? = null,
         strength: Int? = null,
         places: List<String> = emptyList(),
         activities: List<String> = emptyList(),
@@ -80,6 +89,8 @@ class NoteDao(private val db: UserData) {
     ) {
         db.noteQueries.updateById(
             content = content,
+            type = type.storageValue,
+            title = title?.takeIf { it.isNotBlank() },
             strength = strength?.toLong(),
             place = encodeList(places),
             activity = encodeList(activities),
