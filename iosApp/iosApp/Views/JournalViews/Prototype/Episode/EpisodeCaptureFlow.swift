@@ -167,7 +167,7 @@ struct EpisodeCaptureFlow: View {
                 )
 
             case .journal:
-                JournalEntryView(
+                JournalCaptureEntryView(
                     onBack: { stage = .typeChooser },
                     onSave: { title, content in
                         savedIsJournal = true

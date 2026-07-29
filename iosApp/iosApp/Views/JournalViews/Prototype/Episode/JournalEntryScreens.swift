@@ -115,7 +115,7 @@ private struct EntryTypeCard: View {
 /// always-visible button to switch to a single big free-text field. A journal
 /// entry only requires *some* text; the title is optional and auto-derived when
 /// left blank.
-struct JournalEntryView: View {
+struct JournalCaptureEntryView: View {
     /// Emits (title, content). Content is non-empty when this fires.
     let onBack: () -> Void
     let onSave: (String, String) -> Void

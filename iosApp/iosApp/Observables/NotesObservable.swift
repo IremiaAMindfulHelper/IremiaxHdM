@@ -132,8 +132,9 @@ final class NotesObservable: ObservableObject {
     /// Converts an arbitrary KMP-exported Note object to `NoteUI`.
     /// Uses KVC/Mirror to read properties, making the bridge resilient to renames.
     private static func toUI(_ any: Any) -> NoteUI? {
-        // Fast path: the shared model is exported as a typed `Note`.
-        if let note = any as? Note {
+        // Fast path: the shared domain model. Obj-C export renames it to `Note_`
+        // because the SQLDelight row type already claims the `Note` Swift name.
+        if let note = any as? Note_ {
             return NoteUI(
                 id: note.id,
                 content: note.content,
@@ -141,9 +142,9 @@ final class NotesObservable: ObservableObject {
                 type: note.type.storageValue,
                 title: note.title,
                 strength: note.strength?.intValue,
-                places: stringArray(from: any, key: "places"),
-                activities: stringArray(from: any, key: "activities"),
-                bodySignals: stringArray(from: note.bodySignals),
+                places: note.places,
+                activities: note.activities,
+                bodySignals: note.bodySignals,
                 moodBefore: note.moodBefore?.intValue,
                 moodAfter: note.moodAfter?.intValue
             )

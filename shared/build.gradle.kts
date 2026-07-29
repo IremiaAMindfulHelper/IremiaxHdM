@@ -149,7 +149,7 @@ if (OperatingSystem.current().isMacOsX) {
 
         commandLine(
             "sh", "-c",
-            "rm -rf \"${rootProject.projectDir}/iosApp/Shared.xcframework\" && cp -R \"${layout.buildDirectory.get()}/XCFrameworks/release/Shared.xcframework\" \"${rootProject.projectDir}/iosApp/Shared.xcframework\""
+            "rm -rf \"${rootProject.projectDir}/iosApp/Shared.xcframework\" && cp -R \"${layout.buildDirectory.get()}/cocoapods/publish/release/shared.xcframework\" \"${rootProject.projectDir}/iosApp/Shared.xcframework\""
         )
         doLast {
             println("Shared.xcframework successfully copied to iosApp")
