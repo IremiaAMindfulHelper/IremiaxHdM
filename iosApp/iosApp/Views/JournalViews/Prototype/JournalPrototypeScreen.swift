@@ -15,8 +15,12 @@ struct JournalPrototypeScreen: View {
     @ObservedObject var gardenObservable: GardenObservable
     /// Opens the capture flow hosted at the shell level.
     var openCaptureFlow: () -> Void = {}
-    /// Set true by MainView (e.g. "view garden" from the capture flow) to open the
-    /// garden; this screen resets it after opening.
+    /// Set true by MainView to open the garden from elsewhere in the app; this screen
+    /// resets it after opening.
+    ///
+    /// NOTE: The capture flow's "view garden" no longer routes through here. It is
+    /// presented directly from MainView so the garden appears in the same transition
+    /// instead of briefly showing this screen first.
     @Binding var openGardenSignal: Bool
 
     @State private var selectedDate = Date()
@@ -76,7 +80,9 @@ struct JournalPrototypeScreen: View {
                     .padding(.horizontal, IremiaSpacing.screenGutter)
                     .padding(.top, IremiaSpacing.s5)
 
-                    Spacer().frame(height: IremiaSpacing.bottomNavClearance)
+                    // Clears the tab bar *and* the "+" FAB above it, so the last
+                    // entry can scroll past the button instead of stopping under it.
+                    Spacer().frame(height: IremiaSpacing.scrollBottomClearance)
                 }
             }
             // The "+" FAB now lives at the shell level (MainView), so it shows on

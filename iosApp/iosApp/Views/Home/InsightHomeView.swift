@@ -57,7 +57,8 @@ struct InsightHomeView: View {
                 DailyFlashcard()
                     .padding(.top, 24)
                     .padding(.horizontal, 16)
-                Color.clear.frame(height: 120) // clear the floating tab bar
+                // Clears the floating tab bar *and* the "+" FAB above it.
+                Color.clear.frame(height: IremiaSpacing.scrollBottomClearance)
             }
         }
         .background(HomeColors.bg.ignoresSafeArea())

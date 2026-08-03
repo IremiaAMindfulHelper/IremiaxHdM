@@ -80,6 +80,9 @@ enum IremiaSpacing {
     static let sectionGap: CGFloat = 24
     /// Bottom padding so content clears the nav bar.
     static let bottomNavClearance: CGFloat = 110
+    /// Bottom padding for scrollable content so the last item can scroll clear of
+    /// BOTH the tab bar and the floating "+" button that sits above it (56pt + margin).
+    static let scrollBottomClearance: CGFloat = 182
 }
 
 // MARK: - Motion

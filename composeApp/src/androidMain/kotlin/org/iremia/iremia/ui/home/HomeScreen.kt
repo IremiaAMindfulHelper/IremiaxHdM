@@ -134,7 +134,10 @@ fun HomeScreen(
         )
         PatternsSection(modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp))
         DailyFlashcard(modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp))
-        Spacer(Modifier.height(24.dp))
+        // NOTE: The FAB floats over this scroll area and is not part of the Scaffold's
+        // content padding, so the last card would otherwise stop underneath it. Reserve
+        // its height (56.dp) plus margin so the card can scroll clear of the button.
+        Spacer(Modifier.height(96.dp))
     }
 
     selectedPoint?.let { point ->
