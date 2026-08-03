@@ -248,8 +248,24 @@ struct GardenSceneView: View {
         }
     }
 
-    /// How long the Lottie dissolves into the static sprite once growth finishes.
-    private let crossfadeDuration: Double = 0.35
+    // MARK: - Planting choreography timings
+    //
+    // NOTE: These mirror the Android GardenScene step-for-step so the planting feels
+    // identical on both platforms. Android drives its Lottie by an explicit duration
+    // (tween 1800ms); iOS must do the same via `duration:` rather than a fixed speed
+    // multiplier, because the growth asset is 20s long and any speed factor would make
+    // the timing depend on the asset instead of the choreography.
+
+    /// Camera zoom in/out onto the planted tile (Android: tween 800ms).
+    private let zoomDuration: Double = 0.8
+    /// Growth Lottie playback (Android: tween 1800ms).
+    private let growthDuration: Double = 1.8
+    /// How long the Lottie dissolves into the static sprite once growth finishes
+    /// (Android: tween 400ms).
+    private let crossfadeDuration: Double = 0.4
+    /// Safety net if the Lottie completion never fires. Must stay above
+    /// `growthDuration` or it would cut the animation short.
+    private var growthTimeout: Double { growthDuration + 1.5 }
 
     /// Starts the plant-growth choreography: suppress the static sprite, zoom in,
     /// play the growth Lottie, then zoom back out (driven by the Lottie completion).
@@ -258,7 +274,7 @@ struct GardenSceneView: View {
         lottieOpacity = 1
         runPlantingZoom()
         // Safety net: if the Lottie completion never fires, end the sequence anyway.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + growthTimeout) {
             if isGrowing {
                 finishGrowth()
             }
@@ -295,12 +311,12 @@ struct GardenSceneView: View {
     /// completion (see growthOverlay) so it stays in sync with the animation.
     private func runPlantingZoom() {
         zoomProgress = 0
-        withAnimation(.easeInOut(duration: 0.8)) { zoomProgress = 1 }
+        withAnimation(.easeInOut(duration: zoomDuration)) { zoomProgress = 1 }
     }
 
     /// Zooms the camera back out once the growth animation has finished.
     private func endPlantingZoom() {
-        withAnimation(.easeInOut(duration: 0.8)) { zoomProgress = 0 }
+        withAnimation(.easeInOut(duration: zoomDuration)) { zoomProgress = 0 }
     }
 
     /// The growth animation overlaid on the newly planted tile.
@@ -320,7 +336,7 @@ struct GardenSceneView: View {
                 // the right scale; the tree only appears after the animation finishes.
                 let growthSize = size * 1.25
 
-                GrowthLottieView(asset: asset, speed: 4) {
+                GrowthLottieView(asset: asset, duration: growthDuration) {
                     // Growth finished: crossfade into the static tree, then zoom
                     // back out and only afterwards notify the caller (which may
                     // cue an ambient surprise), so nothing overlaps the choreography.

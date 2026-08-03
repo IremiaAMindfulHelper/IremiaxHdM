@@ -30,6 +30,14 @@ struct LottieFileView: View {
     var loopMode: LottiePlaybackMode = .playOnce
     var speed: CGFloat = 1.0
     var fromProgress: CGFloat = 0
+    /// Wall-clock seconds the played segment should take, independent of the
+    /// animation's own length. When set, it overrides `speed`: the player derives
+    /// the required speed from the loaded composition's real duration.
+    ///
+    /// NOTE: Prefer this over `speed` for anything that must match Android, which
+    /// drives its Lottie by an explicit duration (see GardenScene). A fixed `speed`
+    /// silently depends on however long the asset happens to be.
+    var duration: TimeInterval? = nil
     var onFinished: (() -> Void)? = nil
 
     var body: some View {
@@ -39,6 +47,7 @@ struct LottieFileView: View {
             loopMode: loopMode,
             speed: speed,
             fromProgress: fromProgress,
+            duration: duration,
             onFinished: onFinished
         )
         .clipped()
@@ -54,6 +63,7 @@ private struct LottiePlayerRepresentable: UIViewRepresentable {
     var loopMode: LottiePlaybackMode
     var speed: CGFloat
     var fromProgress: CGFloat
+    var duration: TimeInterval?
     var onFinished: (() -> Void)?
 
     func makeUIView(context: Context) -> LottieAnimationView {
@@ -68,6 +78,16 @@ private struct LottiePlayerRepresentable: UIViewRepresentable {
             switch result {
             case .success(let dotLottie):
                 view.loadAnimation(from: dotLottie)
+                // With an explicit duration, derive the speed from the composition's
+                // actual length so playback takes the requested wall-clock time
+                // regardless of how long the asset itself is.
+                if let duration, duration > 0, let animation = view.animation {
+                    let segment = max(0, 1 - fromProgress)
+                    let playedSeconds = animation.duration * TimeInterval(segment)
+                    view.animationSpeed = playedSeconds > 0
+                        ? CGFloat(playedSeconds / duration)
+                        : speed
+                }
                 view.play(fromProgress: fromProgress, toProgress: 1, loopMode: mappedLoopMode) { finished in
                     if finished { onFinished?() }
                 }
@@ -80,7 +100,11 @@ private struct LottiePlayerRepresentable: UIViewRepresentable {
 
     func updateUIView(_ uiView: LottieAnimationView, context: Context) {
         uiView.loopMode = mappedLoopMode
-        uiView.animationSpeed = speed
+        // Only take over the speed when no duration is driving it; otherwise this
+        // would clobber the duration-derived speed computed at load time.
+        if duration == nil {
+            uiView.animationSpeed = speed
+        }
     }
 
     /// Without this, SwiftUI falls back to `LottieAnimationView.intrinsicContentSize`,
@@ -154,9 +178,18 @@ private struct LottieFallbackView: View {
 struct GrowthLottieView: View {
     let asset: LottieAsset
     var speed: CGFloat = 1.0
+    /// Wall-clock seconds for the growth segment. Overrides `speed` when set.
+    var duration: TimeInterval? = nil
     var onFinished: (() -> Void)? = nil
 
     var body: some View {
-        LottieFileView(asset: asset, loopMode: .playOnce, speed: speed, fromProgress: 0.2, onFinished: onFinished)
+        LottieFileView(
+            asset: asset,
+            loopMode: .playOnce,
+            speed: speed,
+            fromProgress: 0.2,
+            duration: duration,
+            onFinished: onFinished
+        )
     }
 }

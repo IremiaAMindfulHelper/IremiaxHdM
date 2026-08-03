@@ -342,7 +342,9 @@ struct EpisodeSavedScreenView: View {
 
                 // Growth animation in the normal layout flow (its own row), so it sits
                 // cleanly above the title with real spacing instead of overlapping it.
-                GrowthLottieView(asset: .treeGrow, speed: 6)
+                // NOTE: speed 4 matches Android's EpisodeGrowthAnimation (speed = 4f
+                // over the same 0.2–1 clip), so the saved screen plays identically.
+                GrowthLottieView(asset: .treeGrow, speed: 4)
                     .frame(width: treeSize, height: treeSize)
 
                 // --- Top section: all texts consistently centered, room to breathe.

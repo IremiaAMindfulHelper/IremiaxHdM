@@ -48,6 +48,11 @@ struct MainView: View {
     @StateObject private var gardenObservable = GardenObservable()
     @State private var showCaptureFlow = false
     @State private var openGardenSignal = false
+    // Set when the capture flow's "view garden" is tapped. The garden is presented
+    // from this shell (not the Journal tab) in the cover's onDismiss, so it appears
+    // in the same transition instead of flashing the Journal screen in between.
+    @State private var showGardenFromCapture = false
+    @State private var pendingGardenOpen = false
 
     private func openCaptureFlow() {
         notesObservable.clearPlantResult()
@@ -129,21 +134,39 @@ struct MainView: View {
                 .ignoresSafeArea(.keyboard)
         }
         // Capture flow, hosted at the shell so the FAB works on any tab.
-        .fullScreenCover(isPresented: $showCaptureFlow, onDismiss: { notesObservable.clearPlantResult() }) {
+        .fullScreenCover(isPresented: $showCaptureFlow, onDismiss: {
+            notesObservable.clearPlantResult()
+            // Present the garden right as the capture flow finishes dismissing.
+            // Going through the Journal tab's own cover would first render the
+            // Journal screen for a moment before the garden animation started.
+            if pendingGardenOpen {
+                pendingGardenOpen = false
+                showGardenFromCapture = true
+            }
+        }) {
             EpisodeCaptureFlow(
                 entryCount: notesObservable.entryCount,
                 onClose: { showCaptureFlow = false },
                 onFinished: { showCaptureFlow = false },
                 onViewGarden: {
-                    showCaptureFlow = false
-                    // Switch to the Journal tab and ask it to open the garden.
+                    // The Journal tab is still selected underneath, so returning
+                    // from the garden lands on the expected screen.
                     selectedTab = .journal
-                    openGardenSignal = true
+                    pendingGardenOpen = true
+                    showCaptureFlow = false
                 },
                 onSaveEpisode: { draft in
                     notesObservable.addEntry(draft)
                 },
                 plantResult: notesObservable.lastPlantResult
+            )
+        }
+        // Garden presented from the shell, so "view garden" in the capture flow goes
+        // straight into the garden without the Journal screen showing in between.
+        .fullScreenCover(isPresented: $showGardenFromCapture) {
+            GardenOverviewScreen(
+                garden: gardenObservable,
+                onClose: { showGardenFromCapture = false }
             )
         }
     }
