@@ -143,6 +143,8 @@
     <!-- Navigation content descriptions -->
     <string name="nav_back">Zurück</string>
     <string name="nav_close">Schließen</string>
+    <!-- Dismisses the soft keyboard from a multiline text field -->
+    <string name="keyboard_done">Fertig</string>
 
     <!-- Garden overview -->
     <string name="garden_title">Mein Garten</string>

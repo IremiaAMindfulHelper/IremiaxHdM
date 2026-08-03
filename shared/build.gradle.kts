@@ -128,7 +128,9 @@ sqldelight {
 multiplatformResources {
     resourcesPackage.set("org.iremia.library")
     resourcesClassName.set("SharedRes")
-    iosBaseLocalizationRegion.set("en")
+    // NOTE: German is the base locale, so the app falls back to German on any
+    // device whose system language is not explicitly supported. Must match base/.
+    iosBaseLocalizationRegion.set("de")
     iosMinimalDeploymentTarget.set("14.0")
 }
 
