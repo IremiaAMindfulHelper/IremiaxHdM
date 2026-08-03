@@ -24,6 +24,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import org.iremia.iremia.ui.components.IremiaCard
@@ -290,6 +294,7 @@ fun JournalEntryScreen(
 @Composable
 fun EntryTitleField(title: String, onTitleChange: (String) -> Unit) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     Column {
         Text(
             localized(SharedRes.strings.entry_title_optional_hint).toString(context),
@@ -306,6 +311,9 @@ fun EntryTitleField(title: String, onTitleChange: (String) -> Unit) {
             shape = IremiaShapes.Field,
             textStyle = IremiaText.Body,
             colors = journalFieldColors(),
+            // Single-line field: the IME shows a "done" key that closes the keyboard.
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         )
     }
 }
@@ -325,7 +333,14 @@ private fun GuidedPromptField(prompt: JournalPrompt, answer: String, onAnswerCha
     }
 }
 
-/** A generously sized multiline text area matching the journal look. */
+/**
+ * A generously sized multiline text area matching the journal look.
+ *
+ * NOTE: Multiline fields keep the IME's newline key, so they intentionally do *not*
+ * use ImeAction.Done, which would cost the user paragraph breaks. Instead a small
+ * "done" button appears above the field while it has focus, giving an explicit way
+ * to close the keyboard besides tapping outside or the system back button.
+ */
 @Composable
 private fun JournalTextArea(
     value: String,
@@ -333,19 +348,41 @@ private fun JournalTextArea(
     placeholder: String,
     minHeight: androidx.compose.ui.unit.Dp,
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = minHeight),
-        placeholder = if (placeholder.isEmpty()) null else {
-            { Text(placeholder, style = IremiaText.Body, color = IremiaColors.Gray400) }
-        },
-        shape = IremiaShapes.Field,
-        textStyle = IremiaText.Body,
-        colors = journalFieldColors(),
-    )
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    var isFocused by remember { mutableStateOf(false) }
+
+    Column {
+        if (isFocused) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                Text(
+                    text = localized(SharedRes.strings.keyboard_done).toString(context),
+                    style = IremiaText.Caption,
+                    color = IremiaColors.Teal700,
+                    modifier = Modifier
+                        .clickable { focusManager.clearFocus() }
+                        .padding(vertical = 4.dp, horizontal = 8.dp),
+                )
+            }
+        }
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = minHeight)
+                .onFocusChanged { isFocused = it.isFocused },
+            placeholder = if (placeholder.isEmpty()) null else {
+                { Text(placeholder, style = IremiaText.Body, color = IremiaColors.Gray400) }
+            },
+            shape = IremiaShapes.Field,
+            textStyle = IremiaText.Body,
+            colors = journalFieldColors(),
+        )
+    }
 }
 
 /**

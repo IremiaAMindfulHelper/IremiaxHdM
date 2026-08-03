@@ -33,7 +33,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -124,10 +126,32 @@ fun EpisodeDetailScreen(
                     Text(localized(SharedRes.strings.episode_reflection_title).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
                     Spacer(Modifier.height(IremiaSpacing.S2))
                     if (editing) {
+                        // Multiline field: keep the newline key and offer an explicit
+                        // "done" button while focused to close the keyboard.
+                        val focusManager = LocalFocusManager.current
+                        var noteFocused by remember { mutableStateOf(false) }
+                        if (noteFocused) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                            ) {
+                                Text(
+                                    text = localized(SharedRes.strings.keyboard_done).toString(context),
+                                    style = IremiaText.Caption,
+                                    color = IremiaColors.Teal700,
+                                    modifier = Modifier
+                                        .clickable { focusManager.clearFocus() }
+                                        .padding(vertical = 4.dp, horizontal = 8.dp),
+                                )
+                            }
+                        }
                         OutlinedTextField(
                             value = content,
                             onValueChange = { content = it },
-                            modifier = Modifier.fillMaxWidth().height(120.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .onFocusChanged { noteFocused = it.isFocused },
                             textStyle = IremiaText.Body,
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = IremiaColors.Ink900,

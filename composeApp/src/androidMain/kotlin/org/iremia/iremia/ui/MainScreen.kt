@@ -1,5 +1,8 @@
 package org.iremia.iremia.ui
 
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -14,7 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -83,7 +88,16 @@ fun MainScreen() {
     }
 
     AppTheme {
+        // Tapping anywhere outside a text field dismisses the keyboard. Without this,
+        // the only way to close it is Android's own back button. Uses the awaited
+        // "press" phase so the tap still reaches buttons and list items underneath.
+        val focusManager = LocalFocusManager.current
         Scaffold(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { focusManager.clearFocus() })
+                },
             bottomBar = {
                 IremiaBottomBar(
                     selectedTab = selectedTab,
@@ -137,19 +151,30 @@ fun MainScreen() {
                     dismissOnClickOutside = false,
                 ),
             ) {
-                EpisodeCaptureFlow(
-                    entryCount = state.entryCount,
-                    onClose = { showCaptureFlow = false },
-                    onFinished = { showCaptureFlow = false },
-                    onViewGarden = {
-                        showCaptureFlow = false
-                        // Switch to the Journal tab and ask it to open the garden.
-                        selectedTab = MainTab.Journal
-                        openGardenSignal = true
-                    },
-                    onSaveEpisode = { draft -> notesViewModel.addEntry(draft) },
-                    plantResult = plantResult,
-                )
+                // The dialog is its own window, so the Scaffold's tap handler above does
+                // not reach it. Repeat it here: most text fields live in this flow.
+                val dialogFocusManager = LocalFocusManager.current
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = { dialogFocusManager.clearFocus() })
+                        },
+                ) {
+                    EpisodeCaptureFlow(
+                        entryCount = state.entryCount,
+                        onClose = { showCaptureFlow = false },
+                        onFinished = { showCaptureFlow = false },
+                        onViewGarden = {
+                            showCaptureFlow = false
+                            // Switch to the Journal tab and ask it to open the garden.
+                            selectedTab = MainTab.Journal
+                            openGardenSignal = true
+                        },
+                        onSaveEpisode = { draft -> notesViewModel.addEntry(draft) },
+                        plantResult = plantResult,
+                    )
+                }
             }
         }
     }
