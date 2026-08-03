@@ -5,11 +5,9 @@
 Nutzertexte bleiben dabei bewusst emotional neutral und autonomie-wahrend: keine Schuldgefühle, kein Streak-Druck.
 
 ##  Projektmitglieder
-* **Kerem Sarıca** (XXXXX)
-* **Semih Akçay** (XXXXX)
-* **Yusuf Altun** (XXXXX)
-
-> Matrikelnummern bitte noch eintragen.
+* **Kerem Sarica**
+* **Semih Akcay**
+* **Yusuf Altun** 
 
 **Betreuung:** Prof. Dr. Ansgar Gerlicher
 
