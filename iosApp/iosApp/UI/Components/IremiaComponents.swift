@@ -18,6 +18,11 @@ struct PrimaryButton: View {
                 Text(text)
                     .font(IremiaText.cardTitle)
                     .foregroundColor(IremiaColors.white)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    // Let the label report its true wrapped height so the pill
+                    // grows with Dynamic Type instead of clipping the text.
+                    .fixedSize(horizontal: false, vertical: true)
                 if let icon = trailingIcon {
                     Image(systemName: icon)
                         .font(.system(size: 20))
@@ -25,7 +30,8 @@ struct PrimaryButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 54)
+            .padding(.vertical, 10)
+            .frame(minHeight: 54)
             .background(enabled ? IremiaColors.teal700 : IremiaColors.gray400)
             .clipShape(Capsule())
         }
