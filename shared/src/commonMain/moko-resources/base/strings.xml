@@ -64,8 +64,7 @@
 
     <!-- Entry title (auto-generated, editable) -->
     <string name="entry_title_label">Titel</string>
-    <string name="entry_title_optional_hint">Titel (optional, wird sonst aus dem Text erzeugt)</string>
-    <string name="entry_title_placeholder">Kurzer Titel</string>
+    <string name="entry_title_placeholder">Titel (optional)</string>
 
     <!-- Delete confirmation -->
     <string name="entry_delete_title">Eintrag löschen?</string>

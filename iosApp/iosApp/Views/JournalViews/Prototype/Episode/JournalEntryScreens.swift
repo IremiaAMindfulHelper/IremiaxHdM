@@ -253,12 +253,11 @@ struct EntryTitleField: View {
     @Binding var title: String
 
     var body: some View {
+        // No separate label above the field: the placeholder carries the same
+        // information and keeps the top of the screen calm.
         VStack(alignment: .leading, spacing: IremiaSpacing.s2) {
-            Text(Strings.entry_title_optional_hint)
-                .font(IremiaText.caption)
-                .foregroundColor(IremiaColors.gray500)
-            // gray500 like the label above it: SwiftUI's default placeholder gray
-            // read as washed-out on the white field.
+            // gray500: SwiftUI's default placeholder gray read as washed-out on
+            // the white field.
             TextField(
                 "",
                 text: $title,

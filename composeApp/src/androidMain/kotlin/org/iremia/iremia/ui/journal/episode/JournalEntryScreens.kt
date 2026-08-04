@@ -295,13 +295,9 @@ fun JournalEntryScreen(
 fun EntryTitleField(title: String, onTitleChange: (String) -> Unit) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    // No separate label above the field: the placeholder carries the same
+    // information and keeps the top of the screen calm.
     Column {
-        Text(
-            localized(SharedRes.strings.entry_title_optional_hint).toString(context),
-            style = IremiaText.Caption,
-            color = IremiaColors.Gray500,
-        )
-        Spacer(Modifier.height(IremiaSpacing.S2))
         OutlinedTextField(
             value = title,
             onValueChange = onTitleChange,
