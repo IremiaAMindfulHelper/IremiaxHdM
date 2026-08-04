@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
@@ -87,7 +88,7 @@ fun JournalCalendar(
             .fillMaxWidth()
             .background(IremiaColors.BlueHeader, IremiaShapes.HeaderWash)
             .padding(horizontal = IremiaSpacing.ScreenGutter)
-            .padding(top = IremiaSpacing.S5, bottom = IremiaSpacing.S2)
+            .padding(top = IremiaSpacing.S5, bottom = IremiaSpacing.S4)
             .animateContentSize(),
     ) {
         // --- Month / year + "today" shortcut ---
@@ -99,11 +100,22 @@ fun JournalCalendar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // The only expand/collapse affordance: the drag handle below used to
+            // suggest a swipe gesture that never existed on either platform.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { expanded = !expanded },
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .clickable(
+                        onClickLabel = localized(
+                            if (expanded) SharedRes.strings.calendar_collapse
+                            else SharedRes.strings.calendar_expand
+                        ).toString(context),
+                        role = Role.Button,
+                    ) { expanded = !expanded },
             ) {
                 Text(monthName(selectedDate.monthNumber), style = IremiaText.H1, color = IremiaColors.Ink)
+                Spacer(Modifier.width(IremiaSpacing.S1))
                 Text(selectedDate.year.toString(), style = IremiaText.H1, color = IremiaColors.Gray400)
                 Icon(
                     imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
@@ -132,8 +144,6 @@ fun JournalCalendar(
             Spacer(Modifier.height(IremiaSpacing.S1))
             CalendarWeekRow(week, selectedDate, today, entryDates, onDateSelected)
         }
-
-        ExpandHandle(expanded = expanded, onToggle = { expanded = !expanded })
     }
 }
 
@@ -206,34 +216,6 @@ private fun WeekdayHeader(labels: List<String>) {
                 modifier = Modifier.weight(1f),
             )
         }
-    }
-}
-
-/** The pull handle + chevron that toggles between the week and month views. */
-@Composable
-private fun ExpandHandle(expanded: Boolean, onToggle: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            // Min 44dp tall so the handle is a comfortable, reliable tap target.
-            .heightIn(min = 44.dp)
-            .clickable { onToggle() }
-            .padding(top = IremiaSpacing.S1),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .width(32.dp)
-                .height(4.dp)
-                .clip(IremiaShapes.Pill)
-                .background(IremiaColors.Gray300),
-        )
-        Icon(
-            imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-            contentDescription = null,
-            tint = IremiaColors.Gray500,
-        )
     }
 }
 
