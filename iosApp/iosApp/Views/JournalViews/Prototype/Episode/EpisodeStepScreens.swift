@@ -283,7 +283,7 @@ struct EpisodeReflectionStepView: View {
                     if note.isEmpty {
                         Text(Strings.episode_reflection_placeholder)
                             .font(IremiaText.body)
-                            .foregroundColor(IremiaColors.gray400)
+                            .foregroundColor(IremiaColors.gray500)
                             .padding(.top, 20)
                             .padding(.leading, 16)
                             .allowsHitTesting(false)

@@ -307,7 +307,8 @@ fun EntryTitleField(title: String, onTitleChange: (String) -> Unit) {
             onValueChange = onTitleChange,
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            placeholder = { Text(localized(SharedRes.strings.entry_title_placeholder).toString(context), style = IremiaText.Body, color = IremiaColors.Gray400) },
+            // Gray500 like the label above it: Gray400 read as washed-out on white.
+            placeholder = { Text(localized(SharedRes.strings.entry_title_placeholder).toString(context), style = IremiaText.Body, color = IremiaColors.Gray500) },
             shape = IremiaShapes.Field,
             textStyle = IremiaText.Body,
             colors = journalFieldColors(),
@@ -376,7 +377,7 @@ private fun JournalTextArea(
                 .heightIn(min = minHeight)
                 .onFocusChanged { isFocused = it.isFocused },
             placeholder = if (placeholder.isEmpty()) null else {
-                { Text(placeholder, style = IremiaText.Body, color = IremiaColors.Gray400) }
+                { Text(placeholder, style = IremiaText.Body, color = IremiaColors.Gray500) }
             },
             shape = IremiaShapes.Field,
             textStyle = IremiaText.Body,

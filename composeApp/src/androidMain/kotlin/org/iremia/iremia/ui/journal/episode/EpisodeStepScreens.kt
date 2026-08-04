@@ -409,7 +409,7 @@ fun EpisodeReflectionStep(
                 .fillMaxWidth()
                 .height(120.dp)
                 .onFocusChanged { noteFocused = it.isFocused },
-            placeholder = { Text(localized(SharedRes.strings.episode_reflection_placeholder).toString(context), style = IremiaText.Body, color = IremiaColors.Gray400) },
+            placeholder = { Text(localized(SharedRes.strings.episode_reflection_placeholder).toString(context), style = IremiaText.Body, color = IremiaColors.Gray500) },
             shape = IremiaShapes.Field,
             textStyle = IremiaText.Body,
             // NOTE: Explicit colors so the typed text is dark on the white field;

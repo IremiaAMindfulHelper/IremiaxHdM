@@ -257,7 +257,13 @@ struct EntryTitleField: View {
             Text(Strings.entry_title_optional_hint)
                 .font(IremiaText.caption)
                 .foregroundColor(IremiaColors.gray500)
-            TextField(Strings.entry_title_placeholder, text: $title)
+            // gray500 like the label above it: SwiftUI's default placeholder gray
+            // read as washed-out on the white field.
+            TextField(
+                "",
+                text: $title,
+                prompt: Text(Strings.entry_title_placeholder).foregroundColor(IremiaColors.gray500)
+            )
                 .font(IremiaText.body)
                 .foregroundColor(IremiaColors.ink900)
                 .padding(.horizontal, 14)
@@ -304,7 +310,7 @@ private struct JournalTextArea: View {
             if text.isEmpty && !placeholder.isEmpty {
                 Text(placeholder)
                     .font(IremiaText.body)
-                    .foregroundColor(IremiaColors.gray400)
+                    .foregroundColor(IremiaColors.gray500)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
             }
