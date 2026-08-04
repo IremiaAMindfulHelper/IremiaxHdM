@@ -32,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -98,6 +99,11 @@ fun GardenOverviewScreen(
     // entry (the screen recomposes into existence), restarting even if a previous
     // one was still playing.
     LaunchedEffect(Unit) { viewModel.onEnterGarden() }
+
+    // Reset on the way out too. onDispose (not the onClose lambda) so it also fires
+    // when the hosting dialog is dismissed via the back gesture or by tapping a
+    // plant, which both bypass the close button.
+    DisposableEffect(Unit) { onDispose { viewModel.onExitGarden() } }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(

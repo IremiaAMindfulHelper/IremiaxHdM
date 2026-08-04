@@ -162,6 +162,9 @@ struct GardenOverviewScreen: View {
         }
         // Play a fresh ambient animation every time the garden is opened.
         .onAppear { garden.onEnterGarden() }
+        // Reset on the way out too, so a browsed month never leaks into the home
+        // preview or the journal tree overview.
+        .onDisappear { garden.onExitGarden() }
         .alert(Strings.garden_reset_confirm_title, isPresented: $showResetConfirm) {
             Button(Strings.garden_reset_cancel, role: .cancel) {}
             Button(Strings.garden_reset_confirm_action, role: .destructive) {

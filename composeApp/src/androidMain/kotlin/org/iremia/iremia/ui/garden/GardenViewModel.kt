@@ -97,6 +97,16 @@ class GardenViewModel(
         _activeAmbient.value = nextAmbient()
     }
 
+    /**
+     * Called every time the garden screen is left. Snaps back to the current month
+     * so the shared [GardenController] does not leave the home preview and the
+     * journal tree overview — which read the same state — stuck on a browsed month.
+     */
+    fun onExitGarden() {
+        gardenController.resetToCurrentMonth()
+        _activeAmbient.value = null
+    }
+
     fun clearAmbient() {
         _activeAmbient.value = null
     }

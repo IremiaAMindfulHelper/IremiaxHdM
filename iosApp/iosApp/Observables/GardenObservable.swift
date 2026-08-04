@@ -126,6 +126,14 @@ final class GardenObservable: ObservableObject {
         activeAmbient = nextAmbient()
     }
 
+    /// Called every time the garden screen is left. Snaps back to the current month
+    /// so the shared controller does not leave the home preview and the journal tree
+    /// overview — which read the same state — stuck on a browsed month.
+    func onExitGarden() {
+        controller.resetToCurrentMonth()
+        activeAmbient = nil
+    }
+
     /// Clears the ambient surprise once its animation finished.
     func clearAmbient() {
         activeAmbient = nil
