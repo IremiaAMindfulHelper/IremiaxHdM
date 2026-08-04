@@ -16,9 +16,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -42,12 +42,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import org.iremia.iremia.ui.components.IremiaActionScaffold
 import org.iremia.iremia.ui.components.IremiaCard
 import org.iremia.iremia.ui.components.PrimaryButton
 import org.iremia.iremia.ui.components.SecondaryTextButton
@@ -196,25 +200,52 @@ fun JournalEntryScreen(
     }
     val canSave = content.isNotBlank()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(IremiaColors.White)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .padding(horizontal = IremiaSpacing.ScreenGutter)
-            .padding(top = IremiaSpacing.S2, bottom = IremiaSpacing.S3),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = localized(SharedRes.strings.nav_back).toString(context),
-                    tint = IremiaColors.Ink900,
+    IremiaActionScaffold(
+        modifier = Modifier.background(IremiaColors.White),
+        header = {
+            Spacer(Modifier.height(IremiaSpacing.S2))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = localized(SharedRes.strings.nav_back).toString(context),
+                        tint = IremiaColors.Ink900,
+                    )
+                }
+            }
+        },
+        actionBar = {
+            // The hint is always composed and only faded out, so the footer keeps a
+            // constant height and the scroll area does not jump on the first keystroke.
+            // autoSize shrinks it rather than truncating at large font scales.
+            BasicText(
+                localized(SharedRes.strings.journal_required_hint).toString(context),
+                style = IremiaText.Caption.copy(
+                    color = if (canSave) Color.Transparent else IremiaColors.Gray400,
+                ),
+                maxLines = 1,
+                autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 13.sp),
+            )
+            Spacer(Modifier.height(IremiaSpacing.S2))
+            PrimaryButton(
+                text = localized(SharedRes.strings.journal_save).toString(context),
+                onClick = { if (canSave) onSave(title, content) },
+                enabled = canSave,
+            )
+            // The free-text button stays visible in guided mode as a clearly offered
+            // alternative; once in free mode there's nothing to switch back to that
+            // wouldn't lose text, so we keep it one-directional and prominent.
+            if (!freeMode) {
+                Spacer(Modifier.height(IremiaSpacing.S1))
+                SecondaryTextButton(
+                    text = localized(SharedRes.strings.journal_free_button).toString(context),
+                    onClick = { freeMode = true },
                 )
             }
-        }
-
+        },
+    ) {
+        // Title and subtitle scroll away: at large font scales the H1 alone eats
+        // most of a small screen.
         Spacer(Modifier.height(IremiaSpacing.S4))
         Text(localized(SharedRes.strings.journal_title).toString(context), style = IremiaText.H1, color = IremiaColors.Ink)
         Spacer(Modifier.height(IremiaSpacing.S2))
@@ -226,11 +257,7 @@ fun JournalEntryScreen(
         )
         Spacer(Modifier.height(IremiaSpacing.S5))
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-        ) {
+        Column {
             // Optional title, common to both modes.
             EntryTitleField(title = title, onTitleChange = { title = it })
             Spacer(Modifier.height(IremiaSpacing.S5))
@@ -259,33 +286,6 @@ fun JournalEntryScreen(
                     Spacer(Modifier.height(IremiaSpacing.S4))
                 }
             }
-        }
-
-        // Required hint appears only when nothing has been written yet.
-        if (!canSave) {
-            Text(
-                localized(SharedRes.strings.journal_required_hint).toString(context),
-                style = IremiaText.Caption,
-                color = IremiaColors.Gray400,
-            )
-            Spacer(Modifier.height(IremiaSpacing.S2))
-        }
-
-        Spacer(Modifier.height(IremiaSpacing.S2))
-        PrimaryButton(
-            text = localized(SharedRes.strings.journal_save).toString(context),
-            onClick = { if (canSave) onSave(title, content) },
-            enabled = canSave,
-        )
-        // The free-text button stays visible in guided mode as a clearly offered
-        // alternative; once in free mode there's nothing to switch back to that
-        // wouldn't lose text, so we keep it one-directional and prominent.
-        if (!freeMode) {
-            Spacer(Modifier.height(IremiaSpacing.S1))
-            SecondaryTextButton(
-                text = localized(SharedRes.strings.journal_free_button).toString(context),
-                onClick = { freeMode = true },
-            )
         }
     }
 }

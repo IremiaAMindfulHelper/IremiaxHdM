@@ -45,7 +45,7 @@
     <string name="journal_free_prompt">Schreib so viel du magst.</string>
     <string name="journal_free_placeholder">Heute war …</string>
     <string name="journal_save">Eintrag speichern</string>
-    <string name="journal_required_hint">Schreib ein paar Worte, dann kannst du speichern.</string>
+    <string name="journal_required_hint">Schreib ein paar Worte zum Speichern.</string>
 
     <!-- Journal reflection question pairs (all optional) -->
     <string name="journal_q_annoyed">Was hat dich heute genervt?</string>
@@ -143,6 +143,8 @@
     <!-- Navigation content descriptions -->
     <string name="nav_back">Zurück</string>
     <string name="nav_close">Schließen</string>
+    <string name="calendar_expand">Kalender ausklappen</string>
+    <string name="calendar_collapse">Kalender einklappen</string>
     <!-- Dismisses the soft keyboard from a multiline text field -->
     <string name="keyboard_done">Fertig</string>
 

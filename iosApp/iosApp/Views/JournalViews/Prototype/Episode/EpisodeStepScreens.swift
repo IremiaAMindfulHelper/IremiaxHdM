@@ -318,7 +318,11 @@ struct EpisodeSavedScreenView: View {
 
     /// Growth animation size on this screen. Large enough to be a clear focal
     /// point above the title, while still leaving room for the content below.
-    private let treeSize: CGFloat = 150
+    /// Capped against the screen height so it shrinks on small devices instead of
+    /// pushing everything else down.
+    private var treeSize: CGFloat {
+        min(150, UIScreen.main.bounds.height * 0.28)
+    }
 
     /// Badge text: what happened in the garden (conditional on plan 6.2).
     private var badgeText: String {
@@ -335,10 +339,9 @@ struct EpisodeSavedScreenView: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            VStack(spacing: 0) {
-                // Balances the block vertically instead of letting it cling to the top,
-                // and keeps the tree clear of the status bar / Dynamic Island.
-                Spacer(minLength: IremiaSpacing.s3)
+            IremiaActionScaffold {
+                // Keeps the tree clear of the status bar / Dynamic Island.
+                Spacer().frame(height: IremiaSpacing.s3)
 
                 // Growth animation in the normal layout flow (its own row), so it sits
                 // cleanly above the title with real spacing instead of overlapping it.
@@ -440,9 +443,11 @@ struct EpisodeSavedScreenView: View {
                         .stroke(IremiaColors.gray200, lineWidth: 1)
                 )
 
+                // Breathing room below the card; the actions themselves are pinned
+                // by the scaffold, so there is never a gap that collapses to nothing.
+                Spacer().frame(height: IremiaSpacing.s5)
+            } actionBar: {
                 // --- Bottom section: one primary action, one quiet text link.
-                Spacer(minLength: IremiaSpacing.s5)
-
                 PrimaryButton(
                     text: Strings.episode_saved_view_garden,
                     action: onViewGarden,
@@ -453,8 +458,6 @@ struct EpisodeSavedScreenView: View {
 
                 SecondaryTextButton(text: Strings.episode_saved_insights, action: onInsights)
             }
-            .padding(.horizontal, IremiaSpacing.screenGutter)
-            .padding(.vertical, IremiaSpacing.s5)
 
             // Close ("back to home") as an X in the top-right corner instead of a
             // third stacked button, decluttering the action area.

@@ -161,7 +161,7 @@ struct JournalCaptureEntryView: View {
     private var canSave: Bool { !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        IremiaActionScaffold {
             HStack {
                 Button(action: onBack) {
                     Image(systemName: "chevron.left")
@@ -173,19 +173,22 @@ struct JournalCaptureEntryView: View {
                 .accessibilityLabel(Strings.nav_back)
                 Spacer()
             }
+            .padding(.top, IremiaSpacing.s2)
+        } content: {
+            VStack(alignment: .leading, spacing: 0) {
+                // Title and subtitle scroll away: at large Dynamic Type sizes the h1
+                // alone eats most of a small screen.
+                Spacer().frame(height: IremiaSpacing.s4)
+                Text(Strings.journal_title)
+                    .font(IremiaText.h1)
+                    .foregroundColor(IremiaColors.ink)
+                Spacer().frame(height: IremiaSpacing.s2)
+                Text(freeMode ? Strings.journal_free_prompt : Strings.journal_subtitle)
+                    .font(IremiaText.body)
+                    .foregroundColor(IremiaColors.gray500)
+                Spacer().frame(height: IremiaSpacing.s5)
 
-            Spacer().frame(height: IremiaSpacing.s4)
-            Text(Strings.journal_title)
-                .font(IremiaText.h1)
-                .foregroundColor(IremiaColors.ink)
-            Spacer().frame(height: IremiaSpacing.s2)
-            Text(freeMode ? Strings.journal_free_prompt : Strings.journal_subtitle)
-                .font(IremiaText.body)
-                .foregroundColor(IremiaColors.gray500)
-            Spacer().frame(height: IremiaSpacing.s5)
-
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 0) {
+                Group {
                     EntryTitleField(title: $title)
                     Spacer().frame(height: IremiaSpacing.s5)
 
@@ -217,31 +220,31 @@ struct JournalCaptureEntryView: View {
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-
-            if !canSave {
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } actionBar: {
+            VStack(alignment: .leading, spacing: 0) {
+                // The hint is always laid out and only faded, so the footer keeps a
+                // constant height and the scroll area does not jump on the first keystroke.
                 Text(Strings.journal_required_hint)
                     .font(IremiaText.caption)
                     .foregroundColor(IremiaColors.gray400)
-                Spacer().frame(height: IremiaSpacing.s2)
-            }
+                    .lineLimit(1)
+                    .opacity(canSave ? 0 : 1)
 
-            Spacer().frame(height: IremiaSpacing.s2)
-            PrimaryButton(
-                text: Strings.journal_save,
-                action: { if canSave { onSave(title, content) } },
-                enabled: canSave
-            )
-            if !freeMode {
-                Spacer().frame(height: IremiaSpacing.s1)
-                SecondaryTextButton(text: Strings.journal_free_button, action: { freeMode = true })
+                Spacer().frame(height: IremiaSpacing.s2)
+                PrimaryButton(
+                    text: Strings.journal_save,
+                    action: { if canSave { onSave(title, content) } },
+                    enabled: canSave
+                )
+                if !freeMode {
+                    Spacer().frame(height: IremiaSpacing.s1)
+                    SecondaryTextButton(text: Strings.journal_free_button, action: { freeMode = true })
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, IremiaSpacing.screenGutter)
-        .padding(.top, IremiaSpacing.s2)
-        .padding(.bottom, IremiaSpacing.s3)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 

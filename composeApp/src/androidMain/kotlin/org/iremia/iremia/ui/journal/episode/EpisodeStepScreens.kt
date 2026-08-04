@@ -15,13 +15,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -65,12 +62,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import org.iremia.iremia.ui.components.ChoiceChip
+import org.iremia.iremia.ui.components.IremiaActionScaffold
 import org.iremia.iremia.ui.components.IremiaCard
 import org.iremia.iremia.ui.components.PrimaryButton
 import org.iremia.iremia.ui.components.SecondaryTextButton
@@ -108,31 +109,41 @@ fun EpisodeStepScaffold(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val context = LocalContext.current
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .padding(horizontal = IremiaSpacing.ScreenGutter)
-            .padding(top = IremiaSpacing.S2, bottom = IremiaSpacing.S3),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = localized(SharedRes.strings.nav_back).toString(context), tint = IremiaColors.Ink900)
+    IremiaActionScaffold(
+        modifier = modifier,
+        header = {
+            Spacer(Modifier.height(IremiaSpacing.S2))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = localized(SharedRes.strings.nav_back).toString(context), tint = IremiaColors.Ink900)
+                }
+                LinearProgressIndicator(
+                    progress = { stepIndex.toFloat() / stepCount },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(4.dp)
+                        .clip(IremiaShapes.Pill),
+                    color = IremiaColors.Teal700,
+                    trackColor = IremiaColors.Gray200,
+                )
+                Spacer(Modifier.size(12.dp))
+                Text("$stepIndex/$stepCount", style = IremiaText.Caption, color = IremiaColors.Gray500)
             }
-            LinearProgressIndicator(
-                progress = { stepIndex.toFloat() / stepCount },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(4.dp)
-                    .clip(IremiaShapes.Pill),
-                color = IremiaColors.Teal700,
-                trackColor = IremiaColors.Gray200,
+        },
+        actionBar = {
+            PrimaryButton(
+                text = primaryLabel,
+                onClick = onPrimary,
+                trailingIcon = if (primaryTrailingIcon) Icons.AutoMirrored.Filled.ArrowForward else null,
             )
-            Spacer(Modifier.size(12.dp))
-            Text("$stepIndex/$stepCount", style = IremiaText.Caption, color = IremiaColors.Gray500)
-        }
-
+            if (secondaryLabel != null && onSecondary != null) {
+                Spacer(Modifier.height(IremiaSpacing.S1))
+                SecondaryTextButton(secondaryLabel, onSecondary)
+            }
+        },
+    ) {
+        // Title and subtitle scroll with the body: at large font scales the H1
+        // alone would otherwise eat most of a small screen.
         Spacer(Modifier.height(IremiaSpacing.S5))
         Text(title, style = IremiaText.H1, color = IremiaColors.Ink)
         if (subtitle != null) {
@@ -140,24 +151,7 @@ fun EpisodeStepScaffold(
             Text(subtitle, style = IremiaText.Body, color = IremiaColors.Gray500)
         }
         Spacer(Modifier.height(IremiaSpacing.S5))
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            content = content,
-        )
-
-        Spacer(Modifier.height(IremiaSpacing.S3))
-        PrimaryButton(
-            text = primaryLabel,
-            onClick = onPrimary,
-            trailingIcon = if (primaryTrailingIcon) Icons.AutoMirrored.Filled.ArrowForward else null,
-        )
-        if (secondaryLabel != null && onSecondary != null) {
-            Spacer(Modifier.height(IremiaSpacing.S1))
-            SecondaryTextButton(secondaryLabel, onSecondary)
-        }
+        content()
     }
 }
 
@@ -592,20 +586,24 @@ fun EpisodeSavedScreen(
         else -> localized(SharedRes.strings.saved_impulse_panic_low).toString(context)
     }
 
+    // The tree is the first thing in the scroll area, so cap it against the screen
+    // height: on small phones it shrinks rather than pushing everything else down,
+    // and it is always fully visible when the animation finishes.
+    val treeSize = min(240.dp, (LocalConfiguration.current.screenHeightDp * 0.28f).dp)
+
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(horizontal = IremiaSpacing.ScreenGutter)
-                .padding(vertical = IremiaSpacing.S5),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        IremiaActionScaffold(
+            contentHorizontalAlignment = Alignment.CenterHorizontally,
+            actionBar = {
+                PrimaryButton(localized(SharedRes.strings.episode_saved_view_garden).toString(context), onViewGarden, trailingIcon = Icons.Filled.Eco)
+                Spacer(Modifier.height(IremiaSpacing.S3))
+                SecondaryTextButton(localized(SharedRes.strings.episode_saved_insights).toString(context), onInsights)
+            },
         ) {
-            Spacer(Modifier.height(IremiaSpacing.S6))
+            Spacer(Modifier.height(IremiaSpacing.S3))
             // A large growth animation so the user sees growth after saving. It plays
             // even when no new plant was set (plan 6.2), acknowledging the entry.
-            EpisodeGrowthAnimation(modifier = Modifier.size(240.dp))
+            EpisodeGrowthAnimation(modifier = Modifier.size(treeSize))
 
             // --- Top section: all texts consistently centered, with room to breathe.
             Spacer(Modifier.height(IremiaSpacing.S5))
@@ -685,11 +683,9 @@ fun EpisodeSavedScreen(
                 Text("$entryCount / $goal", style = IremiaText.Caption, color = IremiaColors.Gray400)
             }
 
-            // --- Bottom section: one primary action, one quiet text link.
-            Spacer(Modifier.weight(1f))
-            PrimaryButton(localized(SharedRes.strings.episode_saved_view_garden).toString(context), onViewGarden, trailingIcon = Icons.Filled.Eco)
-            Spacer(Modifier.height(IremiaSpacing.S3))
-            SecondaryTextButton(localized(SharedRes.strings.episode_saved_insights).toString(context), onInsights)
+            // Breathing room below the card; the actions themselves are pinned by
+            // the scaffold, so there is never a gap that collapses to nothing.
+            Spacer(Modifier.height(IremiaSpacing.S5))
         }
 
         // Close ("back to home") as an X in the top-right corner instead of a third
@@ -714,6 +710,12 @@ fun EpisodeSavedScreen(
 @Composable
 private fun EpisodeGrowthAnimation(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    // Previews have no resource loader for the raw Lottie asset, so stand in for it
+    // with a plain placeholder instead of crashing the preview pane.
+    if (LocalInspectionMode.current) {
+        Box(modifier.clip(CircleShape).background(IremiaColors.Garden100))
+        return
+    }
     val growBytes = remember {
         context.resources.openRawResource(SharedRes.files.tree_growth_without_background_lottie.rawResId)
             .use { it.readBytes() }
