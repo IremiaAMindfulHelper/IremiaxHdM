@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.iremia.iremia.ui.components.IremiaCard
 import org.iremia.iremia.ui.garden.GardenScene
@@ -47,13 +49,44 @@ fun TreeOverviewCard(
     val context = LocalContext.current
     IremiaCard(modifier = modifier.clickable(onClick = onClick)) {
         Column(Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(localized(SharedRes.strings.tree_overview_title).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
-                Text(localized(SharedRes.strings.tree_overview_period).toString(context), style = IremiaText.Caption, color = IremiaColors.Gray500)
+            // Beyond ~1.3x font scale the eyebrow and the period label no longer fit
+            // side by side and would overlap; stack them instead.
+            val stacked = LocalDensity.current.fontScale > 1.3f
+            val titleText: @Composable (Modifier) -> Unit = { m ->
+                Text(
+                    localized(SharedRes.strings.tree_overview_title).toString(context),
+                    style = IremiaText.Eyebrow,
+                    color = IremiaColors.Teal700,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = m,
+                )
+            }
+            val periodText: @Composable (Modifier) -> Unit = { m ->
+                Text(
+                    localized(SharedRes.strings.tree_overview_period).toString(context),
+                    style = IremiaText.Caption,
+                    color = IremiaColors.Gray500,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = m,
+                )
+            }
+
+            if (stacked) {
+                titleText(Modifier)
+                Spacer(Modifier.height(2.dp))
+                periodText(Modifier)
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    titleText(Modifier.weight(1f, fill = false))
+                    Spacer(Modifier.size(8.dp))
+                    periodText(Modifier)
+                }
             }
 
             Spacer(Modifier.height(12.dp))

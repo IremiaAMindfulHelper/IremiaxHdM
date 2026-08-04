@@ -1,6 +1,7 @@
 package org.iremia.iremia.ui.navigation
 
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -8,6 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import org.iremia.iremia.ui.theme.IremiaColors
 import org.iremia.iremia.utils.localized
 
@@ -55,7 +59,17 @@ fun IremiaBottomBar(
                 selected = selectedTab == tab,
                 onClick = { onTabSelected(tab) },
                 icon = { Icon(imageVector = tab.icon, contentDescription = label) },
-                label = { Text(label) },
+                // Long labels ("Wohlbefinden") would otherwise wrap to two lines and
+                // get clipped by the bar at large system font scales.
+                label = {
+                    Text(
+                        label,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
+                    )
+                },
                 colors = itemColors,
             )
         }

@@ -11,8 +11,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,8 +53,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.iremia.iremia.domain.insights.InsightConfidence
@@ -238,44 +242,60 @@ private fun GardenEntryCard(
                 .clickable(onClick = onViewGarden),
         )
         Spacer(Modifier.height(14.dp))
+        // IntrinsicSize.Min keeps both pills the same height when one label wraps
+        // to two lines at a large system font scale.
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // Primary: make an entry.
             Row(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxHeight()
                     .clip(RoundedCornerShape(percent = 50))
                     .background(HomeColors.teal)
                     .clickable(onClick = onMakeEntry)
-                    .padding(vertical = 13.dp),
+                    .heightIn(min = 48.dp)
+                    .padding(vertical = 8.dp, horizontal = 12.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = localized(SharedRes.strings.home_make_entry).toString(context),
                     fontSize = 14.sp,
+                    lineHeight = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = HomeColors.onTeal,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
                 )
             }
             // Secondary: view garden.
             Row(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxHeight()
                     .clip(RoundedCornerShape(percent = 50))
                     .border(1.5.dp, HomeColors.teal, RoundedCornerShape(percent = 50))
                     .clickable(onClick = onViewGarden)
-                    .padding(vertical = 13.dp),
+                    .heightIn(min = 48.dp)
+                    .padding(vertical = 8.dp, horizontal = 12.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = localized(SharedRes.strings.home_view_garden).toString(context),
                     fontSize = 14.sp,
+                    lineHeight = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = HomeColors.teal,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
                 )
             }
         }
@@ -359,28 +379,49 @@ private fun HeroInsightCard(
             )
             .padding(18.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
+        // Beyond ~1.3x font scale the eyebrow and the "no rating" pill no longer fit
+        // side by side; stacking keeps the pill's label from breaking mid-word.
+        val heroStacked = LocalDensity.current.fontScale > 1.3f
+        val heroLabel: @Composable (Modifier) -> Unit = { textModifier ->
             Text(
                 text = localized(SharedRes.strings.home_hero_label).toString(context),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.3.sp,
                 color = HomeColors.onTealMute,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = textModifier,
             )
+        }
+        val heroBadge: @Composable (Modifier) -> Unit = { textModifier ->
             Text(
                 text = localized(SharedRes.strings.home_hero_no_rating).toString(context),
                 fontSize = 10.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = HomeColors.onTealMute,
-                modifier = Modifier
+                maxLines = 1,
+                modifier = textModifier
                     .clip(RoundedCornerShape(percent = 50))
                     .border(1.dp, HomeColors.onTeal.copy(alpha = 0.22f), RoundedCornerShape(percent = 50))
                     .padding(horizontal = 9.dp, vertical = 3.dp),
             )
+        }
+
+        if (heroStacked) {
+            heroLabel(Modifier)
+            Spacer(Modifier.height(6.dp))
+            heroBadge(Modifier)
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                heroLabel(Modifier.weight(1f, fill = false))
+                Spacer(Modifier.width(8.dp))
+                heroBadge(Modifier)
+            }
         }
 
         Spacer(Modifier.height(14.dp))
@@ -518,24 +559,47 @@ private fun PatternsSection(modifier: Modifier = Modifier) {
             PatternCardData(SharedRes.strings.home_pattern_breath_title, SharedRes.strings.home_pattern_breath_meta),
         )
     }
+    // Beyond ~1.3x font scale the title and the trailing label no longer fit on one
+    // line, so they stack instead of truncating.
+    val stacked = LocalDensity.current.fontScale > 1.3f
+
     Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
+        val title: @Composable (Modifier) -> Unit = { textModifier ->
             Text(
                 text = localized(SharedRes.strings.home_patterns_title).toString(context),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = HomeColors.ink,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = textModifier,
             )
+        }
+        val autoLabel: @Composable (Modifier) -> Unit = { textModifier ->
             Text(
                 text = localized(SharedRes.strings.home_patterns_auto).toString(context),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = HomeColors.teal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = textModifier,
             )
+        }
+
+        if (stacked) {
+            title(Modifier)
+            Spacer(Modifier.height(2.dp))
+            autoLabel(Modifier)
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                title(Modifier.weight(1f, fill = false))
+                autoLabel(Modifier.padding(start = 8.dp))
+            }
         }
         Spacer(Modifier.height(12.dp))
         cards.forEachIndexed { index, data ->

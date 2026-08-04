@@ -93,13 +93,19 @@ struct InsightHomeView: View {
             )
             .onTapGesture { onOpenJournal() }
             Spacer().frame(height: 14)
+            // fixedSize lets a wrapped label report its true height, so the pills
+            // grow with Dynamic Type instead of clipping; both stay equal height.
             HStack(spacing: 10) {
                 Button(action: onOpenJournal) {
                     Text(Strings.home_make_entry)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(HomeColors.onTeal)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
                         .background(Capsule().fill(HomeColors.teal))
                 }
                 .buttonStyle(.plain)
@@ -107,14 +113,19 @@ struct InsightHomeView: View {
                     Text(Strings.home_view_garden)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(HomeColors.teal)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
                         .background(
                             Capsule().stroke(HomeColors.teal, lineWidth: 1.5)
                         )
                 }
                 .buttonStyle(.plain)
             }
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
         .background(
@@ -159,19 +170,38 @@ struct InsightHomeView: View {
 
     private var patternsSection: some View {
         VStack(spacing: 10) {
-            HStack {
-                Text(Strings.home_patterns_title)
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(HomeColors.ink)
-                Spacer()
-                Text(Strings.home_patterns_auto)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(HomeColors.teal)
+            // At large Dynamic Type sizes the title and the trailing label no longer
+            // fit on one line, so they stack instead of truncating.
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    patternsTitle
+                    Spacer()
+                    patternsAutoLabel
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    patternsTitle
+                    patternsAutoLabel
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             PatternCard(title: Strings.home_pattern_move_title, meta: Strings.home_pattern_move_meta)
             PatternCard(title: Strings.home_pattern_evening_title, meta: Strings.home_pattern_evening_meta)
             PatternCard(title: Strings.home_pattern_breath_title, meta: Strings.home_pattern_breath_meta)
         }
+    }
+
+    private var patternsTitle: some View {
+        Text(Strings.home_patterns_title)
+            .font(.system(size: 18, weight: .bold))
+            .foregroundColor(HomeColors.ink)
+            .lineLimit(2)
+    }
+
+    private var patternsAutoLabel: some View {
+        Text(Strings.home_patterns_auto)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(HomeColors.teal)
+            .lineLimit(1)
     }
 }
 
@@ -183,17 +213,19 @@ private struct HeroInsightCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(Strings.home_hero_label)
-                    .font(.system(size: 11, weight: .bold))
-                    .tracking(1.3)
-                    .foregroundColor(HomeColors.onTeal.opacity(0.62))
-                Spacer()
-                Text(Strings.home_hero_no_rating)
-                    .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundColor(HomeColors.onTeal.opacity(0.62))
-                    .padding(.horizontal, 9).padding(.vertical, 3)
-                    .overlay(Capsule().stroke(HomeColors.onTeal.opacity(0.22), lineWidth: 1))
+            // At large Dynamic Type sizes the eyebrow and the "no rating" pill no
+            // longer fit side by side; stacking keeps the pill's label intact.
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    heroLabel
+                    Spacer()
+                    heroBadge
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    heroLabel
+                    heroBadge
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Spacer().frame(height: 14)
@@ -246,6 +278,24 @@ private struct HeroInsightCard: View {
             )
         )
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private var heroLabel: some View {
+        Text(Strings.home_hero_label)
+            .font(.system(size: 11, weight: .bold))
+            .tracking(1.3)
+            .foregroundColor(HomeColors.onTeal.opacity(0.62))
+            .lineLimit(2)
+    }
+
+    private var heroBadge: some View {
+        Text(Strings.home_hero_no_rating)
+            .font(.system(size: 10.5, weight: .semibold))
+            .foregroundColor(HomeColors.onTeal.opacity(0.62))
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, 9).padding(.vertical, 3)
+            .overlay(Capsule().stroke(HomeColors.onTeal.opacity(0.22), lineWidth: 1))
     }
 }
 
