@@ -23,6 +23,20 @@ struct JournalCalendarView: View {
 
     @State private var expanded = false
 
+    /// Swipe down to expand, up to collapse. minimumDistance keeps it from stealing
+    /// taps from the day cells underneath.
+    private var expandDragGesture: some Gesture {
+        DragGesture(minimumDistance: 20)
+            .onEnded { value in
+                guard abs(value.translation.height) > abs(value.translation.width) else { return }
+                let shouldExpand = value.translation.height > 0
+                guard shouldExpand != expanded else { return }
+                withAnimation(.easeInOut(duration: IremiaMotion.dur)) {
+                    expanded = shouldExpand
+                }
+            }
+    }
+
     var body: some View {
         let cal = Calendar(identifier: .iso8601)
         let selMonth = cal.component(.month, from: selectedDate)
@@ -49,9 +63,11 @@ struct JournalCalendarView: View {
                             .font(.system(size: 14))
                             .foregroundColor(IremiaColors.gray500)
                     }
+                    .frame(minHeight: 48)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(expanded ? Strings.calendar_collapse : Strings.calendar_expand)
                 Spacer()
                 Button(action: onTodayClick) {
                     Text("Heute")
@@ -62,6 +78,10 @@ struct JournalCalendarView: View {
                 }
                 .buttonStyle(.plain)
             }
+            // Swipe on the title row too, so the gesture works even when the month
+            // list below is expanded and owns its own scrolling.
+            .contentShape(Rectangle())
+            .gesture(expandDragGesture)
 
             Spacer().frame(height: IremiaSpacing.s4)
 
@@ -74,26 +94,27 @@ struct JournalCalendarView: View {
                 )
             } else {
                 let week = rollingWeek(start: today)
-                WeekdayHeaderView(labels: week.map { shortWeekdayLabel(date: $0) })
-                Spacer().frame(height: IremiaSpacing.s1)
-                CalendarWeekRow(
-                    week: week.map { Optional($0) },
-                    selectedDate: selectedDate,
-                    today: today,
-                    entryDates: entryDates,
-                    onDateSelected: onDateSelected
-                )
+                VStack(spacing: 0) {
+                    WeekdayHeaderView(labels: week.map { shortWeekdayLabel(date: $0) })
+                    Spacer().frame(height: IremiaSpacing.s1)
+                    CalendarWeekRow(
+                        week: week.map { Optional($0) },
+                        selectedDate: selectedDate,
+                        today: today,
+                        entryDates: entryDates,
+                        onDateSelected: onDateSelected
+                    )
+                }
+                // Pull down anywhere on the week row to open the month view. This is
+                // what the removed handle only pretended to offer.
+                .contentShape(Rectangle())
+                .gesture(expandDragGesture)
             }
 
-            ExpandHandleView(expanded: expanded) {
-                withAnimation(.easeInOut(duration: IremiaMotion.dur)) {
-                    expanded.toggle()
-                }
-            }
         }
         .padding(.horizontal, IremiaSpacing.screenGutter)
         .padding(.top, IremiaSpacing.s5)
-        .padding(.bottom, IremiaSpacing.s2)
+        .padding(.bottom, IremiaSpacing.s4)
         .background(
             IremiaShapes.headerWash()
                 .fill(IremiaColors.blueHeader)
@@ -193,34 +214,6 @@ private struct WeekdayHeaderView: View {
                     .multilineTextAlignment(.center)
             }
         }
-    }
-}
-
-// MARK: - Expand Handle
-
-/// The pull handle + chevron that toggles between the week and month views.
-private struct ExpandHandleView: View {
-    let expanded: Bool
-    let onToggle: () -> Void
-
-    var body: some View {
-        Button(action: onToggle) {
-            VStack(spacing: 0) {
-                Capsule()
-                    .fill(IremiaColors.gray300)
-                    .frame(width: 32, height: 4)
-                Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                    .foregroundColor(IremiaColors.gray500)
-                    .font(.system(size: 16))
-            }
-            // Fill the full width and a 44pt-tall row, then make the whole area
-            // hit-testable so the handle reliably toggles (a plain Button otherwise
-            // only registers taps on the small capsule + chevron).
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .padding(.top, IremiaSpacing.s1)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 }
 

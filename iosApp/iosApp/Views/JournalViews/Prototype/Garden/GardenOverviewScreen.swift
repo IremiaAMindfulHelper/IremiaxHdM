@@ -10,6 +10,8 @@ import shared
 struct GardenOverviewScreen: View {
     @ObservedObject var garden: GardenObservable
     let onClose: () -> Void
+    /// Opens the tapped plant's journal entry for viewing/editing (Block 2.2).
+    var onOpenEntry: (Int64) -> Void = { _ in }
 
     @State private var showResetConfirm = false
     // Pinch-to-zoom / pan for the full garden view. Kept separate from the
@@ -180,9 +182,12 @@ struct GardenOverviewScreen: View {
                 set: { if $0 == nil { garden.selectTile(nil) } }
             )
         ) { entry in
-            GardenEntrySheet(entry: entry)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+            GardenEntrySheet(entry: entry) {
+                garden.selectTile(nil)
+                onOpenEntry(entry.id)
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
     }
 
@@ -208,6 +213,7 @@ struct GardenOverviewScreen: View {
 /// Sheet showing the journal entry behind a tapped plant: its date and full content.
 private struct GardenEntrySheet: View {
     let entry: GardenEntry
+    var onOpenEntry: () -> Void = {}
 
     private var dateText: String {
         let date = Date(timeIntervalSince1970: Double(entry.createdAt) / 1000.0)
@@ -232,9 +238,29 @@ private struct GardenEntrySheet: View {
                     .font(IremiaText.body)
                     .foregroundColor(IremiaColors.ink700)
                     .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Quiet "open entry →" action (Block 2.2), matching Android: from here
+                // the entry can actually be opened and edited.
+                Button(action: onOpenEntry) {
+                    HStack(spacing: 6) {
+                        Text(Strings.garden_open_entry)
+                            .font(IremiaText.cardTitle)
+                            .foregroundColor(IremiaColors.teal700)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(IremiaColors.teal700)
+                    }
+                    .frame(minHeight: 48)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.top, IremiaSpacing.s2)
             }
             .padding(.horizontal, IremiaSpacing.screenGutter)
             .padding(.vertical, IremiaSpacing.s5)
+            // Without this the VStack stretches to the sheet's full detent height,
+            // which is what made short entries scroll far past their content.
+            .frame(maxHeight: .infinity, alignment: .top)
         }
         .background(IremiaColors.white.ignoresSafeArea())
     }

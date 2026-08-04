@@ -53,6 +53,8 @@ struct MainView: View {
     // in the same transition instead of flashing the Journal screen in between.
     @State private var showGardenFromCapture = false
     @State private var pendingGardenOpen = false
+    /// Entry opened from the garden sheet, shown in the editable detail view.
+    @State private var detailNote: NoteUI?
 
     private func openCaptureFlow() {
         notesObservable.clearPlantResult()
@@ -166,7 +168,22 @@ struct MainView: View {
         .fullScreenCover(isPresented: $showGardenFromCapture) {
             GardenOverviewScreen(
                 garden: gardenObservable,
-                onClose: { showGardenFromCapture = false }
+                onClose: { showGardenFromCapture = false },
+                onOpenEntry: { entryId in
+                    // Close the garden first, then open the entry for editing.
+                    showGardenFromCapture = false
+                    detailNote = notesObservable.items.first(where: { $0.id == entryId })
+                }
+            )
+        }
+        .sheet(item: $detailNote) { note in
+            EpisodeDetailView(
+                note: note,
+                onClose: { detailNote = nil },
+                onSave: { draft in
+                    notesObservable.updateEntry(id: note.id, draft)
+                    detailNote = nil
+                }
             )
         }
     }

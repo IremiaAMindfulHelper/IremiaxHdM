@@ -99,7 +99,12 @@ struct JournalPrototypeScreen: View {
         .fullScreenCover(isPresented: $showGarden) {
             GardenOverviewScreen(
                 garden: gardenObservable,
-                onClose: { showGarden = false }
+                onClose: { showGarden = false },
+                onOpenEntry: { entryId in
+                    // Close the garden first, then open the entry for editing.
+                    showGarden = false
+                    detailNote = notesObservable.items.first(where: { $0.id == entryId })
+                }
             )
         }
         .sheet(item: $detailNote) { note in
