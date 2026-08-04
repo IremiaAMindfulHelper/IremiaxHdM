@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A view that presents a series of mathematical questions to the user.
 struct CalculationExerciseView: View {

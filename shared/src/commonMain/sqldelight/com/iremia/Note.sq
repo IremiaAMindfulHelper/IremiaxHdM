@@ -1,0 +1,49 @@
+CREATE TABLE note (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  content TEXT NOT NULL,
+  createdAt INTEGER NOT NULL, -- timestamp in millis
+  -- Entry type: 'panic' or 'journal'. Older rows migrate to 'panic' via DEFAULT.
+  -- Mapped to the EntryType enum in the DAO.
+  type TEXT NOT NULL DEFAULT 'panic',
+  -- Optional, user-editable title. NULL means "derive from content on display".
+  title TEXT,
+  -- Episode metadata (all nullable; older rows keep NULL). Multi-select fields
+  -- are stored as comma-separated tokens. Mood/strength are small integers.
+  strength INTEGER,
+  place TEXT,
+  activity TEXT,
+  bodySignals TEXT,
+  moodBefore INTEGER,
+  moodAfter INTEGER
+);
+
+selectAll:
+SELECT *
+FROM note
+ORDER BY createdAt DESC;
+
+insert:
+INSERT INTO note(content, createdAt, type, title, strength, place, activity, bodySignals, moodBefore, moodAfter)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Row id of the most recently inserted note, used to link a freshly planted
+-- garden plant back to its source entry.
+lastInsertedId:
+SELECT last_insert_rowid();
+
+updateById:
+UPDATE note
+SET content = ?,
+    type = ?,
+    title = ?,
+    strength = ?,
+    place = ?,
+    activity = ?,
+    bodySignals = ?,
+    moodBefore = ?,
+    moodAfter = ?
+WHERE id = ?;
+
+deleteById:
+DELETE FROM note
+WHERE id = ?;

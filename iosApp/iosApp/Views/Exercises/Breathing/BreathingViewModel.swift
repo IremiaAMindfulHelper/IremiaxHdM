@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// Manages the breathing exercise logic and acts as a bridge to the Kotlin-based `BreathingEngine`.
 /// It handles the exercise state, timer ticks, and scoring updates.

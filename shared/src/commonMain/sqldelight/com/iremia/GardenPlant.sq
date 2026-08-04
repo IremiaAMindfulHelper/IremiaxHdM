@@ -1,0 +1,59 @@
+-- Persistent garden plants. Decoupled from the note table on purpose: a plant
+-- survives even if its source journal entry is later deleted. `sourceEntryId` is
+-- nullable so non-journal actions (e.g. finishing a breathing exercise) can plant
+-- too, and there is deliberately NO foreign key / cascade to `note`.
+--
+-- A plant belongs to a specific month (year/month), taken from the entry's date,
+-- so each month is its own garden and backdated entries land in the right month.
+-- `dayOfMonth` is kept for the day label shown when a plant is tapped. `category`
+-- distinguishes a tree (panic entry) from a flower bed (journal entry). Each entry
+-- plants one plant on a free grid cell; `position` is that free cell within the
+-- month's 5x5 grid (0..24), independent of the day.
+CREATE TABLE gardenPlant (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  position INTEGER NOT NULL,       -- free grid cell within the month (0..24)
+  plantType TEXT NOT NULL,         -- PlantType enum name
+  category TEXT NOT NULL DEFAULT 'tree',  -- 'tree' or 'flowerbed'
+  year INTEGER NOT NULL DEFAULT 0,
+  month INTEGER NOT NULL DEFAULT 0,       -- 1..12
+  dayOfMonth INTEGER NOT NULL DEFAULT 0,  -- 1..31
+  sourceEntryId INTEGER,           -- originating note id, or NULL (no cascade)
+  createdAt INTEGER NOT NULL       -- timestamp in millis
+);
+
+selectAll:
+SELECT *
+FROM gardenPlant
+ORDER BY position ASC;
+
+-- All plants in one month's garden, ordered by grid position.
+selectForMonth:
+SELECT *
+FROM gardenPlant
+WHERE year = ? AND month = ?
+ORDER BY position ASC;
+
+-- Grid positions already taken in one month, used to place a new plant on a free
+-- cell within that month.
+selectOccupiedPositionsForMonth:
+SELECT position
+FROM gardenPlant
+WHERE year = ? AND month = ?;
+
+insert:
+INSERT INTO gardenPlant(position, plantType, category, year, month, dayOfMonth, sourceEntryId, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Reserved for the future drag-and-drop edit mode (move a plant to a new cell).
+updatePositionById:
+UPDATE gardenPlant
+SET position = ?
+WHERE id = ?;
+
+deleteById:
+DELETE FROM gardenPlant
+WHERE id = ?;
+
+-- Clears the whole garden (Reset Garden button).
+deleteAll:
+DELETE FROM gardenPlant;

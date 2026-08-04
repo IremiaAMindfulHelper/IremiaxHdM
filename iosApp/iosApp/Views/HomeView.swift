@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()

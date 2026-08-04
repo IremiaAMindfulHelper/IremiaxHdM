@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A SwiftUI-compatible wrapper around the shared Kotlin `MainViewModel`.
 ///

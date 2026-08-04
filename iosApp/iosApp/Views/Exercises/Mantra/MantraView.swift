@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /**
  * A view that displays a daily mantra or affirmation.

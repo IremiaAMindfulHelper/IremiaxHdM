@@ -1,12 +1,13 @@
-# Iremia Lambda 
+# Iremia Insights
 
-**Iremia Lambda** ist ein interdisziplinäres Semesterprojekt an der Hochschule der Medien (Wintersemester 2025/26). Im Rahmen der Lehrveranstaltung bei Prof. Dr. Ansgar Gerlicher wurde die bestehende Gesundheits-App „Iremia“ gezielt weiterentwickelt. Der Fokus lag auf der konzeptionellen und technischen Optimierung der Notfallfunktion für Menschen in akuten psychischen Belastungssituationen.
+**Iremia Insights** ist ein Semesterprojekt an der Hochschule der Medien. Auf Basis der bestehenden Gesundheits-App „Iremia“ wurde der Journal-Bereich weiterentwickelt: Einträge lassen sich geführt oder frei erfassen, daraus abgeleitete Insights erscheinen auf dem Startbildschirm, und ein Garten macht den eigenen Verlauf sichtbar, ohne zu bewerten.
+
+Nutzertexte bleiben dabei bewusst emotional neutral und autonomie-wahrend: keine Schuldgefühle, kein Streak-Druck.
 
 ##  Projektmitglieder
-* **Michael Jaufmann** (45045)
-* **Manuel Veit** (45260)
-* **Anna-Maria Schwoch** (43707)
-* **Jan Hübner** (45204)
+* **Kerem Sarica**
+* **Semih Akcay**
+* **Yusuf Altun** 
 
 **Betreuung:** Prof. Dr. Ansgar Gerlicher
 
@@ -16,15 +17,15 @@
 Da es sich um ein **Kotlin Multiplatform (KMP)** Projekt handelt, ist die Einrichtung für die iOS-Umgebung in zwei Schritte unterteilt: das Bauen der geteilten Logik (Kotlin) und das Installieren der Abhängigkeiten (Swift/CocoaPods).
 
 ### 1. Repository klonen
-Öffnen Sie Ihr Terminal, klonen Sie den spezifischen Branch und navigieren Sie in das Verzeichnis.
 ```bash
-git clone -b lambda-branch https://github.com/IremiaAMindfulHelper/IremiaxHdM.git
+git clone https://github.com/IremiaAMindfulHelper/IremiaxHdM.git
+cd IremiaxHdM
 ```
 
 ### 2. Gemeinsamen Code (Shared Logic) bauen
 Das KMP-Framework muss generiert werden, damit Xcode darauf zugreifen kann.
 ```bash
-./gradlew :shared:assembleRelease
+./gradlew :shared:podPublishDebugXCFramework
 ```
 
 ### 3. iOS Abhängigkeiten installieren (CocoaPods)
@@ -37,8 +38,16 @@ pod install
 
 ### 4. Projekt öffnen und Ausführen
 * Öffnen Sie die Datei **`iosApp.xcworkspace`** in Xcode (wichtig: nicht die `.xcodeproj` Datei öffnen!).
-* Wählen Sie einen iOS-Simulator (z. B. iPhone 16) aus.
+* Wählen Sie einen iOS-Simulator aus.
 * Starten Sie die App mit `Cmd + R` oder über den "Run"-Button.
+
+### Android
+
+```bash
+./gradlew :composeApp:assembleDebug
+```
+
+Die fertige APK liegt unter `composeApp/build/outputs/apk/debug/`.
 
 
 ##  Projektstruktur
@@ -47,5 +56,13 @@ Das Projekt nutzt **Kotlin Multiplatform (KMP)**, um Code zwischen Android und i
 
 * **`/shared`**: Enthält die Kernlogik (Business Logic), die auf beiden Plattformen genutzt wird.
     * `commonMain`: Plattformunabhängiger Code (Repositories, Models, Engines).
+    * Hier liegen auch alle Texte (moko-resources), damit sie nur an einer Stelle gepflegt werden.
 * **`/iosApp`**: Die native iOS-App. Beinhaltet den Entry Point und SwiftUI-Code, der auf den Shared-Code zugreift.
-* **`/composeApp`**: Enthält den Shared-UI-Code (Compose Multiplatform) für Android und potenziell weitere Plattformen.
+* **`/composeApp`**: Die native Android-App mit Jetpack Compose.
+
+
+##  Hinweise zur Entwicklung
+
+* Nach Änderungen an Texten: `./gradlew :shared:generateMR` (nicht nur `generateMRcommonMain`, sonst bleiben die Android-Ressourcen alt).
+* Nach Änderungen an `.sq`-Dateien: `./gradlew :shared:generateSqlDelightInterface`.
+* Nach Kotlin-Änderungen für iOS: XCFramework neu bauen (siehe Schritt 2).

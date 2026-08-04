@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A view that presents a 3-column memory card matching game.
 /// The game progress is tracked via matched pairs and a countdown timer.

@@ -1,6 +1,6 @@
 [versions]
 # Android + Build Tools
-agp = "8.12.3"
+agp = "8.11.0"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
@@ -19,11 +19,12 @@ resources = "0.26.4"
 mokoResourcesPlugin = "0.26.4"
 
 # Kotlin & Test
-kotlin = "2.4.0"
+kotlin = "2.1.10"
 kotlinxCoroutinesCore = "1.11.0"
 
 # SQLDelight
 sqldelight = "2.3.2"
+compottie = "2.0.0-rc02"
 
 [libraries]
 # Kotlin / Test
@@ -46,6 +47,8 @@ sqldelight-coroutines    = { module = "app.cash.sqldelight:coroutines-extensions
 graphics = { module = "dev.icerock.moko:graphics", version.ref = "graphics" }
 resources = { module = "dev.icerock.moko:resources", version.ref = "resources" }
 resources-test = { module = "dev.icerock.moko:resources-test", version.ref = "resources" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version.ref = "compottie" }
+compottie-dot = { module = "io.github.alexzhirkevich:compottie-dot", version.ref = "compottie" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -1,131 +1,266 @@
 import SwiftUI
-import Shared
+import shared
+
+// =============================================================================
+// MainView — Custom frosted bottom navigation:
+//   Start | Training | Journal | Wohlbefinden
+// =============================================================================
+
+/// The four tabs matching the current app navigation.
+enum MainTab: Int, CaseIterable, Identifiable {
+    case start = 0
+    case training = 1
+    case journal = 2
+    case wellbeing = 3
+
+    var id: Int { rawValue }
+
+    var label: String {
+        switch self {
+        case .start: return "Start"
+        case .training: return "Training"
+        case .journal: return "Journal"
+        case .wellbeing: return "Wohlbefinden"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .start: return "house.fill"
+        case .training: return "books.vertical.fill"
+        case .journal: return "book.fill"
+        case .wellbeing: return "figure.mind.and.body"
+        }
+    }
+}
 
 struct MainView: View {
-    // Falls du das Wrapper-VM noch brauchst (z.B. später), lassen wir es drin,
-    // aber wir syncen die Tab-Auswahl NICHT über route.
-    @StateObject private var vm = MainViewModelWrapper()
+    @State private var selectedTab: MainTab = .start
 
-    // Mini player (falls genutzt)
+    // Mini player state (preserved from the original)
     @State private var showSoundPlayer = false
     @State private var currentSoundTitle = ""
 
-    // SOS overlay (student style)
-    @State private var showingEmergencyOverlay = false
+    // Shared notes state + capture flow, hosted at the shell so the "+" FAB works
+    // on every tab and the Journal tab observes the same controller instance.
+    @StateObject private var notesObservable = NotesObservable()
+    // Shared garden state, so the home screen shows the same live garden preview.
+    @StateObject private var gardenObservable = GardenObservable()
+    @State private var showCaptureFlow = false
+    @State private var openGardenSignal = false
+    // Set when the capture flow's "view garden" is tapped. The garden is presented
+    // from this shell (not the Journal tab) in the cover's onDismiss, so it appears
+    // in the same transition instead of flashing the Journal screen in between.
+    @State private var showGardenFromCapture = false
+    @State private var pendingGardenOpen = false
 
-    // Student tab layout uses Int tags
-    @State private var selectedTab: Int = 0
+    private func openCaptureFlow() {
+        notesObservable.clearPlantResult()
+        showCaptureFlow = true
+    }
 
     var body: some View {
-        ZStack {
-            TabView(selection: $selectedTab) {
-
-                // 0) Start
-                NavigationStack {
-                    HomeView(
-                        showSoundPlayer: $showSoundPlayer,
-                        currentSoundTitle: $currentSoundTitle
-                    )
-                }
-                .tabItem {
-                    Label(
-                        StringsKt.localized(res: SharedRes.strings().home).localized(),
-                        systemImage: "house.fill"
-                    )
-                }
-                .tag(0)
-
-                // 1) Journal (wichtig: JournalNavigationView beibehalten)
-                NavigationStack {
-                    JournalNavigationView()
-                }
-                .tabItem {
-                    Label("Journal", systemImage: "book.closed")
-                }
-                .tag(1)
-
-                // 99) Center placeholder (für den mittigen SOS Button)
-                Color.clear
-                    .tabItem { Text("") }
-                    .tag(99)
-
-                // 2) Mein Plan (hier ggf. euren echten View einsetzen)
-                NavigationStack {
-                    Text("Mein Plan")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.background)
-                }
-                .tabItem {
-                    Label("Mein Plan", systemImage: "checklist")
-                }
-                .tag(2)
-
-                // 3) Profil
-                NavigationStack {
-                    ProfileView()
-                }
-                .tabItem {
-                    Label(
-                        StringsKt.localized(res: SharedRes.strings().profile).localized(),
-                        systemImage: "person"
-                    )
-                }
-                .tag(3)
-            }
-
-            // Mini Player
-            VStack {
-                Spacer()
-                if showSoundPlayer {
-                    HStack {
-                        SoundPlayerMini(title: currentSoundTitle) {
-                            withAnimation { showSoundPlayer = false }
-                        }
-                        Spacer()
+        ZStack(alignment: .bottom) {
+            Group {
+                switch selectedTab {
+                case .start:
+                    NavigationStack {
+                        InsightHomeView(
+                            garden: gardenObservable,
+                            onOpenJournal: { selectedTab = .journal }
+                        )
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 75)
-                    .transition(.move(edge: .leading).combined(with: .opacity))
+
+                case .training:
+                    NavigationStack {
+                        Text(Strings.training)
+                            .font(IremiaText.h1)
+                            .foregroundColor(IremiaColors.ink)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(IremiaColors.gray100)
+                    }
+
+                case .journal:
+                    NavigationStack {
+                        JournalPrototypeScreen(
+                            notesObservable: notesObservable,
+                            gardenObservable: gardenObservable,
+                            openCaptureFlow: { openCaptureFlow() },
+                            openGardenSignal: $openGardenSignal
+                        )
+                    }
+
+                case .wellbeing:
+                    NavigationStack {
+                        Text(Strings.wellbeing)
+                            .font(IremiaText.h1)
+                            .foregroundColor(IremiaColors.ink)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(IremiaColors.gray100)
+                    }
                 }
             }
 
-            // Floating SOS Button (mittig)
-            VStack {
-                Spacer()
-                Button {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                        showingEmergencyOverlay = true
+            if showSoundPlayer {
+                HStack {
+                    SoundPlayerMini(title: currentSoundTitle) {
+                        withAnimation { showSoundPlayer = false }
                     }
-                } label: {
-                    VStack(spacing: 4) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 60, height: 60)
-                                .shadow(radius: 6)
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 92)
+                .transition(.move(edge: .leading).combined(with: .opacity))
+            }
 
-                            Image("NotfallButton")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 50, height: 50)
-                        }
-                        Text("SOS")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color.primary500)
+            // Persistent "+" FAB — visible on every tab, above the glassy tab bar.
+            Button(action: { openCaptureFlow() }) {
+                Image(systemName: "plus")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(IremiaColors.white)
+                    .frame(width: 56, height: 56)
+                    .background(Circle().fill(IremiaColors.teal700))
+                    .shadow(color: SwiftUI.Color.black.opacity(0.18), radius: 8, x: 0, y: 4)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Strings.journal_fab)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            .padding(.trailing, IremiaSpacing.screenGutter)
+            .padding(.bottom, IremiaSpacing.bottomNavClearance)
+
+            GlassyTabBar(selectedTab: $selectedTab)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+                .ignoresSafeArea(.keyboard)
+        }
+        // Capture flow, hosted at the shell so the FAB works on any tab.
+        .fullScreenCover(isPresented: $showCaptureFlow, onDismiss: {
+            notesObservable.clearPlantResult()
+            // Present the garden right as the capture flow finishes dismissing.
+            // Going through the Journal tab's own cover would first render the
+            // Journal screen for a moment before the garden animation started.
+            if pendingGardenOpen {
+                pendingGardenOpen = false
+                showGardenFromCapture = true
+            }
+        }) {
+            EpisodeCaptureFlow(
+                entryCount: notesObservable.entryCount,
+                onClose: { showCaptureFlow = false },
+                onFinished: { showCaptureFlow = false },
+                onViewGarden: {
+                    // The Journal tab is still selected underneath, so returning
+                    // from the garden lands on the expected screen.
+                    selectedTab = .journal
+                    pendingGardenOpen = true
+                    showCaptureFlow = false
+                },
+                onSaveEpisode: { draft in
+                    notesObservable.addEntry(draft)
+                },
+                plantResult: notesObservable.lastPlantResult
+            )
+        }
+        // Garden presented from the shell, so "view garden" in the capture flow goes
+        // straight into the garden without the Journal screen showing in between.
+        .fullScreenCover(isPresented: $showGardenFromCapture) {
+            GardenOverviewScreen(
+                garden: gardenObservable,
+                onClose: { showGardenFromCapture = false }
+            )
+        }
+    }
+}
+
+// MARK: - Glassy Tab Bar
+
+private struct GlassyTabBar: View {
+    @Binding var selectedTab: MainTab
+    @Namespace private var selectionAnimation
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(MainTab.allCases) { tab in
+                GlassyTabBarItem(
+                    tab: tab,
+                    isSelected: selectedTab == tab,
+                    namespace: selectionAnimation
+                ) {
+                    withAnimation(.spring(response: 0.34, dampingFraction: 0.84)) {
+                        selectedTab = tab
                     }
                 }
-                .buttonStyle(.plain)
-                .offset(y: 5)
-            }
-            .zIndex(5)
-
-            // SOS Overlay (student EmergencyPlanView)
-            if showingEmergencyOverlay {
-                EmergencyPlanView(isShowing: $showingEmergencyOverlay)
-                    .transition(.move(edge: .bottom))
-                    .zIndex(10)
             }
         }
+        .frame(height: 68)
+        .padding(.horizontal, 6)
+        .background {
+            ZStack {
+                Capsule(style: .continuous)
+                    .fill(.ultraThinMaterial)
+
+                Capsule(style: .continuous)
+                    .fill(SwiftUI.Color.white.opacity(0.74))
+
+                Capsule(style: .continuous)
+                    .stroke(SwiftUI.Color.black.opacity(0.10), lineWidth: 0.8)
+
+                Capsule(style: .continuous)
+                    .inset(by: 1)
+                    .stroke(SwiftUI.Color.white.opacity(0.82), lineWidth: 1)
+            }
+        }
+        .clipShape(Capsule(style: .continuous))
+        .shadow(color: SwiftUI.Color.black.opacity(0.20), radius: 18, x: 0, y: 8)
+        .shadow(color: SwiftUI.Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
+    }
+}
+
+private struct GlassyTabBarItem: View {
+    let tab: MainTab
+    let isSelected: Bool
+    let namespace: Namespace.ID
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                if isSelected {
+                    Capsule(style: .continuous)
+                        .fill(SwiftUI.Color.white.opacity(0.62))
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(.regularMaterial)
+                        )
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .stroke(SwiftUI.Color.white.opacity(0.75), lineWidth: 0.7)
+                        )
+                        .shadow(color: SwiftUI.Color.black.opacity(0.07), radius: 10, x: 0, y: 4)
+                        .matchedGeometryEffect(id: "selectedTabBackground", in: namespace)
+                        .frame(width: 78, height: 48)
+                }
+
+                VStack(spacing: 0) {
+                    Image(systemName: tab.icon)
+                        .font(.system(size: 25, weight: .heavy))
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundColor(isSelected ? IremiaColors.teal700 : SwiftUI.Color.black.opacity(0.88))
+                        .frame(height: 30)
+
+                    Text(tab.label)
+                        .font(.system(size: 12, weight: .bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .foregroundColor(isSelected ? IremiaColors.teal700 : SwiftUI.Color.black.opacity(0.88))
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(tab.label)
     }
 }
 

@@ -2,4 +2,9 @@ target 'iosApp' do
   use_frameworks!
   platform :ios, '14.0'
   pod 'shared', :path => '../shared'
+  # Lottie for iOS. lottie-ios 4.x natively loads the .lottie (dotLottie) files
+  # the shared module ships, so iOS plays the same growth + ambient animations
+  # as Android (Compottie). Chosen over the Rust-based LottieFiles player for
+  # mature CocoaPods support and a first-class SwiftUI LottieView.
+  pod 'lottie-ios', '~> 4.4'
 end

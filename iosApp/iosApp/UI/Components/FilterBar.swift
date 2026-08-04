@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A horizontal selection bar used for dashboard filtering and navigation.
 /// Features a primary "All" filter toggle and dynamic navigation links to content categories.

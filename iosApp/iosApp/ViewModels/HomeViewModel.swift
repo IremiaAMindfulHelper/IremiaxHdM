@@ -1,5 +1,5 @@
 import Foundation
-import Shared
+import shared
 
 /// Provides the data for the main dashboard by interfacing with the `WellnessRepository`.
 /// Maps Kotlin-native data structures to SwiftUI observable properties.

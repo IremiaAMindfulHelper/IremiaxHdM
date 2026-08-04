@@ -11,7 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.iremia.iremia.bridge.SharedFactory
@@ -31,6 +35,7 @@ fun ReflectionScreen(state: MantrasState, onAdd: (String) -> Unit, onRemove: (Lo
     val state by controller.state.collectAsState()
 
     var input by rememberSaveable { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     // Controller aufräumen, wenn der Screen disposed wird
     DisposableEffect(Unit) {
@@ -96,7 +101,10 @@ fun ReflectionScreen(state: MantrasState, onAdd: (String) -> Unit, onRemove: (Lo
                 onValueChange = { input = it },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
-                placeholder = { Text("Neues Mantra …") }
+                placeholder = { Text("Neues Mantra …") },
+                // Single-line field: the IME shows a "done" key that closes the keyboard.
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             )
             Spacer(Modifier.width(8.dp))
             Button(

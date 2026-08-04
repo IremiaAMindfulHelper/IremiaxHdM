@@ -1,0 +1,10 @@
+-- Migration v2 -> v3: add the persistent gardenPlant table.
+-- Plants are now stored independently of journal notes, so deleting an entry
+-- no longer removes its plant from the garden.
+CREATE TABLE gardenPlant (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  position INTEGER NOT NULL,
+  plantType TEXT NOT NULL,
+  sourceEntryId INTEGER,
+  createdAt INTEGER NOT NULL
+);

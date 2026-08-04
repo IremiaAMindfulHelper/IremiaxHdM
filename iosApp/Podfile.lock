@@ -1,16 +1,23 @@
 PODS:
-  - shared (0.1.0)
+  - lottie-ios (4.6.1)
+  - shared (1.0)
 
 DEPENDENCIES:
+  - lottie-ios (~> 4.4)
   - shared (from `../shared`)
+
+SPEC REPOS:
+  trunk:
+    - lottie-ios
 
 EXTERNAL SOURCES:
   shared:
     :path: "../shared"
 
 SPEC CHECKSUMS:
-  shared: e4ede379828d1c0cab49d64339a529cc8a1ee452
+  lottie-ios: 6467ca7035120c5b0e0acee58bb679cf15875686
+  shared: 822a7e5af2f8bbe1a9236390d8a243599773bc7c
 
-PODFILE CHECKSUM: c783745d7c24ca4fa7218f76886128cd9e11cf66
+PODFILE CHECKSUM: 37b3fc254ea2f126ecc134eacade36f00f3c23ad
 
 COCOAPODS: 1.16.2

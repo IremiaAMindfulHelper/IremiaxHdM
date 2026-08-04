@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// Manages the visual and logical progression between SOS exercise steps.
 class CheckpointViewModel: ObservableObject {

@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// Manages the state of the Memory game, bridging the Swift UI with the Kotlin `MemoryEngine`.
 /// Handles card selection logic, mismatch timeouts, and game timer synchronization.

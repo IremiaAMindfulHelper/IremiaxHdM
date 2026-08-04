@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import shared
 
 /// A row component representing an audio track.
 /// Allows the user to trigger a sound and displays its title and short description.
