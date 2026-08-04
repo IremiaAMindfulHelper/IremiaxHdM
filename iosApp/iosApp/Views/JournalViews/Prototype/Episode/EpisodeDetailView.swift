@@ -119,21 +119,27 @@ struct EpisodeDetailView: View {
                         }
 
                         // Mood
-                        IremiaCard {
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text(Strings.episode_mood_after)
-                                    .font(IremiaText.eyebrow)
-                                    .foregroundColor(IremiaColors.teal700)
-                                Spacer().frame(height: IremiaSpacing.s2)
-                                HStack(spacing: 8) {
-                                    ForEach(Array(moodFaces.enumerated()), id: \.offset) { idx, face in
-                                        Text(face)
-                                            .font(IremiaText.cardTitle)
-                                            .frame(width: 40, height: 40)
-                                            .background(
-                                                Capsule().fill(idx == moodAfter ? IremiaColors.teal100 : IremiaColors.gray100)
-                                            )
-                                            .onTapGesture { if editing { moodAfter = idx } }
+                        // Reading: show only the chosen face (the whole card is hidden
+                        // when nothing was picked). Editing: show all faces to set it.
+                        if editing || moodFaces.indices.contains(moodAfter) {
+                            IremiaCard {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(Strings.episode_mood_after)
+                                        .font(IremiaText.eyebrow)
+                                        .foregroundColor(IremiaColors.teal700)
+                                    Spacer().frame(height: IremiaSpacing.s2)
+                                    HStack(spacing: 8) {
+                                        ForEach(Array(moodFaces.enumerated()), id: \.offset) { idx, face in
+                                            if editing || idx == moodAfter {
+                                                Text(face)
+                                                    .font(IremiaText.cardTitle)
+                                                    .frame(width: 40, height: 40)
+                                                    .background(
+                                                        Capsule().fill(idx == moodAfter ? IremiaColors.teal100 : IremiaColors.gray100)
+                                                    )
+                                                    .onTapGesture { if editing { moodAfter = idx } }
+                                            }
+                                        }
                                     }
                                 }
                             }

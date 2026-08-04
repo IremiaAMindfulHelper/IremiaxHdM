@@ -197,25 +197,31 @@ fun EpisodeDetailScreen(
                     }
                 }
 
-                Spacer(Modifier.height(IremiaSpacing.S3))
-
                 // --- Mood ---
-                IremiaCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.fillMaxWidth()) {
-                        Text(localized(SharedRes.strings.episode_mood_after).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
-                        Spacer(Modifier.height(IremiaSpacing.S2))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            moodFaces.forEachIndexed { idx, face ->
-                                val selected = idx == moodAfter
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(IremiaShapes.Pill)
-                                        .background(if (selected) IremiaColors.Teal100 else IremiaColors.Gray100)
-                                        .then(if (editing) Modifier.clickable { moodAfter = idx } else Modifier),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(face, style = IremiaText.CardTitle)
+                // Reading: show only the chosen face (the whole card is hidden when
+                // nothing was picked). Editing: show all faces so it can be set.
+                val hasMood = moodAfter in moodFaces.indices
+                if (editing || hasMood) {
+                    Spacer(Modifier.height(IremiaSpacing.S3))
+                    IremiaCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.fillMaxWidth()) {
+                            Text(localized(SharedRes.strings.episode_mood_after).toString(context), style = IremiaText.Eyebrow, color = IremiaColors.Teal700)
+                            Spacer(Modifier.height(IremiaSpacing.S2))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                moodFaces.forEachIndexed { idx, face ->
+                                    val selected = idx == moodAfter
+                                    if (editing || selected) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(IremiaShapes.Pill)
+                                                .background(if (selected) IremiaColors.Teal100 else IremiaColors.Gray100)
+                                                .then(if (editing) Modifier.clickable { moodAfter = idx } else Modifier),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(face, style = IremiaText.CardTitle)
+                                        }
+                                    }
                                 }
                             }
                         }
