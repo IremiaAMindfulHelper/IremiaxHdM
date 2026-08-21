@@ -9,9 +9,14 @@ Companion-App für Apple Watch zum iOS-Client von **Iremia**. Sie läuft eigenst
 * **Lovis Pangratz**
 * **Daniel Gieser**
 * **Anton Smirnov**
-* **José Salvador Tavares Ruela Viana**
+* **José Viana**
 * **Fiona Hirschberg**
-  
+
+## Links
+
+* **Figma (Smartwatch Companion):** https://www.figma.com/design/AcWeD0AGec92pJtKEzZ3r1/Iremia-Smartwatch-companion?node-id=1707-403&t=Dbt6x0D5ovlOjE7M-1
+* **Videos, Dokumentation, Folien, Survey-Ergebnisse:** https://cloud.mi.hdm-stuttgart.de/index.php/s/yycFbXgfg8cF2QB
+
 ## Einstieg
 
 Entry Point ist `IremiaWatchApp.swift` → lädt `ContentView`, die den kompletten Mood-Check-Flow als State Machine steuert (`MoodFlowStep`: `.initial` → `.category` → `.detail` → `.response` → `.done`).
