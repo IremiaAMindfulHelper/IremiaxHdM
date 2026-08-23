@@ -24,7 +24,9 @@ attacks.
 | José Viana | 5030229 |
 | Fiona Hirschberg | 45794 |
 
-**Supervision:** Prof. Dr. Ansgar Gerlicher
+**Supervision:** Prof. Dr. Ansgar Gerlicher (HdM)
+
+**Iremia team (stakeholders):** Lara Bruder, Maik Bucher, Julia Fellmeth
 
 ### Project materials
 
