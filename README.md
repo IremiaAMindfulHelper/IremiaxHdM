@@ -1,8 +1,11 @@
-# Iremia — Apple Watch Companion
+# Iremia x HdM
 
 **Iremia** is a mental-health app that supports people during acute psychological distress,
-in particular panic attacks. It is an interdisciplinary semester project at Hochschule der
-Medien (HdM) Stuttgart, supervised by **Prof. Dr. Ansgar Gerlicher**.
+in particular panic attacks. It is developed as an interdisciplinary semester project at
+Hochschule der Medien (HdM) Stuttgart, supervised by **Prof. Dr. Ansgar Gerlicher**, and is
+continued by a new team each semester.
+
+## Apple Watch Companion (Sommersemester 2026)
 
 This semester's contribution is a **native watchOS companion app** plus the iPhone-side
 integration that connects both devices. The idea: a smartwatch is worn on the body and is
@@ -11,7 +14,7 @@ mood check-in with AI feedback, a guided breathing exercise, a voice-based emerg
 assistant with live transcription, synced emergency contacts, and a Learn section on panic
 attacks.
 
-## Team — Sommersemester 2026
+### Team
 
 | Name | Matrikelnummer |
 |---|---|
@@ -23,7 +26,7 @@ attacks.
 
 **Supervision:** Prof. Dr. Ansgar Gerlicher
 
-## Project materials
+### Project materials
 
 | Material | Where |
 |---|---|
@@ -36,9 +39,9 @@ covered in the project documentation linked above.
 
 ---
 
-# Setup and installation
+## Setup and installation
 
-## Requirements
+### Requirements
 
 * **macOS with Xcode** (iOS 17+ / watchOS 10+ SDK). No Apple Developer account needed —
   a signing team is committed, so the project builds out of the box.
@@ -46,7 +49,7 @@ covered in the project documentation linked above.
   `brew install openjdk@21`.
 * No CocoaPods, no Docker, no additional dependencies.
 
-## 1. Clone and switch to the project branch
+### 1. Clone and switch to the project branch
 
 > **Important:** this semester's work lives on the branch **`watch/basics`**, not on `main`.
 > The `main` branch does not contain the watch app.
@@ -72,7 +75,7 @@ Verify you are on the right branch — the command must print `watch/basics`, an
 git branch --show-current
 ```
 
-## 2. Add the API key (recommended)
+### 2. Add the API key (recommended)
 
 The app's AI features use the Anthropic Claude API. **No key is included in this repository.**
 The key for evaluation is provided by e-mail; create a `.env` file in the repository root:
@@ -85,7 +88,7 @@ The build picks it up automatically. **Without a key the project still builds an
 but all AI responses fall back to fixed, pre-written texts, so the voice assistant and the
 mood feedback cannot be evaluated properly. See "Running without an API key" below.
 
-## 3. Open the project
+### 3. Open the project
 
 Open **`iosApp/iosApp.xcworkspace`** in Xcode — important: not the `.xcodeproj` file.
 
@@ -93,11 +96,11 @@ The shared Kotlin framework is built automatically by an Xcode build phase. The 
 takes several minutes** (Gradle compiles the Kotlin framework) and may look stalled — this is
 expected.
 
-## 4. Run the iPhone app
+### 4. Run the iPhone app
 
 Select the **`iosApp`** scheme and any iOS simulator (e.g. iPhone 16), then `Cmd + R`.
 
-## 5. Run the watch app
+### 5. Run the watch app
 
 Select the **`IremiaWatch`** scheme and — importantly — an iPhone simulator **with a paired
 watch simulator** (e.g. "iPhone 16 + Apple Watch Series 10"). The watch talks to the phone via
@@ -106,7 +109,13 @@ watch simulator** (e.g. "iPhone 16 + Apple Watch Series 10"). The watch talks to
 For features that involve the iPhone (voice assistant, mood feedback, contacts), **run the
 iPhone app first** and leave it running, then start the watch app.
 
-## Running without an API key
+> **Voice input needs a real Apple Watch.** Microphone capture in the watchOS simulator is
+> unreliable — recordings may stay silent or produce no transcript, even with everything else
+> set up correctly. Everything else in the app can be evaluated in the simulator, but for the
+> emergency voice assistant please use a physical Apple Watch paired with an iPhone, or refer
+> to the demo video linked above.
+
+### Running without an API key
 
 Fully usable: breathing exercise, Learn section, journey/history, settings, navigation, and
 the emergency contacts UI.
@@ -116,18 +125,19 @@ emergency voice assistant's replies. The app deliberately never breaks when the 
 unavailable — offline usability is a design goal — but the AI behaviour itself is only
 visible with a key.
 
-## Troubleshooting
+### Troubleshooting
 
 | Symptom | Fix |
 |---|---|
 | Build phase "Compile Kotlin Framework" fails | Wrong or missing JDK — JDK 21 is expected |
 | Watch app shows only fallback texts | No `.env` / no API key, or the iPhone app is not running |
 | Watch cannot reach the phone | Simulator pair without a paired watch, or iPhone app not started |
+| Voice input records nothing / no transcript | Expected in the watchOS simulator — use a real Apple Watch |
 | Signing errors | Optional: create `iosApp/Configuration/Local.xcconfig` with your own `DEV_TEAM_ID` (template provided next to it) |
 
 The encrypted files under `secrets/` are **not** needed to build or run the project.
 
-## Repository structure
+### Repository structure
 
 * **`/iosApp/watchApp`** — the watchOS app (Swift/SwiftUI), this semester's main contribution
 * **`/iosApp/iosApp`** — the iOS app, including the watch integration
@@ -136,7 +146,7 @@ The encrypted files under `secrets/` are **not** needed to build or run the proj
 
 ---
 
-## Vorgängerprojekt: Iremia Lambda (Wintersemester 2025/26)
+## Iremia Lambda (Wintersemester 2025/26)
 
 *Der folgende Abschnitt dokumentiert das Vorgängerteam und ist bewusst im Original auf
 Deutsch belassen.*
