@@ -17,8 +17,8 @@ attacks.
 |---|---|
 | Lovis Pangratz | 45292 |
 | Daniel Gieser | 44687 |
-| Anton Smirnov | *TODO* |
-| José Viana | *TODO* |
+| Anton Smirnov | 5030235 |
+| José Viana | 5030229 |
 | Fiona Hirschberg | 45794 |
 
 **Supervision:** Prof. Dr. Ansgar Gerlicher
