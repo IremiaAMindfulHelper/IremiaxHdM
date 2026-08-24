@@ -1,12 +1,24 @@
 // OPTIONAL override — most developers do not need this file.
 //
 // The shared Apple Developer Team ID is already committed in Config.xcconfig,
-// so the project signs and builds without any setup.
+// so the project signs and builds without any setup. For the simulator this
+// file is never needed at all.
 //
-// Only if you must sign with a DIFFERENT team, copy this file to
-// Local.xcconfig and set your own ID:
+// You need it when you deploy to a real iPhone and Apple Watch with your own
+// Apple ID. Copy this file and fill in BOTH values:
 //
 //   cp Local.xcconfig.template Local.xcconfig
 //
 // Local.xcconfig is git-ignored, so your override stays local.
 DEV_TEAM_ID =
+
+// Your own base bundle identifier. Needed together with your own team,
+// because org.iremia.app is registered to the team above and cannot be
+// claimed by a different one. The watch app derives its own identifier
+// ($(APP_BUNDLE_ID).watchkitapp) and its companion reference from this
+// value, so this single line covers both targets.
+//
+// Keep the line commented out unless you actually set an identifier — an
+// empty value here would override the working default from Config.xcconfig
+// and leave the watch app with a broken bundle identifier.
+//APP_BUNDLE_ID = de.example.iremia

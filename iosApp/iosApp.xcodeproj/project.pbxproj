@@ -12,15 +12,11 @@
 		29CE79E52F7ED63700586B9C /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 29CE79E42F7ED62700586B9C /* libsqlite3.tbd */; };
 		373D27222FCCCA070006C161 /* JourneyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373D27212FCCCA070006C161 /* JourneyStore.swift */; };
 		373D27242FCCCA230006C161 /* JourneyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373D27232FCCCA230006C161 /* JourneyView.swift */; };
-		AA00000100000000000000E7 /* LearnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000E6 /* LearnView.swift */; };
-		AA00000100000000000000E9 /* LearnContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000E8 /* LearnContent.swift */; };
 		373D27262FCCCFE70006C161 /* BreathingWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373D27252FCCCFE70006C161 /* BreathingWatchView.swift */; };
 		373D27312FCCCA070006C161 /* DailyMessageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373D27302FCCCA070006C161 /* DailyMessageStore.swift */; };
 		379332A12FC073F100D72D1C /* MoodCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379332A02FC073F100D72D1C /* MoodCheckView.swift */; };
 		379332B12FC073F100D72D1C /* MoodMicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379332B02FC073F100D72D1C /* MoodMicView.swift */; };
 		AA00000100000000000000D1 /* IremiaWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C1 /* IremiaWatchApp.swift */; };
-		AA0000010000000000000F12 /* WatchClaudeAssistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000F02 /* WatchClaudeAssistant.swift */; };
-		AA0000010000000000000F13 /* iremia_rag.json in Resources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000F03 /* iremia_rag.json */; };
 		AA00000100000000000000D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C2 /* ContentView.swift */; };
 		AA00000100000000000000D3 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C3 /* WatchConnectivityManager.swift */; };
 		AA00000100000000000000D4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C4 /* Assets.xcassets */; };
@@ -29,6 +25,10 @@
 		AA00000100000000000000D7 /* EmergencyVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C7 /* EmergencyVoiceView.swift */; };
 		AA00000100000000000000D8 /* EmergencyWatchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000C8 /* EmergencyWatchViewModel.swift */; };
 		AA00000100000000000000E2 /* IremiaWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000A0 /* IremiaWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA00000100000000000000E7 /* LearnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000E6 /* LearnView.swift */; };
+		AA00000100000000000000E9 /* LearnContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000100000000000000E8 /* LearnContent.swift */; };
+		AA0000010000000000000F12 /* WatchClaudeAssistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000F02 /* WatchClaudeAssistant.swift */; };
+		AA0000010000000000000F13 /* iremia_rag.json in Resources */ = {isa = PBXBuildFile; fileRef = AA0000010000000000000F03 /* iremia_rag.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,8 +71,6 @@
 		29CE79E42F7ED62700586B9C /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		373D27212FCCCA070006C161 /* JourneyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyStore.swift; sourceTree = "<group>"; };
 		373D27232FCCCA230006C161 /* JourneyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyView.swift; sourceTree = "<group>"; };
-		AA00000100000000000000E6 /* LearnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnView.swift; sourceTree = "<group>"; };
-		AA00000100000000000000E8 /* LearnContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnContent.swift; sourceTree = "<group>"; };
 		373D27252FCCCFE70006C161 /* BreathingWatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingWatchView.swift; sourceTree = "<group>"; };
 		373D27302FCCCA070006C161 /* DailyMessageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyMessageStore.swift; sourceTree = "<group>"; };
 		379332A02FC073F100D72D1C /* MoodCheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodCheckView.swift; sourceTree = "<group>"; };
@@ -87,9 +85,11 @@
 		AA00000100000000000000C6 /* ContactsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsListView.swift; sourceTree = "<group>"; };
 		AA00000100000000000000C7 /* EmergencyVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyVoiceView.swift; sourceTree = "<group>"; };
 		AA00000100000000000000C8 /* EmergencyWatchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyWatchViewModel.swift; sourceTree = "<group>"; };
+		AA00000100000000000000E6 /* LearnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnView.swift; sourceTree = "<group>"; };
+		AA00000100000000000000E8 /* LearnContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnContent.swift; sourceTree = "<group>"; };
+		AA0000010000000000000CF1 /* Configuration/Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration/Config.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA0000010000000000000F02 /* WatchClaudeAssistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchClaudeAssistant.swift; sourceTree = "<group>"; };
 		AA0000010000000000000F03 /* iremia_rag.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = iremia_rag.json; path = iosApp/Resources/iremia_rag.json; sourceTree = SOURCE_ROOT; };
-		AA0000010000000000000CF1 /* Configuration/Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration/Config.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -314,25 +314,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		AA00000200000000000000F1 /* Generate Secrets */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate Secrets";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "\"${SRCROOT}/scripts/generate-secrets.sh\"\n";
-		};
 		AA0000010000000000000F20 /* Generate Secrets (Watch) */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -344,6 +325,25 @@
 			inputPaths = (
 			);
 			name = "Generate Secrets (Watch)";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"${SRCROOT}/scripts/generate-secrets.sh\"\n";
+		};
+		AA00000200000000000000F1 /* Generate Secrets */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Secrets";
 			outputFileListPaths = (
 			);
 			outputPaths = (
