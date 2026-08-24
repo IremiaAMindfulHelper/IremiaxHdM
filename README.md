@@ -45,10 +45,17 @@ covered in the project documentation linked above.
 
 ### Requirements
 
-* **macOS with Xcode** (iOS 17+ / watchOS 10+ SDK). No Apple Developer account needed —
-  a signing team is committed, so the project builds out of the box.
+* **A Mac with Apple Silicon and Xcode 16 or newer** (iOS 17+ / watchOS 10+ SDK).
+  Apple Silicon matters for the iPhone app: the shared Kotlin framework is only built for
+  arm64 simulators, so on an Intel Mac the `iosApp` scheme offers no simulator to run on.
+  The watch app is not affected by this.
+* **No Apple Developer account needed** for simulator evaluation — simulator builds are
+  signed ad-hoc, and a signing team is committed on top. Only a real iPhone or Apple Watch
+  requires your own account; see [Running on real hardware](#running-on-real-hardware-needed-for-voice-input).
 * **JDK 21** — required for the Kotlin Multiplatform build. Install e.g. with
-  `brew install openjdk@21`.
+  `brew install openjdk@21`. The formula is keg-only, so it puts no `java` on your `PATH`:
+  Xcode locates the JDK by itself, and the one terminal command in step 3 gets it passed
+  explicitly.
 * No CocoaPods, no Docker, no additional dependencies.
 
 ### 1. Clone and switch to the project branch
@@ -90,22 +97,36 @@ The build picks it up automatically. **Without a key the project still builds an
 but all AI responses fall back to fixed, pre-written texts, so the voice assistant and the
 mood feedback cannot be evaluated properly. See "Running without an API key" below.
 
-### 3. Open the project
+### 3. Build the shared Kotlin framework (once, before opening Xcode)
+
+The iOS app links against `iosApp/Shared.xcframework`. That bundle is generated from the
+Kotlin Multiplatform code and is therefore not part of the repository — it has to be built
+once:
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :shared:copyXCFrameworkToIosApp
+```
+
+This takes about two minutes. Skipping it makes the iPhone app fail immediately with
+`error: There is no XCFramework found at .../iosApp/Shared.xcframework`. Repeat the command
+only when the Kotlin code under `/shared` changes. The watch app does not need it and builds
+without this step.
+
+### 4. Open the project
 
 Open **`iosApp/iosApp.xcworkspace`** in Xcode — important: not the `.xcodeproj` file.
 
-The shared Kotlin framework is built automatically by an Xcode build phase. The **first build
-takes several minutes** (Gradle compiles the Kotlin framework) and may look stalled — this is
-expected.
+An Xcode build phase runs Gradle to compile the Kotlin framework into the app. The **first
+build takes several minutes** and may look stalled — this is expected.
 
-### 4. Run the iPhone app
+### 5. Run the iPhone app
 
-Select the **`iosApp`** scheme and any iOS simulator (e.g. iPhone 16), then `Cmd + R`.
+Select the **`iosApp`** scheme and any iOS simulator (e.g. iPhone 17), then `Cmd + R`.
 
-### 5. Run the watch app
+### 6. Run the watch app
 
 Select the **`IremiaWatch`** scheme and — importantly — an iPhone simulator **with a paired
-watch simulator** (e.g. "iPhone 16 + Apple Watch Series 10"). The watch talks to the phone via
+watch simulator** (e.g. "iPhone 17 + Apple Watch Series 11"). The watch talks to the phone via
 `WatchConnectivity`, which does not work without a pairing.
 
 For features that involve the iPhone (voice assistant, mood feedback, contacts), **run the
@@ -116,6 +137,28 @@ iPhone app first** and leave it running, then start the watch app.
 > set up correctly. Everything else in the app can be evaluated in the simulator, but for the
 > emergency voice assistant please use a physical Apple Watch paired with an iPhone, or refer
 > to the demo video linked above.
+
+### Running on real hardware (needed for voice input)
+
+Simulator builds need no account at all. Deploying to a real iPhone and Apple Watch does —
+a free Apple ID is enough, no paid membership:
+
+1. Add your Apple ID in Xcode under **Settings → Accounts** and note the Team ID it shows.
+2. Create `iosApp/Configuration/Local.xcconfig` (git-ignored; a template sits next to it)
+   and set **both** values:
+
+   ```
+   DEV_TEAM_ID   = <your team id>
+   APP_BUNDLE_ID = de.example.iremia
+   ```
+
+   The bundle identifier has to change as well: `org.iremia.app` belongs to our team, and a
+   different team cannot claim it. One line is enough for both targets — the watch app
+   derives its own identifier (`<APP_BUNDLE_ID>.watchkitapp`) and its companion reference
+   from this value.
+3. Install the iPhone app on the phone first, then the watch app on the paired watch. On
+   first launch, trust the developer certificate on both devices under
+   **Settings → General → VPN & Device Management**.
 
 ### Running without an API key
 
@@ -131,11 +174,13 @@ visible with a key.
 
 | Symptom | Fix |
 |---|---|
+| `error: There is no XCFramework found at .../Shared.xcframework` | Setup step 3 was skipped — run the Gradle command from there |
 | Build phase "Compile Kotlin Framework" fails | Wrong or missing JDK — JDK 21 is expected |
+| `iosApp` scheme offers no simulator to select | Intel Mac — the iPhone app needs Apple Silicon; the watch app still runs |
 | Watch app shows only fallback texts | No `.env` / no API key, or the iPhone app is not running |
 | Watch cannot reach the phone | Simulator pair without a paired watch, or iPhone app not started |
 | Voice input records nothing / no transcript | Expected in the watchOS simulator — use a real Apple Watch |
-| Signing errors | Optional: create `iosApp/Configuration/Local.xcconfig` with your own `DEV_TEAM_ID` (template provided next to it) |
+| Signing errors | Only relevant on real hardware: create `iosApp/Configuration/Local.xcconfig` with your own `DEV_TEAM_ID` **and** `APP_BUNDLE_ID` (template provided next to it) — see [Running on real hardware](#running-on-real-hardware-needed-for-voice-input) |
 
 The encrypted files under `secrets/` are **not** needed to build or run the project.
 
