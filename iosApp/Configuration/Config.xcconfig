@@ -4,6 +4,11 @@
 // builds out of the box — no per-developer setup required.
 DEV_TEAM_ID = 5WRJ6K8ZQJ
 
+// Base bundle identifier for the iOS app. The watch app derives its own
+// identifier ($(APP_BUNDLE_ID).watchkitapp) and its companion reference from
+// this value, so it must match the iOS target's PRODUCT_BUNDLE_IDENTIFIER.
+APP_BUNDLE_ID = org.iremia.app
+
 // Optional, git-ignored override. Anyone who needs a different signing team
 // can create Configuration/Local.xcconfig with their own DEV_TEAM_ID; the
 // include is optional, so the build never fails if the file is absent.
