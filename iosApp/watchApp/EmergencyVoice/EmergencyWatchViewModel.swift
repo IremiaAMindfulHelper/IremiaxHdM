@@ -32,7 +32,7 @@ final class VoiceCaptureController: ObservableObject {
     private let engine = AVAudioEngine()
     private var streaming = false
 
-    // MARK: - Lifecycle
+    // Lifecycle
 
     func begin() async {
         guard case .idle = phase else { return }

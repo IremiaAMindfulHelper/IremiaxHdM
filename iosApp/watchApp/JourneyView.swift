@@ -121,7 +121,7 @@ struct JournalEntriesView: View {
     }
 }
 
-// MARK: - Entry Row
+// Entry Row
 
 private struct JournalEntryRow: View {
     let entry: JournalEntry
@@ -164,7 +164,7 @@ private struct JournalEntryRow: View {
     }
 }
 
-// MARK: - Entry Detail
+// Entry Detail
 
 private struct JournalEntryDetailView: View {
     let entry: JournalEntry
@@ -241,7 +241,7 @@ private struct JournalEntryDetailView: View {
     }
 }
 
-// MARK: - Mood Chart
+// Mood Chart
 
 private struct MoodChartView: View {
     let entries: [JournalEntry]

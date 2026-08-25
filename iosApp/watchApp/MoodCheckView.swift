@@ -258,9 +258,7 @@ private struct BubbleTriangle: View {
     var onMicTap: () -> Void = {}
 
     var body: some View {
-        // Figma-exact diamond: step = 30px in 51px circles → 21px overlap per row.
-        // The previous "cramped" look was wrong horizontal spacing; Spacer() now
-        // places Life/Mind at 20% / 80% of available width, matching the Figma.
+        // Figma based diamond
         let overlap = bubbleSize * 0.41
 
         VStack(spacing: -overlap) {

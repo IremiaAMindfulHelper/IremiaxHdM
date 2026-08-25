@@ -144,7 +144,7 @@ private struct GoodResponseView: View {
 private struct HomeMenuView: View {
     // Figma reference frame ("Apple Watch Series 10 42mm"): 187 × 223 pt.
     // Everything is laid out in these coordinates, then scaled by a single
-    // factor and centred — so the spacing is a pixel-faithful copy of the
+    // factor and centred so the spacing is a pixel-faithful copy of the
     // Figma design and stays identical across every watch size (40–49 mm all
     // share ~0.84 aspect). Sizing and gaps scale together, so nothing overlaps.
     private static let refW: CGFloat = 187
@@ -211,7 +211,7 @@ private struct HomeMenuView: View {
                 .buttonStyle(.plain)
                 .position(x: ox + 40 * s, y: oy + 197 * s)
 
-                // Settings — bottom right → placeholder
+                // Settings — bottom right
                 NavigationLink {
                     SettingsView()
                 } label: {
@@ -227,8 +227,8 @@ private struct HomeMenuView: View {
     }
 }
 
-/// Alternate home menu — a faithful copy of the Figma "mid-fidelity" concept
-/// (node 1558-2006). Same reference frame and single-scale-factor technique as
+/// Alternate home menu — a faithful copy of the Figma "mid-fidelity" concept.
+/// Same reference frame and single-scale-factor technique as
 /// HomeMenuView, so it stays pixel-faithful across every watch size. Every
 /// button routes to the same destination as the original bubble menu:
 /// Quick help → contacts (SOS), Breathe, Journey, mic → emergency voice,

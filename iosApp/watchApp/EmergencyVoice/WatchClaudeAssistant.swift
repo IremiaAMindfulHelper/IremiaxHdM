@@ -18,7 +18,7 @@ enum CrisisKeywords {
     }
 }
 
-// MARK: - Claude Messages API wire types
+// Claude Messages API wire types
 
 private struct ClaudeSystemBlock: Encodable {
     let type = "text"
@@ -79,7 +79,7 @@ private struct RAGEntry: Decodable {
     let text: String
 }
 
-// MARK: - Service
+// Service
 
 /// Watch-side Claude client. Same behaviour as the iPhone `ClaudeAssistantService`,
 /// but runs directly on the Watch over its own network connection so voice input
@@ -100,7 +100,7 @@ actor WatchClaudeAssistant {
         self.systemBlocks = Self.buildSystemBlocks()
     }
 
-    // MARK: Voice input
+    // Voice input
 
     /// Voice transcript → Claude. Returns nil when the input is empty or the API
     /// is unavailable so the caller can surface an error instead of a canned
@@ -118,7 +118,7 @@ actor WatchClaudeAssistant {
         history.append(ClaudeChatMessage(role: "assistant", content: assistant))
     }
 
-    // MARK: Claude API call
+    // Claude API call
 
     private func complete(userMessage: String) async -> String? {
         // Record the input first so it stays part of the history even if this
@@ -178,7 +178,7 @@ actor WatchClaudeAssistant {
         }
     }
 
-    // MARK: API key
+    // API key
 
     /// Reads ANTHROPIC_API_KEY from the bundled Secrets.plist (written at build
     /// time by scripts/generate-secrets.sh from the repo-root .env).
@@ -190,7 +190,7 @@ actor WatchClaudeAssistant {
         return key
     }
 
-    // MARK: System prompt with verified panic-attack knowledge
+    // System prompt with verified panic-attack knowledge
 
     private static func buildSystemBlocks() -> [ClaudeSystemBlock] {
         let persona = """

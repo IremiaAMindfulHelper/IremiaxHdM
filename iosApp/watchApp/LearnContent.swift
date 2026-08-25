@@ -1,6 +1,6 @@
 import Foundation
 
-/// Curated Learn content for the Watch — English copy grouped into five
+/// Curated Learn content for the Watch. English copy grouped into five
 /// didactic chapters (understand → act → work with thoughts → prevent →
 /// emergency). Each article's `id` maps to the German source entry in
 /// `iremia_rag.json`, which stays untouched as the Claude knowledge base.

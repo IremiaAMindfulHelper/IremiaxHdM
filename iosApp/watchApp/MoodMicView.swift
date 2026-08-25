@@ -1,11 +1,11 @@
 import SwiftUI
 
-// MARK: - Shared voice input
+// Shared voice input
 
 /// The single voice-input surface used everywhere in the Watch app (mood
 /// check-in and emergency). It records via `VoiceCaptureController`, shows the
 /// live transcript streamed back from the iPhone, and ends in either a response
-/// or an error — there is no canned fallback text.
+/// or an error, there is no canned fallback text.
 struct VoiceInputView: View {
     /// Called once with the final transcript + response so the caller can log
     /// the session in the Journey.
@@ -50,7 +50,7 @@ struct VoiceInputView: View {
         .onDisappear { controller.teardown() }
     }
 
-    // MARK: Listening
+    // Listening
 
     private var listeningView: some View {
         VStack(spacing: 0) {
@@ -100,7 +100,7 @@ struct VoiceInputView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: Response / error
+    // Response / error
 
     private func resultView(_ text: String, isError: Bool) -> some View {
         ZStack {
@@ -135,7 +135,7 @@ struct VoiceInputView: View {
     }
 }
 
-// MARK: - Mood check-in entry point
+// Mood check-in entry point
 
 struct MoodMicView: View {
     var onComplete: () -> Void

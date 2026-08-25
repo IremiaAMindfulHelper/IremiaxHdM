@@ -13,18 +13,13 @@ struct BreathingWatchView: View {
             let elapsed = context.date.timeIntervalSince(start)
                 .truncatingRemainder(dividingBy: BreathStep.cycle)
             let step = BreathStep(elapsed: elapsed)
-            // Eased (smoothstep) glow so the light surges through the middle of
-            // the breath rather than tracking the bloom linearly.
             let glow = step.bloom * step.bloom * (3 - 2 * step.bloom)
 
             ZStack {
                 // Solid black base so the wash can dissolve into it.
                 Color.black.ignoresSafeArea()
 
-                // Base wash: a faint teal glow whose alpha falls off all the way
-                // to transparent (into the black) — no opaque outer stop, so the
-                // compressed state melts into the background instead of reading
-                // as a hard-edged teal disc.
+                // Smooth circular gradient around the Breathing animation
                 RadialGradient(
                     gradient: Gradient(stops: [
                         .init(color: Color(red: 89 / 255, green: 170 / 255, blue: 168 / 255)
@@ -36,16 +31,11 @@ struct BreathingWatchView: View {
                     ]),
                     center: .center,
                     startRadius: 0,
-                    // Small but clearly visible halo hugging the flower when
-                    // held; grows into the full bloom on the inhale (where the
-                    // hot core, not this wash, supplies the extra brightness).
                     endRadius: 82 + 73 * glow
                 )
                 .ignoresSafeArea()
 
-                // Hot core that blooms in from nothing on the inhale (a
-                // qualitative change, not just a scale) and fades out fully on
-                // the exhale, so the light feels alive rather than zoomed.
+
                 RadialGradient(
                     gradient: Gradient(colors: [
                         Color(red: 150 / 255, green: 222 / 255, blue: 220 / 255),
@@ -88,13 +78,7 @@ struct BreathingWatchView: View {
 }
 
 /// Breath guidance derived from the same clock as the flower, so the text and
-/// counter stay locked to the bloom. The phases map onto the visual morph
-/// stages of the 16s loop: breathe in 0–4s (103→100, the big petal curves
-/// expand), hold 4–8s (100→101, the small lines follow), breathe out 8–16s
-/// (101→103, the whole flower compresses). The compressed state has no hold —
-/// the loop runs straight from compression back into the next breathe in.
-/// Bloom tracks real openness, so it rises through both the in and the hold
-/// (peaking fully open at 101) and falls back on the exhale.
+/// counter stay locked to the bloom.
 private struct BreathStep {
     static let cycle: TimeInterval = 16
 
@@ -122,10 +106,8 @@ private struct BreathStep {
     }
 }
 
-// MARK: - Bloom flower
-
-/// Vector flower recreated from Figma "Flow 2" (Screen Ideation/Sandbox).
-/// Driven by the breath clock via `phase` (0...1 over the 20s loop) so the
+/// Vector flower recreated from Figma concept
+/// Driven by the breath clock via `phase` so the
 /// bloom stays in sync with the on-screen guidance.
 private struct BreathFlower: View {
     var phase: CGFloat
@@ -144,10 +126,7 @@ private struct BreathFlower: View {
     }
 }
 
-/// Morphing flower shape. `phase` is the normalized position in the Flow 2 loop
-/// (0...1); SwiftUI animates it linearly and `path(in:)` maps it onto the three
-/// keyframes, interpolating the petal paths per control point (mirroring Figma's
-/// SMART_ANIMATE), fitted/centred into the 187×223 viewBox.
+/// Morphing flower shape
 private struct BloomFlower: Shape {
     var phase: CGFloat
 
@@ -188,7 +167,7 @@ private struct BloomFlower: Shape {
     }
 }
 
-/// Raw vector data exported from Figma Flow 2, in the 187×223 viewBox.
+/// Raw vector data exported from Figma, in the 187×223 viewBox.
 /// `closed` is frame 100 (1528:559), `open` is frame 103 (1528:663); the two
 /// arrays are index-aligned by petal so they morph cleanly.
 private enum FlowerGeometry {
@@ -251,7 +230,7 @@ private enum FlowerGeometry {
     static let openOps = open.map(SVGPath.ops)
 }
 
-/// Minimal absolute-coordinate SVG path parser. Parses the M, L, C and Z
+///SVG path parser. Parses the M, L, C and Z
 /// commands in the exported flower data into ordered ops, and interpolates two
 /// structurally-identical paths point-by-point (matching Figma SMART_ANIMATE).
 private enum SVGPath {

@@ -41,7 +41,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     /// soon as it is. This closes the race where the very first request right
     /// after launch (e.g. the Good-mood check fired after a single tap on the
     /// launch screen) would fail because the session hadn't finished activating
-    /// or the iPhone app hadn't been woken yet — sending the user to the local
+    /// or the iPhone app hadn't been woken yet, sending the user to the local
     /// fallback even though Claude was available a moment later.
     private func waitForReachable(timeout: TimeInterval = 3) async -> Bool {
         let session = WCSession.default
@@ -118,7 +118,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         session.sendMessage(["action": "voiceCancel"], replyHandler: nil, errorHandler: nil)
     }
 
-    // MARK: - Claude mood check
+    // Claude mood check
 
     /// Asks the iPhone to generate a Claude response for a mood check-in made
     /// with the preset buttons. Returns nil when the phone is unreachable or
@@ -142,7 +142,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
-    // MARK: - Message of the day
+    // Message of the day
 
     /// Asks the iPhone for an encouraging home-screen message, passing a short
     /// summary of the user's recent Journey so Claude can reference it. Returns
@@ -165,7 +165,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
-    // MARK: - WCSessionDelegate
+    // WCSessionDelegate
 
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
         // Load contacts that were sent before this session activated
