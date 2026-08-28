@@ -21,8 +21,8 @@ Nutzertexte bleiben dabei bewusst emotional neutral und autonomie-wahrend: keine
 | Projektdokumentation (PDF) | [Abgaben/Projektdoku_InsightIntegration.pdf](Abgaben/Projektdoku_InsightIntegration.pdf) |
 | Finale Präsentation, Präsentationstag und Media Night (PDF) | [Abgaben/Präsentationstag.pdf](Abgaben/Präsentationstag.pdf) |
 | Team-Vorstellungspräsentation (PDF) | [Abgaben/Team%20Introduction%20Presentation.pdf](Abgaben/Team%20Introduction%20Presentation.pdf) |
-| Demo-Video | [HdM-Nextcloud](https://cloud.mi.hdm-stuttgart.de/index.php/apps/files/files/45919387?dir=/IremiaInsight_Integration/Doku) |
-| Umfrage-Auswertung (PDF) | [HdM-Nextcloud](https://cloud.mi.hdm-stuttgart.de/index.php/apps/files/files/45919387?dir=/IremiaInsight_Integration/Doku) |
+| Demo-Video | [HdM-Nextcloud](https://cloud.mi.hdm-stuttgart.de/index.php/apps/files/files/45919387?dir=/IremiaInsight_Integration) |
+| Umfrage-Auswertung (PDF) | [HdM-Nextcloud](https://cloud.mi.hdm-stuttgart.de/index.php/apps/files/files/45919387?dir=/IremiaInsight_Integration) |
 | Figma, Design, Prototyp und Affinity Maps | [SS26 Progress Insight Integration](https://www.figma.com/design/oWBUJZ8uTeTT5abcO17Ty2/SS26---Progress-Insight-Integration) |
 | Confluence, Projekt-Space | [IremiaxHdM, Insight Integration](https://stresslesstheapp.atlassian.net/wiki/spaces/IremiaStud/folder/309329922) |
 | Technische Dokumentation | [docs/](docs/) |
