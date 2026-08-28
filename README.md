@@ -18,13 +18,13 @@ Nutzertexte bleiben dabei bewusst emotional neutral und autonomie-wahrend: keine
 
 | Material | Link |
 | --- | --- |
-| Projektdokumentation (PDF) | *hier Link einsetzen* |
-| Demo-Video | *hier Link einsetzen* |
-| Finale Präsentation (PDF) | *hier Link einsetzen* |
-| Umfrage-Auswertung (PDF) | *hier Nextcloud-Link einsetzen* |
-| Figma, Design und Prototyp | *hier Link einsetzen* |
-| FigJam, Affinity Map und Nutzer-Cluster | *hier Link einsetzen* |
-| Confluence, Projekt-Space | *hier Link einsetzen* |
+| Projektdokumentation (PDF) | [Abgaben/Projektdoku_InsightIntegration.pdf](Abgaben/Projektdoku_InsightIntegration.pdf) |
+| Finale Präsentation, Präsentationstag und Media Night (PDF) | [Abgaben/Präsentationstag.pdf](Abgaben/Präsentationstag.pdf) |
+| Team-Vorstellungspräsentation (PDF) | [Abgaben/Team%20Introduction%20Presentation.pdf](Abgaben/Team%20Introduction%20Presentation.pdf) |
+| Demo-Video | [HdM-Nextcloud](https://cloud.mi.hdm-stuttgart.de/index.php/apps/files/files/45919387?dir=/IremiaInsight_Integration/Doku) |
+| Umfrage-Auswertung (PDF) | [HdM-Nextcloud](https://cloud.mi.hdm-stuttgart.de/index.php/apps/files/files/45919387?dir=/IremiaInsight_Integration/Doku) |
+| Figma, Design, Prototyp und Affinity Maps | [SS26 Progress Insight Integration](https://www.figma.com/design/oWBUJZ8uTeTT5abcO17Ty2/SS26---Progress-Insight-Integration) |
+| Confluence, Projekt-Space | [IremiaxHdM, Insight Integration](https://stresslesstheapp.atlassian.net/wiki/spaces/IremiaStud/folder/309329922) |
 | Technische Dokumentation | [docs/](docs/) |
 
 Rohdaten aus Umfrage und Nutzertests liegen aus Datenschutzgründen nicht in diesem öffentlichen Repository, sondern in der HdM-Nextcloud.
@@ -34,6 +34,8 @@ Rohdaten aus Umfrage und Nutzertests liegen aus Datenschutzgründen nicht in die
 Journal mit zweistufiger Erfassung und zwei Eintragstypen, Monatsgarten mit Baum für belastende Ereignisse und Beet für Journaleinträge, ein lokal rechnender Insights-Algorithmus über ein rollierendes 30-Tage-Fenster, das Design-System als Token-Schicht auf beiden Plattformen und die iOS-Parität in SwiftUI.
 
 Umfang: rund 15.000 Zeilen über 176 Dateien, 15 Unit-Tests, 174 neue lokalisierte Textbausteine.
+
+Die Evaluation lief vierstufig: heuristische Evaluation, fünf moderierte Usability-Tests, User Experience Questionnaire und ein Feldtest auf der Media Night. Daraus entstanden 19 konsolidierte Befunde, von denen elf noch im Projektzeitraum behoben wurden.
 
 ## Setup und Installation
 
@@ -100,6 +102,7 @@ Das Projekt nutzt **Kotlin Multiplatform (KMP)**, um Code zwischen Android und i
 * **`/iosApp`**: Die native iOS-App. Beinhaltet den Entry Point und SwiftUI-Code, der auf den Shared-Code zugreift.
 * **`/composeApp`**: Die native Android-App mit Jetpack Compose.
 * **`/docs`**: Technische Dokumentation für die Weiterentwicklung.
+* **`/Abgaben`**: Projektdokumentation und Präsentationen als PDF.
 
 `composeApp/` und `iosApp/` kennen `shared/`, aber `shared/` kennt keines der beiden. Diese Abhängigkeitsrichtung ist die zentrale Regel des Projekts.
 
